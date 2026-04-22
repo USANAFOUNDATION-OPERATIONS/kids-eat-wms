@@ -320,14 +320,14 @@
 
         <!-- Three section tabs -->
         <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;" id="dash-tabs">
-          <button onclick="setDashTab('general')" id="dash-tab-general" style="padding:10px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:3px solid var(--green);color:var(--green-dark);margin-bottom:-2px;font-family:inherit;">ℹ️ General Information</button>
-          <button onclick="setDashTab('annual')" id="dash-tab-annual" style="padding:10px 20px;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;color:var(--text-muted);margin-bottom:-2px;font-family:inherit;">📊 Annual Report</button>
+
+          <button onclick="setDashTab('annual')" id="dash-tab-annual" style="padding:10px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:3px solid var(--green);color:var(--green-dark);margin-bottom:-2px;font-family:inherit;">📊 Annual Report</button>
           <button onclick="setDashTab('tax')" id="dash-tab-tax" style="padding:10px 20px;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;color:var(--text-muted);margin-bottom:-2px;font-family:inherit;">🧾 Tax Information</button>
           <button onclick="setDashTab('charts')" id="dash-tab-charts" style="padding:10px 20px;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;color:var(--text-muted);margin-bottom:-2px;font-family:inherit;">📈 Charts</button>
         </div>
 
         <!-- ANNUAL REPORT TAB -->
-        <div id="dash-annual" style="display:none;">
+        <div id="dash-annual">
           <div class="grid-2" style="margin-bottom:16px;">
             <!-- Left col: key numbers -->
             <div>
@@ -476,11 +476,11 @@
           <div class="grid-2" style="margin-bottom:16px;">
             <div class="card">
               <div class="card-head"><div class="card-title">Weekend bags delivered per month</div></div>
-              <div class="card-body" style="padding:16px;"><canvas id="chart-bags-month" height="200"></canvas></div>
+              <div class="card-body" style="padding:16px;"><canvas id="chart-bags-month" height="120"></canvas></div>
             </div>
             <div class="card">
               <div class="card-head"><div class="card-title">Weekend bags delivered per quarter</div></div>
-              <div class="card-body" style="padding:16px;"><canvas id="chart-bags-quarter" height="200"></canvas></div>
+              <div class="card-body" style="padding:16px;"><canvas id="chart-bags-quarter" height="120"></canvas></div>
             </div>
           </div>
 
@@ -488,11 +488,11 @@
           <div class="grid-2" style="margin-bottom:16px;">
             <div class="card">
               <div class="card-head"><div class="card-title">Meals delivered per month</div></div>
-              <div class="card-body" style="padding:16px;"><canvas id="chart-meals-month" height="200"></canvas></div>
+              <div class="card-body" style="padding:16px;"><canvas id="chart-meals-month" height="120"></canvas></div>
             </div>
             <div class="card">
               <div class="card-head"><div class="card-title">Meals delivered per quarter</div></div>
-              <div class="card-body" style="padding:16px;"><canvas id="chart-meals-quarter" height="200"></canvas></div>
+              <div class="card-body" style="padding:16px;"><canvas id="chart-meals-quarter" height="120"></canvas></div>
             </div>
           </div>
 
@@ -500,33 +500,22 @@
           <div class="grid-2" style="margin-bottom:16px;">
             <div class="card">
               <div class="card-head"><div class="card-title">Active agencies per district</div></div>
-              <div class="card-body" style="padding:16px;"><canvas id="chart-agencies-district" height="220"></canvas></div>
+              <div class="card-body" style="padding:16px;"><canvas id="chart-agencies-district" height="140"></canvas></div>
             </div>
             <div class="card">
               <div class="card-head"><div class="card-title">Kids on program by district</div></div>
-              <div class="card-body" style="padding:16px;"><canvas id="chart-kids-district" height="220"></canvas></div>
+              <div class="card-body" style="padding:16px;"><canvas id="chart-kids-district" height="140"></canvas></div>
             </div>
           </div>
 
           <!-- Row 5: Totals by agency -->
           <div class="card" style="margin-bottom:16px;">
             <div class="card-head"><div class="card-title">Total bags delivered by agency — year to date</div></div>
-            <div class="card-body" style="padding:16px;"><canvas id="chart-totals-agency" height="180"></canvas></div>
+            <div class="card-body" style="padding:16px;"><canvas id="chart-totals-agency" height="120"></canvas></div>
           </div>
         </div>
 
-        <!-- GENERAL INFORMATION TAB -->
-        <div id="dash-general">
-          <div class="card">
-            <div class="card-head">
-              <div class="card-title">Organization information</div>
-              <button class="btn btn-sm" onclick="editGeneralInfo()">✏ Edit</button>
-            </div>
-            <div class="card-body" id="general-info-body" style="padding:20px;">
-              <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">Click Edit to add your organization information.</div>
-            </div>
-          </div>
-        </div>
+        
 
       </div>
     </div>
@@ -1138,10 +1127,10 @@ function updateDashboard(){
   renderDashTab();
 }
 
-let dashTab='general';
+let dashTab='annual';
 function setDashTab(tab){
   dashTab=tab;
-  ['annual','tax','general','charts'].forEach(t=>{
+  ['annual','tax','charts'].forEach(t=>{
     const btn=document.getElementById('dash-tab-'+t);
     const content=document.getElementById('dash-'+t);
     if(btn){
@@ -1157,7 +1146,7 @@ function setDashTab(tab){
 function renderDashTab(){
   if(dashTab==='annual') renderAnnualReport();
   else if(dashTab==='tax') renderTaxInfo();
-  else if(dashTab==='general') renderGeneralInfo();
+
   else if(dashTab==='charts') renderCharts();
 }
 
@@ -1240,6 +1229,7 @@ function renderCharts(){
       type, data: { labels, datasets },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: type==='bar' ? {
           y: { beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11}} },
