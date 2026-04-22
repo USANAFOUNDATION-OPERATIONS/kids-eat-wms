@@ -3339,8 +3339,19 @@ function toggleSidebar(){
 }
 
 // Attach hamburger and overlay listeners after DOM ready
-document.getElementById('hamburger-btn').addEventListener('click', toggleSidebar);
-document.getElementById('sidebar-overlay').addEventListener('click', toggleSidebar);
+document.addEventListener('DOMContentLoaded', function(){
+  const hbtn = document.getElementById('hamburger-btn');
+  const overlay = document.getElementById('sidebar-overlay');
+  if(hbtn) hbtn.addEventListener('click', toggleSidebar);
+  if(overlay) overlay.addEventListener('click', toggleSidebar);
+});
+// Also try immediately in case DOM is already ready
+(function(){
+  const hbtn = document.getElementById('hamburger-btn');
+  const overlay = document.getElementById('sidebar-overlay');
+  if(hbtn) hbtn.addEventListener('click', toggleSidebar);
+  if(overlay) overlay.addEventListener('click', toggleSidebar);
+})();
 
 // Close sidebar when nav item clicked on mobile
 document.querySelectorAll('.nav-item').forEach(item=>{
