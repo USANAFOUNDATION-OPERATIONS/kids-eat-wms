@@ -62,7 +62,7 @@
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
 
   /* Metrics */
-  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+  .metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;}
   .metric{background:var(--surface);border-radius:var(--radius);padding:18px 20px;border:1px solid var(--border);box-shadow:var(--shadow-sm);}
   .metric-label{font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
   .metric-value{font-size:28px;font-weight:700;line-height:1;}
@@ -230,6 +230,7 @@
           <div class="metric"><div class="metric-label">Pending</div><div class="metric-value amber" id="m-pending">—</div><div class="metric-foot">Awaiting shipment</div></div>
           <div class="metric"><div class="metric-label">Shipped</div><div class="metric-value" id="m-shipped">—</div><div class="metric-foot">Completed</div></div>
           <div class="metric"><div class="metric-label">International</div><div class="metric-value" id="m-intl">—</div><div class="metric-foot">vs US only</div></div>
+          <div class="metric"><div class="metric-label">Total shipping cost</div><div class="metric-value green" id="m-cost">—</div><div class="metric-foot">All shipments</div></div>
         </div>
         <div class="card">
           <div class="card-head">
@@ -437,10 +438,12 @@ function renderMetrics(){
   const shipped=s.filter(x=>x.status==='Shipped').length;
   const intl=s.filter(x=>x.ship_type==='International').length;
   const el=id=>document.getElementById(id);
+  const totalCost=s.reduce((sum,x)=>sum+(x.shipping_cost||0),0);
   if(el('m-total'))el('m-total').textContent=total;
   if(el('m-pending'))el('m-pending').textContent=pending;
   if(el('m-shipped'))el('m-shipped').textContent=shipped;
   if(el('m-intl'))el('m-intl').textContent=intl;
+  if(el('m-cost'))el('m-cost').textContent='$'+totalCost.toFixed(2);
 }
 
 function updateBadge(){
@@ -485,7 +488,7 @@ function renderShipmentsTable(){
       <td>${date}</td>
       <td><span class="badge ${statusColor}">${s.status||'Pending'}</span></td>
       <td>
-        <button class="btn btn-sm" onclick="viewShipment('${s.id}')" style="margin-right:4px;">View</button>
+        <button class="btn btn-sm" onclick="viewShipment('${s.id}')" style="margin-right:4px;">Update</button>
         <button class="btn btn-sm btn-primary" onclick="generateDoc('${s.id}')">📄 Print</button>
       </td>
     </tr>`;
@@ -626,9 +629,15 @@ function viewShipment(id){
         <option ${s.status==='Cancelled'?'selected':''}>Cancelled</option>
       </select>
     </div>
-    <div style="margin-bottom:16px;">
-      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Tracking number</div>
-      <input type="text" class="form-input" id="tracking-input" value="${s.tracking_number||''}" placeholder="Enter tracking number when shipped"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Tracking number</div>
+        <input type="text" class="form-input" id="tracking-input" value="${s.tracking_number||''}" placeholder="Enter when shipped"/>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Shipping cost ($)</div>
+        <input type="number" class="form-input" id="cost-input" value="${s.shipping_cost||''}" placeholder="0.00" step="0.01" min="0"/>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">Close</button>
@@ -641,17 +650,18 @@ function viewShipment(id){
 async function saveShipmentUpdate(id){
   const status=document.getElementById('status-select')?.value||'Pending';
   const tracking=document.getElementById('tracking-input')?.value||'';
+  const cost=parseFloat(document.getElementById('cost-input')?.value)||null;
   const s=DATA.shipments.find(x=>x.id===id);
-  if(s){s.status=status;s.tracking_number=tracking;}
+  if(s){s.status=status;s.tracking_number=tracking;s.shipping_cost=cost;}
   if(dbReady){
     await fetch(`${SUPABASE_URL}/rest/v1/gt_shipments?id=eq.${id}`,{
       method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},
-      body:JSON.stringify({status,tracking_number:tracking})
+      body:JSON.stringify({status,tracking_number:tracking,shipping_cost:cost})
     });
   }
   closeModal();
   renderAll();
-  showToast('✓ Shipment updated','success');
+  showToast('Shipment updated','success');
 }
 
 function generateDoc(id){
@@ -659,123 +669,168 @@ function generateDoc(id){
   if(!s)return;
   const items=JSON.parse(s.items_json||'[]');
   const isIntl=s.ship_type==='International';
-  const date=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-  const reqDate=s.date_requested?new Date(s.date_requested+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):date;
+  const today=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const reqDate=s.date_requested?new Date(s.date_requested+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):today;
 
-  // Build items table
-  const itemRows=items.map(i=>`
-    <tr>
-      <td>${i.name}</td>
-      <td style="text-align:center;">${i.qty}</td>
-      <td style="text-align:right;">$${i.price.toFixed(2)}</td>
-      <td style="text-align:right;">$${i.value.toFixed(2)}</td>
-      ${isIntl?`<td>${s.harmonized_code||'—'}</td>`:''}
-    </tr>`).join('');
+  // Parse address safely for display
+  function fmtAddr(addr){return(addr||'').split('\n').join('<br/>');}
 
-  const urgentBanner=s.urgency==='Urgent'?`<div class="ship-doc-urgent">⚠ URGENT SHIPMENT — Priority handling required</div>`:'';
+  // Box splitting rules
+  const boxes=[];
+  const kitWith=items.find(i=>i.name.includes('With Trays'));
+  const kitNo=items.find(i=>i.name.includes('Without Trays'));
+  const minis=items.find(i=>i.name.includes('Minis'));
+  const sacks=items.find(i=>i.name.includes('Sacks'));
+  const rolls=items.find(i=>i.name.includes('Rolls'));
+  const tags=items.find(i=>i.name.includes('Tracking Tags'));
+  const other=items.find(i=>i.name==='Other');
+  let minisAdded=false;
 
-  const shippingOptions=isIntl?`
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;font-weight:600;color:#006953;margin-bottom:6px;">Shipping Options (International)</div>
-      <div style="display:grid;grid-template-columns:20px 1fr;gap:4px;font-size:12px;">
-        <span>${s.shipping_method?.includes('Worldwide Expedited')?'☑':'☐'}</span><span>UPS Worldwide Expedited — 2-5 days</span>
-        <span>${s.shipping_method?.includes('Express Saver')?'☑':'☐'}</span><span>UPS Worldwide Express Saver — 1-2 days by end of day</span>
-        <span>${s.shipping_method?.includes('Worldwide Express')?'☑':'☐'}</span><span>UPS Worldwide Express — 1-2 days by 12:00</span>
-        <span>${s.shipping_method?.includes('FedEx')?'☑':'☐'}</span><span>FedEx International Priority Direct — 3-7 days</span>
-        <span>${s.shipping_method?.includes('Standard to Canada')?'☑':'☐'}</span><span>UPS Standard to Canada — 3-7 days</span>
-      </div>
-    </div>`:`
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;font-weight:600;color:#006953;margin-bottom:6px;">Shipping Options (US Only)</div>
-      <div style="display:grid;grid-template-columns:20px 1fr;gap:4px;font-size:12px;">
-        <span>${s.shipping_method?.includes('Ground')?'☑':'☐'}</span><span>UPS Ground — 1-5 days</span>
-        <span>☐</span><span>UPS 3 Day</span>
-        <span>☐</span><span>UPS 2 Day</span>
-        <span>☐</span><span>UPS Next Day Air</span>
-        <span>☐</span><span>UPS Next Day Early AM</span>
-      </div>
-    </div>`;
+  if(kitWith&&kitWith.qty>0){
+    const bi=[kitWith];
+    if(minis&&minis.qty>0){bi.push(minis);minisAdded=true;}
+    boxes.push({label:'Welcome Kit (With Trays)',items:bi});
+  }
+  if(kitNo&&kitNo.qty>0){
+    const bi=[kitNo];
+    if(minis&&minis.qty>0&&!minisAdded){bi.push(minis);minisAdded=true;}
+    boxes.push({label:'Welcome Kit (Without Trays)',items:bi});
+  }
+  if(minis&&minis.qty>0&&!minisAdded){
+    boxes.push({label:'Garden Tower Minis',items:[minis]});
+  }
+  if(sacks&&sacks.qty>0){
+    let rem=sacks.qty,bn=1;
+    while(rem>0){
+      const q=Math.min(20,rem),v=q*sacks.price;
+      boxes.push({label:'Sewn Garden Tower Sacks'+(sacks.qty>20?' — Box '+bn:''),items:[{...sacks,qty:q,value:v}]});
+      rem-=q;bn++;
+    }
+  }
+  if(rolls&&rolls.qty>0){
+    let rem=rolls.qty,bn=1;
+    while(rem>0){
+      const q=Math.min(20,rem),v=q*rolls.price;
+      boxes.push({label:'Garden Tower Rolls'+(rolls.qty>20?' — Box '+bn:''),items:[{...rolls,qty:q,value:v}]});
+      rem-=q;bn++;
+    }
+  }
+  if(tags&&tags.qty>0){if(boxes.length>0)boxes[0].items.push(tags);else boxes.push({label:'Garden Tower Tracking Tags',items:[tags]});}
+  if(other&&other.qty>0){if(boxes.length>0)boxes[0].items.push(other);else boxes.push({label:'Other Items',items:[other]});}
+  if(!boxes.length)boxes.push({label:'Shipment',items});
 
-  const doc=`
-    <div class="ship-doc">
-      <div class="ship-doc-header">
-        <div>
-          <div class="ship-doc-title">${isIntl?'International':'US'} Shipping Request</div>
-          <div class="ship-doc-sub">USANA Foundation · Garden Towers Program · Shipment #${s.shipment_number}</div>
-        </div>
-        <div style="text-align:right;font-size:12px;color:#555;">
-          <div><strong>Date:</strong> ${reqDate}</div>
-          <div><strong>Requested by:</strong> ${s.requestor_name||'—'}</div>
-        </div>
-      </div>
+  const totalBoxes=boxes.length;
 
-      ${urgentBanner}
+  function shippingOpts(method){
+    if(isIntl){
+      return '<div style="font-size:10px;font-weight:700;color:#006953;margin-bottom:4px;">Shipping Method</div>'
+        +'<div style="font-size:11px;line-height:1.7;">'
+        +(method&&method.includes('Worldwide Expedited')?'<strong>☑ UPS Worldwide Expedited (2-5 days)</strong>':'☐ UPS Worldwide Expedited (2-5 days)')+'<br/>'
+        +(method&&method.includes('Express Saver')?'<strong>☑ UPS Worldwide Express Saver</strong>':'☐ UPS Worldwide Express Saver (1-2 days)')+'<br/>'
+        +(method&&method.includes('Worldwide Express')&&!method.includes('Saver')?'<strong>☑ UPS Worldwide Express</strong>':'☐ UPS Worldwide Express (1-2 days)')+'<br/>'
+        +(method&&method.includes('FedEx')?'<strong>☑ FedEx International Priority</strong>':'☐ FedEx International Priority (3-7 days)')+'<br/>'
+        +(method&&method.includes('Standard to Canada')?'<strong>☑ UPS Standard to Canada</strong>':'☐ UPS Standard to Canada (3-7 days)')
+        +'</div>';
+    }else{
+      return '<div style="font-size:10px;font-weight:700;color:#006953;margin-bottom:4px;">Shipping Method</div>'
+        +'<div style="font-size:11px;line-height:1.7;">'
+        +(method&&method.includes('Ground')?'<strong>☑ UPS Ground (1-5 days)</strong>':'☐ UPS Ground (1-5 days)')+'<br/>'
+        +'☐ UPS 3 Day<br/>☐ UPS 2 Day<br/>☐ UPS Next Day Air<br/>☐ UPS Next Day Early AM'
+        +'</div>';
+    }
+  }
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px;">
-        <div class="ship-doc-section">
-          <div class="ship-doc-section-title">Billing Information</div>
-          <div class="ship-doc-row"><div class="ship-doc-label">Cost Center:</div><div class="ship-doc-value"><strong>007-7310</strong></div></div>
-          <div class="ship-doc-row"><div class="ship-doc-label">Sender:</div><div class="ship-doc-value">Stephen Cook</div></div>
-          <div class="ship-doc-row"><div class="ship-doc-label">Extension:</div><div class="ship-doc-value">207137</div></div>
-          <div class="ship-doc-row"><div class="ship-doc-label">Requestor:</div><div class="ship-doc-value">${s.requestor_name||'—'}</div></div>
-          <div class="ship-doc-row"><div class="ship-doc-label">Organization:</div><div class="ship-doc-value">${s.organization||'—'}</div></div>
-        </div>
-        <div class="ship-doc-section">
-          <div class="ship-doc-section-title">Ship To</div>
-          <div style="font-size:13px;font-weight:600;">${s.recipient_name||'—'}</div>
-          <div style="font-size:12px;margin-top:4px;">${(s.ship_to_address||'').replace(/\n/g,'<br/>')}</div>
-          <div style="font-size:12px;margin-top:6px;"><strong>Email:</strong> ${s.recipient_email||'—'}</div>
-          <div style="font-size:12px;"><strong>Phone:</strong> ${s.recipient_phone||'—'}</div>
-        </div>
-      </div>
+  const allDocs=boxes.map(function(box,boxIdx){
+    const boxNum=boxIdx+1;
+    const itemRows=box.items.map(function(i){
+      return '<tr>'
+        +'<td style="padding:5px 8px;border:1px solid #e0e0e0;">'+i.name+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;">'+i.qty+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:right;">$'+(i.price||0).toFixed(2)+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:right;">$'+(i.value||0).toFixed(2)+'</td>'
+        +(isIntl?'<td style="padding:5px 8px;border:1px solid #e0e0e0;">'+(s.harmonized_code||'—')+'</td>':'')
+        +'</tr>';
+    }).join('');
+    const boxTotal=box.items.reduce(function(sum,i){return sum+(i.value||0);},0);
+    const isUrgent=s.urgency==='Urgent';
+    const pageBreak=boxIdx<boxes.length-1?'always':'avoid';
 
-      <div class="ship-doc-section ship-doc-items">
-        <div class="ship-doc-section-title">List of Contents</div>
-        <table>
-          <thead><tr>
-            <th>Item Description</th>
-            <th style="text-align:center;">Qty</th>
-            <th style="text-align:right;">Unit Value</th>
-            <th style="text-align:right;">Total Value</th>
-            ${isIntl?'<th>Harmonized Code</th>':''}
-          </tr></thead>
-          <tbody>${itemRows}</tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td colspan="${isIntl?3:3}"><strong>Total Declared Value</strong></td>
-              <td style="text-align:right;"><strong>$${(s.total_value||0).toFixed(2)}</strong></td>
-              ${isIntl?'<td></td>':''}
-            </tr>
-          </tfoot>
-        </table>
-        ${s.notes?`<div style="margin-top:8px;font-size:12px;"><strong>Notes:</strong> ${s.notes}</div>`:''}
-      </div>
+    return '<div style="page-break-after:'+pageBreak+';padding:18px 22px;max-width:680px;margin:0 auto;font-family:sans-serif;font-size:12px;color:#1a1a1a;">'
 
-      <div class="ship-doc-section">
-        ${shippingOptions}
-      </div>
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #006953;">'
+        +'<div>'
+          +'<div style="font-size:15px;font-weight:700;color:#006953;">'+(isIntl?'International':'US')+' Shipping Request</div>'
+          +'<div style="font-size:11px;color:#666;">USANA Foundation · Garden Towers · Shipment #'+s.shipment_number+(totalBoxes>1?' · Box '+boxNum+' of '+totalBoxes:'')+'</div>'
+          +'<div style="font-size:11px;color:#006953;font-weight:600;">'+box.label+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;font-size:11px;color:#555;">'
+          +'<div><strong>Date:</strong> '+reqDate+'</div>'
+          +'<div><strong>By:</strong> '+s.requestor_name+'</div>'
+          +'<div style="color:'+(isUrgent?'#dc2626':'#166534')+';font-weight:600;">'+(isUrgent?'⚠ URGENT':'A week is fine')+'</div>'
+        +'</div>'
+      +'</div>'
 
-      <div class="for-shipping-dept">
-        <div class="for-shipping-dept-title">For Shipping Department Use Only</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;font-size:12px;">
-          <div><div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:4px;">Shipping Charge</div><div style="border-bottom:1px solid #d97706;padding-bottom:16px;">&nbsp;</div></div>
-          <div><div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:4px;">Shipped By</div><div style="border-bottom:1px solid #d97706;padding-bottom:16px;">&nbsp;</div></div>
-          <div><div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:4px;">Tracking Number</div><div style="border-bottom:1px solid #d97706;padding-bottom:16px;">${s.tracking_number||'&nbsp;'}</div></div>
-        </div>
-      </div>
+      +(isUrgent?'<div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:5px 10px;border-radius:4px;font-weight:600;font-size:11px;margin-bottom:8px;">⚠ URGENT SHIPMENT — Priority handling required</div>':'')
 
-      <div class="ship-doc-sig">
-        <div><div class="ship-doc-sig-box">Signature of Sender</div></div>
-        <div><div class="ship-doc-sig-box">Date</div></div>
-      </div>
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">'
+        +'<div style="border:1px solid #c6e5b9;border-radius:6px;padding:8px 12px;background:#f4faf8;">'
+          +'<div style="font-size:10px;font-weight:700;color:#006953;text-transform:uppercase;margin-bottom:5px;">Billing</div>'
+          +'<div style="font-size:11px;line-height:1.7;">'
+            +'<strong>Cost Center:</strong> 007-7310<br/>'
+            +'<strong>Sender:</strong> Stephen Cook<br/>'
+            +'<strong>Extension:</strong> 207137<br/>'
+            +'<strong>Requestor:</strong> '+(s.requestor_name||'—')+'<br/>'
+            +'<strong>Organization:</strong> '+(s.organization||'—')
+          +'</div>'
+        +'</div>'
+        +'<div style="border:1px solid #c6e5b9;border-radius:6px;padding:8px 12px;background:#f4faf8;">'
+          +'<div style="font-size:10px;font-weight:700;color:#006953;text-transform:uppercase;margin-bottom:5px;">Ship To</div>'
+          +'<div style="font-size:12px;font-weight:600;">'+(s.recipient_name||'—')+'</div>'
+          +'<div style="font-size:11px;line-height:1.5;margin-top:2px;">'+fmtAddr(s.ship_to_address)+'</div>'
+          +'<div style="font-size:11px;margin-top:4px;"><strong>Ph:</strong> '+(s.recipient_phone||'—')+'</div>'
+        +'</div>'
+      +'</div>'
 
-      <div class="ship-doc-footer">
-        IMPORTANT: Package must be in the Shipping Department by 1:00 PM to receive same-day shipping
-        <br/>USANA Foundation Garden Towers Program · Generated ${date}
-      </div>
-    </div>`;
+      +'<div style="margin-bottom:10px;">'
+        +'<div style="font-size:10px;font-weight:700;color:#006953;text-transform:uppercase;margin-bottom:5px;">Contents</div>'
+        +'<table style="width:100%;border-collapse:collapse;font-size:11px;">'
+          +'<thead><tr style="background:#e8f5f2;">'
+            +'<th style="padding:5px 8px;border:1px solid #c6e5b9;text-align:left;">Description</th>'
+            +'<th style="padding:5px 8px;border:1px solid #c6e5b9;text-align:center;">Qty</th>'
+            +'<th style="padding:5px 8px;border:1px solid #c6e5b9;text-align:right;">Unit Value</th>'
+            +'<th style="padding:5px 8px;border:1px solid #c6e5b9;text-align:right;">Total Value</th>'
+            +(isIntl?'<th style="padding:5px 8px;border:1px solid #c6e5b9;">Harmonized Code</th>':'')
+          +'</tr></thead>'
+          +'<tbody>'+itemRows+'</tbody>'
+          +'<tfoot><tr style="background:#e8f5f2;font-weight:700;">'
+            +'<td colspan="3" style="padding:5px 8px;border:1px solid #c6e5b9;">Box declared value</td>'
+            +'<td style="padding:5px 8px;border:1px solid #c6e5b9;text-align:right;">$'+boxTotal.toFixed(2)+'</td>'
+            +(isIntl?'<td style="border:1px solid #c6e5b9;"></td>':'')
+          +'</tr></tfoot>'
+        +'</table>'
+        +(s.notes?'<div style="margin-top:4px;font-size:11px;"><strong>Notes:</strong> '+s.notes+'</div>':'')
+      +'</div>'
 
-  document.getElementById('print-area').innerHTML=doc;
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">'
+        +'<div style="border:1px solid #c6e5b9;border-radius:6px;padding:8px 12px;background:#f4faf8;">'+shippingOpts(s.shipping_method)+'</div>'
+        +'<div style="border:1px solid #fde68a;border-radius:6px;padding:8px 12px;background:#fffbf0;">'
+          +'<div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:6px;">For Shipping Dept Only</div>'
+          +'<div style="font-size:11px;margin-bottom:8px;"><div style="font-weight:600;color:#92400e;margin-bottom:2px;">Shipping Charge</div><div style="border-bottom:1px solid #d97706;padding-bottom:10px;">&nbsp;</div></div>'
+          +'<div style="font-size:11px;margin-bottom:8px;"><div style="font-weight:600;color:#92400e;margin-bottom:2px;">Tracking Number</div><div style="border-bottom:1px solid #d97706;padding-bottom:10px;">'+(s.tracking_number||'&nbsp;')+'</div></div>'
+          +'<div style="font-size:11px;"><div style="font-weight:600;color:#92400e;margin-bottom:2px;">Shipped By</div><div style="border-bottom:1px solid #d97706;padding-bottom:10px;">&nbsp;</div></div>'
+        +'</div>'
+      +'</div>'
+
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:6px;">'
+        +'<div><div style="border-bottom:1px solid #333;padding-bottom:2px;"></div><div style="font-size:10px;color:#555;margin-top:2px;">Signature of Sender</div></div>'
+        +'<div><div style="border-bottom:1px solid #333;padding-bottom:2px;"></div><div style="font-size:10px;color:#555;margin-top:2px;">Date</div></div>'
+      +'</div>'
+
+      +'<div style="font-size:10px;color:#888;text-align:center;border-top:1px solid #e0e0e0;padding-top:4px;">Package must be in Shipping Dept by 1:00 PM for same-day shipping &nbsp;·&nbsp; USANA Foundation · Generated '+today+'</div>'
+    +'</div>';
+  }).join('');
+
+  document.getElementById('print-area').innerHTML=allDocs;
   window.print();
 }
 
