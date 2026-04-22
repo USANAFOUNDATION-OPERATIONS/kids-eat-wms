@@ -2914,10 +2914,11 @@ function renderAgencies(q){
     const activeCount=agencies.filter(a=>a.is_active).length;
     const totalBags=agencies.reduce((s,a)=>s+(a.weekly_bag_count||0),0);
 
-    html+=`<div style="margin-bottom:20px;">
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:8px;margin-bottom:6px;border-left:3px solid var(--green);">
-        <div style="font-size:13px;font-weight:700;color:var(--text);">${district}</div>
+    html+=`<div style="margin-bottom:32px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:8px;margin-bottom:8px;border-left:4px solid var(--green);">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">${district}</div>
         <div style="font-size:12px;color:var(--text-muted);">${activeCount} active · ${totalBags.toLocaleString()} bags/week</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--text-faint);">${agencies.length} agencies</div>
       </div>
       <table style="width:100%;">
         <thead><tr>
