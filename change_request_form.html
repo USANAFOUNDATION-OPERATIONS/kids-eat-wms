@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kids Eat — Delivery Change Request</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+  :root{
+    --teal:#5eccc9;--teal-dark:#2a9d9a;--teal-light:#e8fafa;--teal-border:rgba(94,204,201,0.3);
+    --amber:#EF9F27;--amber-light:#FAEEDA;--amber-text:#854F0B;
+    --red:#E24B4A;--red-light:#FCEBEB;--red-text:#A32D2D;
+    --green:#22c55e;--green-light:#dcfce7;--green-dark:#15803d;
+    --text:#1A1A1A;--text-muted:#6B6B6B;--border:rgba(0,0,0,0.1);
+    --bg:#f0fafa;--surface:#fff;--radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;}
+  .card{background:var(--surface);border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,0.08);width:100%;max-width:540px;overflow:hidden;margin:auto;}
+  .header{background:linear-gradient(135deg,#5eccc9,#2a9d9a);padding:28px 28px 24px;color:#fff;}
+  .logo{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .logo-icon{width:44px;height:44px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+  .logo-text{font-size:15px;font-weight:600;}
+  .logo-sub{font-size:12px;opacity:0.8;}
+  h1{font-size:22px;font-weight:600;margin-bottom:6px;}
+  .header p{font-size:14px;opacity:0.85;line-height:1.5;}
+  .body{padding:28px;}
+  .form-row{margin-bottom:18px;}
+  label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;}
+  input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--teal);background:#fff;}
+  textarea{resize:vertical;min-height:80px;}
+  select{cursor:pointer;}
+
+  /* Agency info card - shows after selecting agency */
+  .agency-info{background:var(--teal-light);border:1.5px solid var(--teal-border);border-radius:10px;padding:16px;margin-top:10px;display:none;}
+  .agency-info .title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--teal-dark);margin-bottom:10px;}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .info-item{text-align:center;}
+  .info-value{font-size:22px;font-weight:700;color:var(--teal-dark);line-height:1;}
+  .info-label{font-size:11px;color:var(--teal-dark);opacity:0.8;margin-top:4px;}
+  .info-note{font-size:12px;color:var(--teal-dark);margin-top:10px;padding-top:10px;border-top:1px solid var(--teal-border);line-height:1.5;}
+
+  /* Dynamic follow-up sections */
+  .followup{display:none;animation:fadeIn .2s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+
+  /* Highlight box for bag count input */
+  .bag-input-box{background:#fff;border:2px solid var(--teal);border-radius:10px;padding:16px;margin-top:4px;}
+  .bag-input-box p{font-size:13px;color:var(--text-muted);margin-bottom:10px;line-height:1.5;}
+  .bag-input-box input{border-color:var(--teal);background:var(--teal-light);}
+
+  .btn{width:100%;padding:14px;font-size:15px;font-weight:600;border-radius:10px;border:none;cursor:pointer;font-family:inherit;transition:all .15s;margin-top:8px;}
+  .btn-primary{background:linear-gradient(135deg,#5eccc9,#2a9d9a);color:#fff;}
+  .btn-primary:hover{opacity:0.92;transform:translateY(-1px);}
+  .btn-primary:disabled{opacity:0.6;transform:none;cursor:not-allowed;}
+
+  .week-info{background:var(--teal-light);border:1px solid var(--teal-border);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--teal-dark);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+
+  .success-screen{display:none;padding:48px 28px;text-align:center;}
+  .success-icon{width:64px;height:64px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;}
+  .success-screen h2{font-size:22px;font-weight:600;margin-bottom:8px;color:var(--green-dark);}
+  .success-screen p{font-size:14px;color:var(--text-muted);line-height:1.6;}
+  .error-box{background:var(--red-light);border:1px solid var(--red);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red-text);margin-top:10px;display:none;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+          <rect x="6" y="10" width="18" height="17" rx="3" fill="white" opacity="0.95"/>
+          <rect x="6" y="10" width="18" height="3.5" rx="1.5" fill="white" opacity="0.7"/>
+          <path d="M10 10 C10 10 9 7 11 5 C12.5 3.5 12.5 2 12.5 2" stroke="white" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.9"/>
+          <path d="M20 10 C20 10 21 7 19 5 C17.5 3.5 17.5 2 17.5 2" stroke="white" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.9"/>
+          <circle cx="12.5" cy="2" r="1.2" fill="white" opacity="0.8"/>
+          <circle cx="17.5" cy="2" r="1.2" fill="white" opacity="0.8"/>
+          <circle cx="12" cy="17.5" r="1.3" fill="#2a9d9a"/>
+          <circle cx="18" cy="17.5" r="1.3" fill="#2a9d9a"/>
+          <path d="M11.5 21 Q15 24 18.5 21" stroke="#2a9d9a" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">Kids Eat — USANA Foundation</div>
+        <div class="logo-sub">Weekend Bag Program</div>
+      </div>
+    </div>
+    <h1>Delivery Change Request</h1>
+    <p>Need to adjust your upcoming delivery? Fill out this short form and we'll take care of it.</p>
+  </div>
+
+  <div id="form-screen">
+    <div class="body">
+
+      <div class="week-info" id="week-info-box">
+        📅 <span id="week-info-text">Upcoming delivery</span>
+      </div>
+
+      <!-- STEP 1: Select your school -->
+      <div class="form-row">
+        <label>Your school or organization</label>
+        <select id="agency-select" onchange="handleAgencyChange()">
+          <option value="">Select your school...</option>
+        </select>
+        <!-- Agency info card -->
+        <div class="agency-info" id="agency-info">
+          <div class="title">Your current delivery info</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-value" id="info-weekly">—</div>
+              <div class="info-label">Bags per week</div>
+            </div>
+            <div class="info-item">
+              <div class="info-value" id="info-freq">—</div>
+              <div class="info-label">Delivery schedule</div>
+            </div>
+            <div class="info-item">
+              <div class="info-value" id="info-per-delivery">—</div>
+              <div class="info-label">Bags per delivery</div>
+            </div>
+          </div>
+          <div class="info-note" id="info-note"></div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Contact info -->
+      <div class="form-row">
+        <label>Your name</label>
+        <input type="text" id="contact-name" placeholder="First and last name"/>
+      </div>
+      <div class="form-row">
+        <label>Your email address</label>
+        <input type="email" id="contact-email" placeholder="your@school.org"/>
+      </div>
+
+      <!-- STEP 3: What do you need? -->
+      <div class="form-row">
+        <label>What do you need?</label>
+        <select id="request-type" onchange="handleTypeChange()">
+          <option value="">Select request type...</option>
+          <option value="Skip Next Delivery">Skip next delivery — we have enough bags</option>
+          <option value="Decrease Bags for Just This Delivery">Decrease bags for just this delivery</option>
+          <option value="Increase Bags for Just This Delivery">Increase bags for just this delivery</option>
+          <option value="Change Weekly Bag Count for Remainder of School Year">Change our weekly bag count for the remainder of the school year</option>
+          <option value="Other">Other — I'll explain below</option>
+        </select>
+      </div>
+
+      <!-- Dynamic follow-up: Decrease -->
+      <div class="followup" id="followup-decrease">
+        <div class="form-row">
+          <label>How many bags do you need for this delivery?</label>
+          <div class="bag-input-box">
+            <p id="decrease-hint">Enter the number of bags you need for this one delivery. Your regular count will resume on your next scheduled delivery.</p>
+            <input type="number" id="bag-count-decrease" placeholder="e.g. 30" min="0"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic follow-up: Increase -->
+      <div class="followup" id="followup-increase">
+        <div class="form-row">
+          <label>How many bags do you need for this delivery?</label>
+          <div class="bag-input-box">
+            <p id="increase-hint">Enter the number of bags you need for this one delivery. Your regular count will resume on your next scheduled delivery.</p>
+            <input type="number" id="bag-count-increase" placeholder="e.g. 50" min="0"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic follow-up: Permanent change -->
+      <div class="followup" id="followup-permanent">
+        <div class="form-row">
+          <label>New weekly bag count requested</label>
+          <div class="bag-input-box">
+            <p id="permanent-hint">Enter the number of bags you'd like to receive each week for the rest of the school year. This will become your new regular count.</p>
+            <input type="number" id="bag-count-permanent" placeholder="e.g. 45" min="0"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic follow-up: Other -->
+      <div class="followup" id="followup-other">
+        <div class="form-row">
+          <label>Please describe what you need</label>
+          <textarea id="notes-other" placeholder="Tell us what you need and we'll do our best to help..."></textarea>
+        </div>
+      </div>
+
+      <!-- General notes (always visible) -->
+      <div class="form-row" id="general-notes-row">
+        <label>Additional notes (optional)</label>
+        <textarea id="notes-general" placeholder="Anything else we should know?"></textarea>
+      </div>
+
+      <div class="error-box" id="error-box"></div>
+
+      <button class="btn btn-primary" id="submit-btn" onclick="submitRequest()">
+        Submit change request
+      </button>
+
+      <p style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:14px;line-height:1.5;">
+        Questions? Contact Stephen Cook<br/>
+        <strong>stephen.cook@usanainc.com</strong>
+      </p>
+    </div>
+  </div>
+
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✓</div>
+    <h2>Request submitted!</h2>
+    <p>Thank you — we've received your change request and our team will review it right away. You don't need to do anything else.</p>
+    <p style="margin-top:12px;font-size:13px;color:var(--teal-dark);font-weight:500;" id="success-detail"></p>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://mroyqkvrzrcmnfgvylkl.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yb3lxa3ZyenJjbW5mZ3Z5bGtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNDkwNjAsImV4cCI6MjA5MTkyNTA2MH0.sG0fRMSFHvrlr3dDHowAUjdtaZZbWWhlFbiEoIYOj0s';
+
+const params=new URLSearchParams(window.location.search);
+const prefilledAgency=params.get('agency')||'';
+const weekDate=params.get('week')||'';
+const weekLabel=params.get('label')||weekDate;
+
+// Agency data - loaded from Supabase
+let agencies=[];
+
+// Frequency multiplier for bags per delivery
+const freqMultiplier={'Weekly':1,'Biweekly':2,'Monthly':4,'As Needed':1};
+const freqLabel={'Weekly':'Weekly','Biweekly':'Every 2 weeks','Monthly':'Monthly','As Needed':'As needed'};
+
+async function init(){
+  // Set week info
+  if(weekLabel){
+    document.getElementById('week-info-text').textContent=
+      `Your delivery is scheduled for the week of ${weekLabel}`;
+  }else{
+    document.getElementById('week-info-box').style.display='none';
+  }
+
+  // Load agencies from Supabase
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/agencies?select=name,weekly_bag_count,delivery_frequency,is_active&order=name`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    agencies=await r.json();
+
+    const sel=document.getElementById('agency-select');
+    agencies.filter(a=>a.is_active).forEach(a=>{
+      const opt=document.createElement('option');
+      opt.value=a.name;
+      opt.textContent=a.name;
+      sel.appendChild(opt);
+    });
+
+    // Pre-fill if agency passed in URL
+    if(prefilledAgency){
+      sel.value=prefilledAgency;
+      handleAgencyChange();
+    }
+  }catch(e){
+    console.error('Could not load agencies',e);
+  }
+}
+
+function handleAgencyChange(){
+  const name=document.getElementById('agency-select').value;
+  const agency=agencies.find(a=>a.name===name);
+  const infoBox=document.getElementById('agency-info');
+
+  if(!agency){infoBox.style.display='none';return;}
+
+  const weekly=agency.weekly_bag_count||0;
+  const freq=agency.delivery_frequency||'Weekly';
+  const mult=freqMultiplier[freq]||1;
+  const perDelivery=weekly*mult;
+
+  document.getElementById('info-weekly').textContent=weekly;
+  document.getElementById('info-freq').textContent=freqLabel[freq]||freq;
+  document.getElementById('info-per-delivery').textContent=perDelivery;
+  document.getElementById('info-note').textContent=
+    `You receive ${weekly} bags per week on a ${(freqLabel[freq]||freq).toLowerCase()} schedule, which means your standard delivery is ${perDelivery} bags.`;
+
+  // Update hints in followup sections
+  document.getElementById('decrease-hint').textContent=
+    `Your standard delivery is ${perDelivery} bags. Enter the smaller number you need just for this one delivery — your regular amount resumes next time.`;
+  document.getElementById('increase-hint').textContent=
+    `Your standard delivery is ${perDelivery} bags. Enter the larger number you need just for this one delivery — your regular amount resumes next time.`;
+  document.getElementById('permanent-hint').textContent=
+    `You currently receive ${weekly} bags per week. Enter the new weekly number you'd like for the rest of the school year.`;
+
+  infoBox.style.display='block';
+  updateTypeHints(agency);
+}
+
+function updateTypeHints(agency){
+  // Re-trigger type change to update hints if already selected
+  handleTypeChange();
+}
+
+function handleTypeChange(){
+  const type=document.getElementById('request-type').value;
+
+  // Hide all followups
+  ['decrease','increase','permanent','other'].forEach(t=>{
+    document.getElementById('followup-'+t).style.display='none';
+  });
+
+  // Show relevant one
+  if(type==='Decrease Bags for Just This Delivery'){
+    document.getElementById('followup-decrease').style.display='block';
+  }else if(type==='Increase Bags for Just This Delivery'){
+    document.getElementById('followup-increase').style.display='block';
+  }else if(type==='Change Weekly Bag Count for Remainder of School Year'){
+    document.getElementById('followup-permanent').style.display='block';
+  }else if(type==='Other'){
+    document.getElementById('followup-other').style.display='block';
+  }
+}
+
+async function submitRequest(){
+  const agency=document.getElementById('agency-select').value;
+  const name=document.getElementById('contact-name').value.trim();
+  const email=document.getElementById('contact-email').value.trim();
+  const type=document.getElementById('request-type').value;
+  const errBox=document.getElementById('error-box');
+
+  errBox.style.display='none';
+  if(!agency){showError('Please select your school or organization.');return;}
+  if(!name){showError('Please enter your name.');return;}
+  if(!email||!email.includes('@')){showError('Please enter a valid email address.');return;}
+  if(!type){showError('Please select what you need.');return;}
+
+  // Get bag count based on type
+  let bagCount=null;
+  if(type==='Decrease Bags for Just This Delivery'){
+    bagCount=parseInt(document.getElementById('bag-count-decrease').value)||null;
+    if(!bagCount){showError('Please enter the number of bags you need for this delivery.');return;}
+  }else if(type==='Increase Bags for Just This Delivery'){
+    bagCount=parseInt(document.getElementById('bag-count-increase').value)||null;
+    if(!bagCount){showError('Please enter the number of bags you need for this delivery.');return;}
+  }else if(type==='Change Weekly Bag Count for Remainder of School Year'){
+    bagCount=parseInt(document.getElementById('bag-count-permanent').value)||null;
+    if(!bagCount){showError('Please enter your requested new weekly bag count.');return;}
+  }
+
+  const otherNotes=document.getElementById('notes-other').value.trim();
+  const generalNotes=document.getElementById('notes-general').value.trim();
+  const notes=[otherNotes,generalNotes].filter(Boolean).join(' | ')||null;
+
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;btn.textContent='Submitting...';
+
+  try{
+    const rec={
+      date_of_request:new Date().toISOString().split('T')[0],
+      agency_name:agency,
+      requestor_name:name,
+      email:email,
+      requested_change:type,
+      requested_weekly_bag_count:bagCount,
+      notes:notes,
+      request_status:'Pending',
+      week_date:weekDate||null
+    };
+
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/delivery_change_requests`,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':SUPABASE_KEY,
+        'Authorization':'Bearer '+SUPABASE_KEY,
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify(rec)
+    });
+
+    if(!r.ok) throw new Error(await r.text());
+
+    document.getElementById('form-screen').style.display='none';
+    document.getElementById('success-screen').style.display='block';
+    document.getElementById('success-detail').textContent=
+      `${agency} · ${type}${bagCount?' · '+bagCount+' bags':''}`;
+
+  }catch(e){
+    showError('Something went wrong — please try again or contact us directly at stephen.cook@usanainc.com');
+    console.error(e);
+    btn.disabled=false;
+    btn.textContent='Submit change request';
+  }
+}
+
+function showError(msg){
+  const b=document.getElementById('error-box');
+  b.textContent=msg;b.style.display='block';
+  b.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+init();
+</script>
+</body>
+</html>

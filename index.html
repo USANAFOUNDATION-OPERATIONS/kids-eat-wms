@@ -1813,7 +1813,7 @@ function openSendNotifications(){
   const deliveryDate=new Date(weekDate);deliveryDate.setDate(weekDate.getDate()+dayOffset);
   const deliveryLabel=deliveryDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const weekLabel=weekDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-  const universalLink='https://phenomenal-blini-abed2a.netlify.app/change_request_form.html?week='+encodeURIComponent(weekStart)+'&label='+encodeURIComponent(weekLabel);
+  const universalLink='https://usanafoundation-operations.github.io/kids-eat-wms/change_request_form.html?week='+encodeURIComponent(weekStart)+'&label='+encodeURIComponent(weekLabel);
   const emailSubject='Kids Eat - Delivery Notification for '+deliveryLabel;
   const emailBody=['Hello,','','This is your delivery notification from USANA Kids Eat - you have a bag delivery scheduled for '+deliveryLabel+'.','','If you need to make any changes to your delivery, please submit a change request using the link below. Please submit any changes by end of day Monday.','','CHANGE REQUEST LINK:',universalLink,'','If everything looks good, no action is needed.','','Thank you for your partnership!','','Stephen Cook','USANA Kids Eat - Warehouse Manager','stephen.cook@usanainc.com'].join('\n');
   const mc=document.getElementById('modal-content');mc.innerHTML='';
