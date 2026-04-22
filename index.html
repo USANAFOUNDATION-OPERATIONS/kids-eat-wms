@@ -2907,6 +2907,29 @@ function renderAgencies(q){
   });
 
   const districtOrder=Object.keys(groups).sort();
+
+  // Shared column widths
+  const cols = `
+    <colgroup>
+      <col style="width:30%"/>
+      <col style="width:16%"/>
+      <col style="width:10%"/>
+      <col style="width:12%"/>
+      <col style="width:10%"/>
+      <col style="width:10%"/>
+      <col style="width:12%"/>
+    </colgroup>`;
+
+  const thead = `<thead><tr style="background:var(--bg);">
+    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);">Agency</th>
+    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);">Frequency</th>
+    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:center;">Bags/wk</th>
+    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:right;">Delivered 2026</th>
+    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:center;">Status</th>
+    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:center;">Cart</th>
+    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);"></th>
+  </tr></thead>`;
+
   let html='';
 
   districtOrder.forEach(district=>{
@@ -2914,41 +2937,47 @@ function renderAgencies(q){
     const activeCount=agencies.filter(a=>a.is_active).length;
     const totalBags=agencies.reduce((s,a)=>s+(a.weekly_bag_count||0),0);
 
-    html+=`<div style="margin-bottom:20px;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);">
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg);border-bottom:1.5px solid var(--border);border-left:4px solid var(--green);">
-        <div style="font-size:14px;font-weight:700;color:var(--text);">${district}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${activeCount} active · ${totalBags.toLocaleString()} bags/week</div>
-        <div style="margin-left:auto;font-size:11px;color:var(--text-faint);">${agencies.length} ${agencies.length===1?'agency':'agencies'}</div>
-      </div>
-      <table style="width:100%;border-radius:0;">
-        <thead><tr>
-          <th>Agency</th><th>Frequency</th><th>Bags/week</th><th>Delivered 2026</th><th>Status</th><th>Cart swap</th><th></th>
-        </tr></thead>
-        <tbody>`;
-
-    agencies.forEach(a=>{
-      const cartBadge=a.cart_swap?'<span class="cart-swap-tag">🔄 Cart swap</span>':'';
+    const rows=agencies.map(a=>{
+      const cartBadge=a.cart_swap?'<span class="cart-swap-tag">🔄</span>':'';
       const freq=a.delivery_frequency||'Weekly';
       const weeklyBags=a.weekly_bag_count||0;
       const perDelivery=a.bags_per_delivery||(freq==='Biweekly'?weeklyBags*2:freq==='Monthly'?weeklyBags*4:weeklyBags);
       const realIdx=DATA.agencies.findIndex(x=>x.id===a.id);
-      const freqBadgeColor=freq==='Weekly'?'background:var(--green-light);color:var(--green-dark);':freq==='Biweekly'?'background:var(--blue-light);color:#0C447C;':freq==='Monthly'?'background:var(--amber-light);color:var(--amber-text);':'background:var(--bg);color:var(--text-muted);';
-      html+=`<tr style="opacity:${a.is_active?'1':'0.5'};">
-        <td><strong>${a.name||'—'}</strong>${cartBadge}</td>
-        <td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;${freqBadgeColor}">${freq}</span>${perDelivery>0?'<br/><span style="font-size:11px;color:var(--text-muted);">'+perDelivery+' per delivery</span>':''}</td>
-        <td style="font-family:'Courier New',monospace;">${weeklyBags||'—'}</td>
-        <td style="font-family:'Courier New',monospace;">${(a.total_bags_delivered_2026||0).toLocaleString()}</td>
-        <td><button class="btn btn-sm" onclick="toggleAgencyActive(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="${a.is_active?'background:var(--green-light);color:var(--green-dark);border-color:var(--green);':'background:var(--bg);color:var(--text-muted);'}">${a.is_active?'✓ Active':'Inactive'}</button></td>
-        <td><button class="btn btn-sm" onclick="toggleCartSwap(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="${a.cart_swap?'background:var(--blue-light);color:#0C447C;border-color:var(--blue);':''}">${a.cart_swap?'✓ Cart swap':'Cart swap'}</button></td>
-        <td><button class="btn btn-sm" onclick="openEditAgency('${a.id||''}','${(a.name||'').replace(/'/g,"\\'")  }',${weeklyBags},'${freq}',${perDelivery})" style="background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button></td>
+      const freqColor=freq==='Weekly'?'background:#dcfce7;color:#166534;':freq==='Biweekly'?'background:#dbeafe;color:#1e40af;':freq==='Monthly'?'background:#fef3c7;color:#92400e;':'background:var(--bg);color:var(--text-muted);';
+      return `<tr style="opacity:${a.is_active?'1':'0.45'};">
+        <td style="padding:10px 14px;"><strong style="font-size:13px;">${a.name||'—'}</strong>${cartBadge}</td>
+        <td style="padding:10px 14px;">
+          <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;${freqColor}">${freq}</span>
+          ${perDelivery>0&&freq!=='As Needed'?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${perDelivery} per visit</div>`:''}
+        </td>
+        <td style="padding:10px 14px;text-align:center;font-family:'Courier New',monospace;font-size:13px;">${weeklyBags||'—'}</td>
+        <td style="padding:10px 14px;text-align:right;font-family:'Courier New',monospace;font-size:13px;">${(a.total_bags_delivered_2026||0).toLocaleString()}</td>
+        <td style="padding:10px 14px;text-align:center;">
+          <button class="btn btn-sm" onclick="toggleAgencyActive(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.is_active?'background:var(--green-light);color:var(--green-dark);border-color:var(--green);':'color:var(--text-muted);'}">${a.is_active?'✓ Active':'Inactive'}</button>
+        </td>
+        <td style="padding:10px 14px;text-align:center;">
+          <button class="btn btn-sm" onclick="toggleCartSwap(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.cart_swap?'background:var(--blue-light);color:#0C447C;border-color:var(--blue);':''}">${a.cart_swap?'✓':'Cart'}</button>
+        </td>
+        <td style="padding:10px 14px;text-align:right;">
+          <button class="btn btn-sm" onclick="openEditAgency('${a.id||''}','${(a.name||'').replace(/'/g,"\\'")}',${weeklyBags},'${freq}',${perDelivery})" style="font-size:11px;padding:3px 10px;background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button>
+        </td>
       </tr>`;
-    });
+    }).join('');
 
-    html+=`</tbody></table></div>`;
+    html+=`
+    <div style="margin-bottom:20px;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg);border-bottom:1.5px solid var(--border);border-left:4px solid var(--green);">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">${district}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${activeCount} active · ${totalBags.toLocaleString()} bags/week</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--text-faint);">${agencies.length} ${agencies.length===1?'agency':'agencies'}</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">${cols}${thead}<tbody>${rows}</tbody></table>
+    </div>`;
   });
 
   document.getElementById('ag-table').innerHTML=html;
 }
+
 
 
 function setAgencyFilter(type,value){
