@@ -2932,7 +2932,7 @@ function renderAgencies(q){
         <button class="btn btn-sm" onclick="toggleAgencyActive(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.is_active?'background:var(--green-light);color:var(--green-dark);border-color:var(--green);':'color:var(--text-muted);'}">${a.is_active?'✓ Active':'Inactive'}</button>
       </td>
       <td style="padding:10px 14px;text-align:center;">
-        <button class="btn btn-sm" onclick="toggleCartSwap(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.cart_swap?'background:var(--blue-light);color:#0C447C;border-color:var(--blue);':''}">${a.cart_swap?'✓':'Cart'}</button>
+        <button class="btn btn-sm" onclick="toggleCartSwap(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.cart_swap?'background:var(--blue-light);color:#0C447C;border-color:var(--blue);':''}">${a.cart_swap?'✓ Cart swap':'Cart swap'}</button>
       </td>
       <td style="padding:10px 14px;text-align:right;">
         <button class="btn btn-sm" onclick="openEditAgency('${a.id||''}','${(a.name||'').replace(/'/g,"\\'")}',${weeklyBags},'${freq}',${perDelivery})" style="font-size:11px;padding:3px 10px;background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button>
