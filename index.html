@@ -2894,27 +2894,61 @@ function renderAgencies(q){
   else if(agencyFilters.status==='cart_swap')filtered=filtered.filter(a=>a.cart_swap);
   if(agencyFilters.district!=='all')filtered=filtered.filter(a=>a.district===agencyFilters.district);
   if(agencyFilters.search)filtered=filtered.filter(a=>(a.name||'').toLowerCase().includes(agencyFilters.search.toLowerCase()));
-  filtered=filtered.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  filtered=filtered.slice().sort((a,b)=>(a.district||'').localeCompare(b.district||'')||(a.name||'').localeCompare(b.name||''));
+
   if(!filtered.length){document.getElementById('ag-table').innerHTML='<div class="state-box">No agencies match your filters</div>';return;}
-  const rows=filtered.map((a,idx)=>{
-    const cartBadge=a.cart_swap?'<span class="cart-swap-tag">🔄 Cart swap</span>':'';
-    const freq=a.delivery_frequency||'Weekly';
-    const weeklyBags=a.weekly_bag_count||0;
-    const perDelivery=a.bags_per_delivery||(freq==='Biweekly'?weeklyBags*2:freq==='Monthly'?weeklyBags*4:weeklyBags);
-    const realIdx=DATA.agencies.findIndex(x=>x.id===a.id||(x.name===a.name));
-    return `<tr style="opacity:${a.is_active?'1':'0.6'};">
-      <td><strong>${a.name||'—'}</strong>${cartBadge}</td>
-      <td>${a.district||'—'}</td>
-      <td>${freq}<br/><span style="font-size:11px;color:var(--text-muted);">${perDelivery} bags/delivery</span></td>
-      <td style="font-family:'Courier New',Courier,monospace;">${weeklyBags}</td>
-      <td style="font-family:'Courier New',Courier,monospace;">${(a.total_bags_delivered_2026||0).toLocaleString()}</td>
-      <td><button class="btn btn-sm" onclick="toggleAgencyActive(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="${a.is_active?'background:var(--green-light);color:var(--green-dark);border-color:var(--green);':'background:var(--bg);color:var(--text-muted);'}">${a.is_active?'✓ Active':'Inactive'}</button></td>
-      <td><button class="btn btn-sm" onclick="toggleCartSwap(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="${a.cart_swap?'background:var(--blue-light);color:#0C447C;border-color:var(--blue);':''}">${a.cart_swap?'✓ Cart swap':'Cart swap'}</button></td>
-      <td><button class="btn btn-sm" onclick="openEditAgency('${a.id||''}','${(a.name||'').replace(/'/g,"\\'")}',${weeklyBags},'${freq}',${perDelivery})" style="background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button></td>
-    </tr>`;
-  }).join('');
-  document.getElementById('ag-table').innerHTML=`<table><thead><tr><th>Agency</th><th>District</th><th>Frequency</th><th>Bags/week</th><th>Delivered 2026</th><th>Status</th><th>Cart swap</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+
+  // Group by district
+  const groups={};
+  filtered.forEach(a=>{
+    const d=a.district||'Unknown';
+    if(!groups[d])groups[d]=[];
+    groups[d].push(a);
+  });
+
+  const districtOrder=Object.keys(groups).sort();
+  let html='';
+
+  districtOrder.forEach(district=>{
+    const agencies=groups[district];
+    const activeCount=agencies.filter(a=>a.is_active).length;
+    const totalBags=agencies.reduce((s,a)=>s+(a.weekly_bag_count||0),0);
+
+    html+=`<div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:8px;margin-bottom:6px;border-left:3px solid var(--green);">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">${district}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${activeCount} active · ${totalBags.toLocaleString()} bags/week</div>
+      </div>
+      <table style="width:100%;">
+        <thead><tr>
+          <th>Agency</th><th>Frequency</th><th>Bags/week</th><th>Delivered 2026</th><th>Status</th><th>Cart swap</th><th></th>
+        </tr></thead>
+        <tbody>`;
+
+    agencies.forEach(a=>{
+      const cartBadge=a.cart_swap?'<span class="cart-swap-tag">🔄 Cart swap</span>':'';
+      const freq=a.delivery_frequency||'Weekly';
+      const weeklyBags=a.weekly_bag_count||0;
+      const perDelivery=a.bags_per_delivery||(freq==='Biweekly'?weeklyBags*2:freq==='Monthly'?weeklyBags*4:weeklyBags);
+      const realIdx=DATA.agencies.findIndex(x=>x.id===a.id);
+      const freqBadgeColor=freq==='Weekly'?'background:var(--green-light);color:var(--green-dark);':freq==='Biweekly'?'background:var(--blue-light);color:#0C447C;':freq==='Monthly'?'background:var(--amber-light);color:var(--amber-text);':'background:var(--bg);color:var(--text-muted);';
+      html+=`<tr style="opacity:${a.is_active?'1':'0.5'};">
+        <td><strong>${a.name||'—'}</strong>${cartBadge}</td>
+        <td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;${freqBadgeColor}">${freq}</span>${perDelivery>0?'<br/><span style="font-size:11px;color:var(--text-muted);">'+perDelivery+' per delivery</span>':''}</td>
+        <td style="font-family:'Courier New',monospace;">${weeklyBags||'—'}</td>
+        <td style="font-family:'Courier New',monospace;">${(a.total_bags_delivered_2026||0).toLocaleString()}</td>
+        <td><button class="btn btn-sm" onclick="toggleAgencyActive(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="${a.is_active?'background:var(--green-light);color:var(--green-dark);border-color:var(--green);':'background:var(--bg);color:var(--text-muted);'}">${a.is_active?'✓ Active':'Inactive'}</button></td>
+        <td><button class="btn btn-sm" onclick="toggleCartSwap(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="${a.cart_swap?'background:var(--blue-light);color:#0C447C;border-color:var(--blue);':''}">${a.cart_swap?'✓ Cart swap':'Cart swap'}</button></td>
+        <td><button class="btn btn-sm" onclick="openEditAgency('${a.id||''}','${(a.name||'').replace(/'/g,"\\'")  }',${weeklyBags},'${freq}',${perDelivery})" style="background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button></td>
+      </tr>`;
+    });
+
+    html+=`</tbody></table></div>`;
+  });
+
+  document.getElementById('ag-table').innerHTML=html;
 }
+
 
 function setAgencyFilter(type,value){
   agencyFilters[type]=value;
