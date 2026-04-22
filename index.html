@@ -834,6 +834,10 @@
     <div class="page" id="page-agencies">
       <div class="topbar">
         <div class="topbar-title">Agencies</div>
+        <div style="display:flex;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:3px;">
+          <button id="ag-view-alpha" onclick="setAgencyView('alpha')" class="btn btn-sm btn-primary" style="font-size:12px;padding:4px 12px;">A–Z</button>
+          <button id="ag-view-district" onclick="setAgencyView('district')" class="btn btn-sm" style="font-size:12px;padding:4px 12px;">By District</button>
+        </div>
         <div class="topbar-right">
           <button class="btn btn-primary btn-sm" onclick="openAgencyModal()">+ Add agency</button>
         </div>
@@ -2885,7 +2889,7 @@ function toggleSchedExpand(id,row){
 }
 
 // ---- Agencies ----
-let agencyFilters={status:'active',district:'all',search:''};
+let agencyFilters={status:'active',district:'all',search:'',view:'alpha'};
 function renderAgencies(q){
   if(q!==undefined)agencyFilters.search=q;
   let filtered=DATA.agencies;
@@ -2894,91 +2898,75 @@ function renderAgencies(q){
   else if(agencyFilters.status==='cart_swap')filtered=filtered.filter(a=>a.cart_swap);
   if(agencyFilters.district!=='all')filtered=filtered.filter(a=>a.district===agencyFilters.district);
   if(agencyFilters.search)filtered=filtered.filter(a=>(a.name||'').toLowerCase().includes(agencyFilters.search.toLowerCase()));
-  filtered=filtered.slice().sort((a,b)=>(a.district||'').localeCompare(b.district||'')||(a.name||'').localeCompare(b.name||''));
+
+  // Sort based on view mode
+  const byDistrict=agencyFilters.view==='district';
+  if(byDistrict){
+    filtered=filtered.slice().sort((a,b)=>(a.district||'').localeCompare(b.district||'')||(a.name||'').localeCompare(b.name||''));
+  }else{
+    filtered=filtered.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  }
 
   if(!filtered.length){document.getElementById('ag-table').innerHTML='<div class="state-box">No agencies match your filters</div>';return;}
 
-  // Group by district
-  const groups={};
-  filtered.forEach(a=>{
-    const d=a.district||'Unknown';
-    if(!groups[d])groups[d]=[];
-    groups[d].push(a);
-  });
+  const rows=filtered.map(a=>{
+    const cartBadge=a.cart_swap?'<span class="cart-swap-tag">🔄</span>':'';
+    const freq=a.delivery_frequency||'Weekly';
+    const weeklyBags=a.weekly_bag_count||0;
+    const perDelivery=a.bags_per_delivery||(freq==='Biweekly'?weeklyBags*2:freq==='Monthly'?weeklyBags*4:weeklyBags);
+    const realIdx=DATA.agencies.findIndex(x=>x.id===a.id);
+    const freqColor=freq==='Weekly'?'background:#dcfce7;color:#166534;':freq==='Biweekly'?'background:#dbeafe;color:#1e40af;':freq==='Monthly'?'background:#fef3c7;color:#92400e;':'background:var(--bg);color:var(--text-muted);';
+    const districtDot=byDistrict?`<span style="font-size:11px;color:var(--text-muted);margin-left:6px;">${a.district||''}</span>`:``;
+    return `<tr style="opacity:${a.is_active?'1':'0.45'};">
+      <td style="padding:10px 14px;">
+        <strong style="font-size:13px;">${a.name||'—'}</strong>${cartBadge}${districtDot}
+      </td>
+      ${!byDistrict?`<td style="padding:10px 14px;font-size:12px;color:var(--text-muted);">${a.district||'—'}</td>`:''}
+      <td style="padding:10px 14px;">
+        <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;${freqColor}">${freq}</span>
+        ${perDelivery>0&&freq!=='As Needed'?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${perDelivery} per visit</div>`:''}
+      </td>
+      <td style="padding:10px 14px;text-align:center;font-family:'Courier New',monospace;font-size:13px;">${weeklyBags||'—'}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:'Courier New',monospace;font-size:13px;">${(a.total_bags_delivered_2026||0).toLocaleString()}</td>
+      <td style="padding:10px 14px;text-align:center;">
+        <button class="btn btn-sm" onclick="toggleAgencyActive(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.is_active?'background:var(--green-light);color:var(--green-dark);border-color:var(--green);':'color:var(--text-muted);'}">${a.is_active?'✓ Active':'Inactive'}</button>
+      </td>
+      <td style="padding:10px 14px;text-align:center;">
+        <button class="btn btn-sm" onclick="toggleCartSwap(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.cart_swap?'background:var(--blue-light);color:#0C447C;border-color:var(--blue);':''}">${a.cart_swap?'✓':'Cart'}</button>
+      </td>
+      <td style="padding:10px 14px;text-align:right;">
+        <button class="btn btn-sm" onclick="openEditAgency('${a.id||''}','${(a.name||'').replace(/'/g,"\\'")}',${weeklyBags},'${freq}',${perDelivery})" style="font-size:11px;padding:3px 10px;background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button>
+      </td>
+    </tr>`;
+  }).join('');
 
-  const districtOrder=Object.keys(groups).sort();
+  const districtCol=!byDistrict?`<th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;">District</th>`:'';
 
-  // Shared column widths
-  const cols = `
-    <colgroup>
-      <col style="width:30%"/>
-      <col style="width:16%"/>
-      <col style="width:10%"/>
-      <col style="width:12%"/>
-      <col style="width:10%"/>
-      <col style="width:10%"/>
-      <col style="width:12%"/>
-    </colgroup>`;
-
-  const thead = `<thead><tr style="background:var(--bg);">
-    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);">Agency</th>
-    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);">Frequency</th>
-    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:center;">Bags/wk</th>
-    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:right;">Delivered 2026</th>
-    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:center;">Status</th>
-    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:center;">Cart</th>
-    <th style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);"></th>
-  </tr></thead>`;
-
-  let html='';
-
-  districtOrder.forEach(district=>{
-    const agencies=groups[district];
-    const activeCount=agencies.filter(a=>a.is_active).length;
-    const totalBags=agencies.reduce((s,a)=>s+(a.weekly_bag_count||0),0);
-
-    const rows=agencies.map(a=>{
-      const cartBadge=a.cart_swap?'<span class="cart-swap-tag">🔄</span>':'';
-      const freq=a.delivery_frequency||'Weekly';
-      const weeklyBags=a.weekly_bag_count||0;
-      const perDelivery=a.bags_per_delivery||(freq==='Biweekly'?weeklyBags*2:freq==='Monthly'?weeklyBags*4:weeklyBags);
-      const realIdx=DATA.agencies.findIndex(x=>x.id===a.id);
-      const freqColor=freq==='Weekly'?'background:#dcfce7;color:#166534;':freq==='Biweekly'?'background:#dbeafe;color:#1e40af;':freq==='Monthly'?'background:#fef3c7;color:#92400e;':'background:var(--bg);color:var(--text-muted);';
-      return `<tr style="opacity:${a.is_active?'1':'0.45'};">
-        <td style="padding:10px 14px;"><strong style="font-size:13px;">${a.name||'—'}</strong>${cartBadge}</td>
-        <td style="padding:10px 14px;">
-          <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;${freqColor}">${freq}</span>
-          ${perDelivery>0&&freq!=='As Needed'?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${perDelivery} per visit</div>`:''}
-        </td>
-        <td style="padding:10px 14px;text-align:center;font-family:'Courier New',monospace;font-size:13px;">${weeklyBags||'—'}</td>
-        <td style="padding:10px 14px;text-align:right;font-family:'Courier New',monospace;font-size:13px;">${(a.total_bags_delivered_2026||0).toLocaleString()}</td>
-        <td style="padding:10px 14px;text-align:center;">
-          <button class="btn btn-sm" onclick="toggleAgencyActive(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.is_active?'background:var(--green-light);color:var(--green-dark);border-color:var(--green);':'color:var(--text-muted);'}">${a.is_active?'✓ Active':'Inactive'}</button>
-        </td>
-        <td style="padding:10px 14px;text-align:center;">
-          <button class="btn btn-sm" onclick="toggleCartSwap(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.cart_swap?'background:var(--blue-light);color:#0C447C;border-color:var(--blue);':''}">${a.cart_swap?'✓':'Cart'}</button>
-        </td>
-        <td style="padding:10px 14px;text-align:right;">
-          <button class="btn btn-sm" onclick="openEditAgency('${a.id||''}','${(a.name||'').replace(/'/g,"\\'")}',${weeklyBags},'${freq}',${perDelivery})" style="font-size:11px;padding:3px 10px;background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button>
-        </td>
-      </tr>`;
-    }).join('');
-
-    html+=`
-    <div style="margin-bottom:20px;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);">
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg);border-bottom:1.5px solid var(--border);border-left:4px solid var(--green);">
-        <div style="font-size:13px;font-weight:700;color:var(--text);">${district}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${activeCount} active · ${totalBags.toLocaleString()} bags/week</div>
-        <div style="margin-left:auto;font-size:11px;color:var(--text-faint);">${agencies.length} ${agencies.length===1?'agency':'agencies'}</div>
-      </div>
-      <table style="width:100%;border-collapse:collapse;">${cols}${thead}<tbody>${rows}</tbody></table>
-    </div>`;
-  });
-
-  document.getElementById('ag-table').innerHTML=html;
+  document.getElementById('ag-table').innerHTML=`<table style="width:100%;border-collapse:collapse;">
+    <thead><tr style="background:var(--bg);">
+      <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;">Agency</th>
+      ${districtCol}
+      <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;">Frequency</th>
+      <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Bags/wk</th>
+      <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:right;">Delivered 2026</th>
+      <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Status</th>
+      <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Cart</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 
+
+
+
+function setAgencyView(view){
+  agencyFilters.view=view;
+  document.getElementById('ag-view-alpha').className='btn btn-sm'+(view==='alpha'?' btn-primary':'');
+  document.getElementById('ag-view-district').className='btn btn-sm'+(view==='district'?' btn-primary':'');
+  renderAgencies();
+}
 
 function setAgencyFilter(type,value){
   agencyFilters[type]=value;
