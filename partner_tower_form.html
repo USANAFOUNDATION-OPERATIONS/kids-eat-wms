@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#006953"/>
+<title>Garden Tower — Partner Form</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  :root{
+    --green:#006953;--green-dark:#004f3d;--green-light:#e8f5f2;
+    --bright:#6bc047;--moss:#c6e5b9;
+    --amber:#f59e0b;--amber-light:#fef3c7;--amber-text:#92400e;
+    --red:#dc2626;--red-light:#fee2e2;--red-text:#991b1b;
+    --blue:#0774cc;--blue-light:#eff6ff;
+    --bg:#f2f7f4;--surface:#ffffff;--border:rgba(0,105,83,0.15);
+    --text:#1a2e2a;--text-muted:#4a7a6a;--text-faint:#8ab8a8;
+    --radius:14px;
+    --shadow:0 4px 16px rgba(0,0,0,0.08);
+  }
+  html,body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh;}
+  body{font-size:16px;line-height:1.5;}
+
+  /* Header */
+  .hdr{position:sticky;top:0;background:var(--green);color:#fff;padding:14px 18px;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+  .hdr-row{display:flex;align-items:center;gap:12px;}
+  .hdr-back{background:rgba(255,255,255,0.18);border:none;color:#fff;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;flex-shrink:0;}
+  .hdr-back:active{background:rgba(255,255,255,0.3);}
+  .hdr-title{font-size:17px;font-weight:600;flex:1;min-width:0;}
+  .hdr-title .hdr-sub{font-size:12px;opacity:.85;font-weight:400;margin-top:2px;}
+
+  /* Content */
+  .container{padding:16px;max-width:720px;margin:0 auto;}
+
+  /* Cards */
+  .card{background:var(--surface);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid var(--border);}
+  .card-title{font-size:14px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;}
+
+  /* Forms — BIG tap targets */
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;}
+  .field input[type=text],.field input[type=number],.field input[type=date],.field select,.field textarea{
+    width:100%;padding:14px 14px;font-size:16px;font-family:inherit;
+    border:1.5px solid var(--border);border-radius:10px;background:#fff;
+    color:var(--text);outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,105,83,0.1);}
+  .field textarea{min-height:90px;resize:vertical;}
+  .field select{background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a7a6a' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px;}
+
+  /* Multi-select chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+  .chip{padding:10px 14px;border-radius:22px;background:var(--bg);border:1.5px solid var(--border);font-size:14px;font-weight:500;cursor:pointer;user-select:none;transition:all .15s;}
+  .chip:active{transform:scale(0.96);}
+  .chip.selected{background:var(--green);color:#fff;border-color:var(--green);}
+  .chip.small{padding:7px 12px;font-size:13px;}
+
+  /* Evaluation options with color dots */
+  .eval-opts{display:grid;gap:10px;}
+  .eval-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;transition:all .15s;}
+  .eval-opt:active{transform:scale(0.98);}
+  .eval-opt.selected{border-color:var(--green);background:var(--green-light);}
+  .eval-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;}
+  .eval-label{font-weight:600;font-size:15px;color:var(--text);}
+  .eval-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+
+  /* Buttons */
+  .btn{padding:14px 22px;font-size:16px;font-weight:600;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:var(--text);cursor:pointer;font-family:inherit;transition:all .15s;}
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 3px 10px rgba(0,105,83,0.3);}
+  .btn-primary:active{background:var(--green-dark);}
+  .btn-block{width:100%;display:block;}
+  .btn-row{display:flex;gap:10px;}
+  .btn-row .btn{flex:1;}
+
+  /* Project cards (landing) */
+  .proj-card{background:var(--surface);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid var(--border);cursor:pointer;transition:transform .1s;}
+  .proj-card:active{transform:scale(0.98);}
+  .proj-card h3{font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .proj-card .meta{font-size:13px;color:var(--text-muted);margin-bottom:8px;}
+  .proj-bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin-top:10px;}
+  .proj-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--bright));transition:width .3s;}
+
+  /* Tower cards (list) */
+  .tower-card{background:var(--surface);border-radius:12px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:12px;transition:transform .1s;}
+  .tower-card:active{transform:scale(0.98);}
+  .tower-num{font-family:'Courier New',monospace;font-size:17px;font-weight:700;color:var(--green-dark);min-width:70px;}
+  .tower-main{flex:1;min-width:0;}
+  .tower-recipient{font-weight:600;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tower-loc{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tower-status{flex-shrink:0;}
+  .status-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .status-empty{background:var(--bg);color:var(--text-faint);}
+  .status-planted{background:var(--moss);color:var(--green-dark);}
+  .status-three_mo{background:var(--blue-light);color:var(--blue);}
+  .status-six_mo{background:#e0f2e0;color:var(--green-dark);}
+
+  /* Photo upload */
+  .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+  .photo-slot{aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--bg);position:relative;}
+  .photo-slot img{width:100%;height:100%;object-fit:cover;}
+  .photo-slot-empty{border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:13px;cursor:pointer;}
+  .photo-slot-empty:active{background:var(--bg);}
+  .photo-remove{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;width:24px;height:24px;border-radius:50%;font-size:14px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;}
+
+  /* Search */
+  .search-wrap{position:relative;margin-bottom:14px;}
+  .search-wrap input{width:100%;padding:13px 14px 13px 42px;font-size:15px;font-family:inherit;border:1.5px solid var(--border);border-radius:10px;background:#fff;outline:none;-webkit-appearance:none;}
+  .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-faint);}
+
+  /* Filter bar */
+  .filter-bar{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
+  .filter-bar::-webkit-scrollbar{display:none;}
+  .filter-bar .chip{white-space:nowrap;flex-shrink:0;}
+
+  /* State boxes */
+  .state{text-align:center;padding:48px 24px;color:var(--text-muted);}
+  .state h3{color:var(--text);font-size:18px;margin-bottom:8px;}
+  .state p{font-size:14px;max-width:300px;margin:0 auto;}
+
+  /* Toast */
+  .toast{position:fixed;bottom:20px;left:16px;right:16px;max-width:400px;margin:0 auto;background:var(--text);color:#fff;padding:14px 18px;border-radius:12px;font-size:14px;font-weight:500;z-index:200;transform:translateY(120px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 8px 24px rgba(0,0,0,0.2);text-align:center;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.success{background:var(--green);}
+  .toast.error{background:var(--red-text);}
+
+  /* Report modal / screen */
+  .sticky-save{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:14px 16px 20px;border-top:1px solid var(--border);box-shadow:0 -4px 14px rgba(0,0,0,0.05);z-index:50;}
+
+  /* Loading skeleton */
+  .skel{background:linear-gradient(90deg,#eef5f1 25%,#dfeee7 50%,#eef5f1 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:8px;height:14px;}
+  @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  /* Page transitions */
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  /* Summary table on report page */
+  .summary-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .summary-table th{text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);background:var(--bg);border-bottom:1px solid var(--border);}
+  .summary-table td{padding:10px 12px;border-bottom:1px solid var(--border);}
+
+  /* Autosave indicator */
+  .autosave{position:fixed;top:70px;right:16px;background:rgba(0,105,83,0.9);color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none;}
+  .autosave.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-row">
+    <button class="hdr-back" id="btn-back" onclick="goBack()" style="display:none;">←</button>
+    <div class="hdr-title" id="hdr-title">Garden Tower</div>
+  </div>
+</div>
+
+<div class="autosave" id="autosave">✓ Saved</div>
+
+<!-- SCREEN: access denied / no partner -->
+<div class="screen" id="screen-denied">
+  <div class="container">
+    <div class="state" style="padding-top:80px;">
+      <h3>🔒 Access link required</h3>
+      <p>This page needs a partner link to work. Please use the link your project manager sent you. If you don't have one, contact the USANA Foundation team.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: loading -->
+<div class="screen" id="screen-loading">
+  <div class="container" style="padding-top:40px;">
+    <div class="skel" style="height:40px;margin-bottom:20px;"></div>
+    <div class="skel" style="height:80px;margin-bottom:14px;"></div>
+    <div class="skel" style="height:80px;margin-bottom:14px;"></div>
+    <div class="skel" style="height:80px;"></div>
+  </div>
+</div>
+
+<!-- SCREEN: project picker (partner landing) -->
+<div class="screen" id="screen-projects">
+  <div class="container">
+    <div class="card" style="background:var(--green-light);border-color:var(--moss);">
+      <div class="card-title" style="color:var(--green-dark);">Welcome, partner</div>
+      <p style="font-size:14px;color:var(--text);margin-bottom:10px;" id="partner-welcome">—</p>
+      <p style="font-size:13px;color:var(--text-muted);">Tap a project below to see your towers and fill out forms.</p>
+    </div>
+    <div id="projects-list"></div>
+    <button class="btn btn-block" style="margin-top:16px;" onclick="showReport()">📊 View my reports</button>
+  </div>
+</div>
+
+<!-- SCREEN: tower list within a project -->
+<div class="screen" id="screen-towers">
+  <div class="container">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="search" id="tower-search" placeholder="Search by tower # or recipient…" oninput="filterTowers()"/>
+    </div>
+    <div class="filter-bar" id="filter-bar">
+      <div class="chip small selected" data-filter="all" onclick="setTowerFilter('all')">All</div>
+      <div class="chip small" data-filter="empty" onclick="setTowerFilter('empty')">Not started</div>
+      <div class="chip small" data-filter="planted" onclick="setTowerFilter('planted')">Planted</div>
+      <div class="chip small" data-filter="three_mo" onclick="setTowerFilter('three_mo')">3-mo done</div>
+      <div class="chip small" data-filter="six_mo" onclick="setTowerFilter('six_mo')">6-mo done</div>
+    </div>
+    <div id="towers-list"></div>
+  </div>
+</div>
+
+<!-- SCREEN: tower form -->
+<div class="screen" id="screen-form">
+  <form id="tower-form" onsubmit="event.preventDefault();saveTower();" style="padding-bottom:100px;">
+    <div class="container">
+      <!-- content gets rendered by renderForm() -->
+      <div id="form-content"></div>
+    </div>
+  </form>
+  <div class="sticky-save">
+    <button class="btn btn-primary btn-block" onclick="saveTower()">💾 Save tower</button>
+  </div>
+</div>
+
+<!-- SCREEN: report -->
+<div class="screen" id="screen-report">
+  <div class="container">
+    <div class="card">
+      <div class="card-title">Summary for <span id="report-partner">—</span></div>
+      <div id="report-metrics" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;"></div>
+      <button class="btn btn-block" onclick="exportReportCsv()">⬇ Export CSV</button>
+    </div>
+    <div class="card">
+      <div class="card-title">By project</div>
+      <div id="report-projects"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- Configuration ----
+const SUPABASE_URL='https://mroyqkvrzrcmnfgvylkl.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yb3lxa3ZyenJjbW5mZ3Z5bGtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNDkwNjAsImV4cCI6MjA5MTkyNTA2MH0.sG0fRMSFHvrlr3dDHowAUjdtaZZbWWhlFbiEoIYOj0s';
+const PHOTO_BUCKET='gt-tower-photos';
+const HDR={apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'};
+
+// ---- State ----
+let PARTNER=null;             // {id, name, slug, uses_extended_form}
+let TOWERS=[];                // all towers for this partner
+let OPTIONS={};               // dropdown vocabularies {vegetable:[...], challenge:[...], evaluation:[...], replanted:[...]}
+let currentProject=null;      // selected project number
+let currentTower=null;        // tower being edited
+let towerFilter='all';
+let autosaveTimer=null;
+
+// ---- Helpers ----
+function qs(k){return new URLSearchParams(window.location.search).get(k);}
+function $(id){return document.getElementById(id);}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('screen-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function showToast(msg,type='info'){
+  const t=$('toast');t.textContent=msg;t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+function fmtDate(d){
+  if(!d)return '—';
+  const dt=new Date(d);
+  return dt.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+}
+function towerStatus(t){
+  if(t.six_month_evaluation)return 'six_mo';
+  if(t.three_month_evaluation)return 'three_mo';
+  if(t.date_planted)return 'planted';
+  return 'empty';
+}
+function statusLabel(s){
+  return {empty:'Not started',planted:'Planted',three_mo:'3-mo done',six_mo:'6-mo done'}[s]||s;
+}
+
+// ---- Supabase calls ----
+async function sbGet(path){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{headers:HDR});
+  if(!r.ok)throw new Error('Load failed: '+r.status);
+  return r.json();
+}
+async function sbPatch(table,id,body){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`,{
+    method:'PATCH',
+    headers:{...HDR,'Prefer':'return=representation'},
+    body:JSON.stringify(body),
+  });
+  if(!r.ok){const t=await r.text();throw new Error('Save failed: '+r.status+' '+t);}
+  return r.json();
+}
+async function uploadPhoto(file,towerNumber,category){
+  // Generate safe filename
+  const safe=file.name.replace(/[^A-Za-z0-9._-]/g,'_');
+  const path=`${towerNumber}/${category}/${Date.now()}_${safe}`;
+  const url=`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${encodeURIComponent(path)}`;
+  const r=await fetch(url,{
+    method:'POST',
+    headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':file.type||'application/octet-stream','x-upsert':'true'},
+    body:file,
+  });
+  if(!r.ok){const t=await r.text();throw new Error('Photo upload failed: '+r.status+' '+t);}
+  return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${encodeURIComponent(path)}`;
+}
+
+// ---- Init ----
+async function init(){
+  const slug=qs('partner');
+  if(!slug){return showScreen('denied');}
+  showScreen('loading');
+
+  try{
+    // Load partner + options in parallel
+    const [partners,opts]=await Promise.all([
+      sbGet(`gt_partners?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`),
+      sbGet(`gt_tower_options?select=*&active=eq.true&order=display_order.asc`),
+    ]);
+    if(!partners.length){return showScreen('denied');}
+    PARTNER=partners[0];
+
+    // Group options by category
+    OPTIONS={};
+    opts.forEach(o=>{(OPTIONS[o.category]=OPTIONS[o.category]||[]).push(o);});
+
+    // Load all towers for this partner
+    const qp=encodeURIComponent(PARTNER.name);
+    TOWERS=await sbGet(`gt_towers?select=*&partner=eq.${qp}&order=project_number.asc,tower_number.asc`);
+
+    $('partner-welcome').textContent=`${PARTNER.name} · ${TOWERS.length.toLocaleString()} towers across ${new Set(TOWERS.map(t=>t.project_number)).size} project(s)`;
+
+    // If ?project=N is in URL, jump straight to tower list
+    const projParam=parseInt(qs('project'));
+    if(projParam&&TOWERS.some(t=>t.project_number===projParam)){
+      currentProject=projParam;
+      showTowerList();
+    }else{
+      renderProjects();
+      showScreen('projects');
+    }
+  }catch(e){
+    console.error(e);
+    showToast('Could not load your towers. Pull to retry.','error');
+    showScreen('denied');
+  }
+}
+
+function goBack(){
+  // Simple back stack: form -> towers -> projects
+  const active=document.querySelector('.screen.active')?.id;
+  if(active==='screen-form'){
+    showTowerList();
+  }else if(active==='screen-towers'){
+    currentProject=null;
+    $('btn-back').style.display='none';
+    $('hdr-title').innerHTML='Garden Tower';
+    showScreen('projects');
+  }else if(active==='screen-report'){
+    $('btn-back').style.display='none';
+    $('hdr-title').innerHTML='Garden Tower';
+    showScreen('projects');
+  }
+}
+
+// ---- Projects screen ----
+function renderProjects(){
+  const el=$('projects-list');
+  const byProject={};
+  TOWERS.forEach(t=>{
+    const p=t.project_number;
+    if(!byProject[p])byProject[p]={project:p,towers:[]};
+    byProject[p].towers.push(t);
+  });
+  const keys=Object.keys(byProject).sort((a,b)=>Number(a)-Number(b));
+  if(!keys.length){
+    el.innerHTML='<div class="state"><h3>No towers yet</h3><p>No projects have been assigned to you yet. Contact your project manager.</p></div>';
+    return;
+  }
+  el.innerHTML=keys.map(k=>{
+    const g=byProject[k];
+    const n=g.towers.length;
+    const done=g.towers.filter(t=>t.date_planted).length;
+    const pct=n?Math.round(done/n*100):0;
+    const rangeStart=Math.min(...g.towers.map(t=>t.tower_number||Infinity));
+    const rangeEnd=Math.max(...g.towers.map(t=>t.tower_number||0));
+    return `<div class="proj-card" onclick="openProject(${g.project})">
+      <h3>Project ${g.project}</h3>
+      <div class="meta">Towers ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${done}/${n} planted (${pct}%)</div>
+      <div class="proj-bar"><div class="proj-bar-fill" style="width:${pct}%;"></div></div>
+    </div>`;
+  }).join('');
+}
+function openProject(n){
+  currentProject=n;
+  showTowerList();
+}
+
+// ---- Tower list ----
+function showTowerList(){
+  $('btn-back').style.display='flex';
+  $('hdr-title').innerHTML=`Project ${currentProject}<div class="hdr-sub">${PARTNER.name}</div>`;
+  renderTowerList();
+  showScreen('towers');
+}
+function renderTowerList(){
+  const el=$('towers-list');
+  const q=($('tower-search')?.value||'').trim().toLowerCase();
+  let list=TOWERS.filter(t=>t.project_number===currentProject);
+  if(towerFilter!=='all')list=list.filter(t=>towerStatus(t)===towerFilter);
+  if(q)list=list.filter(t=>String(t.tower_number).includes(q)||(t.recipient_name||'').toLowerCase().includes(q)||(t.tower_location||'').toLowerCase().includes(q));
+  if(!list.length){
+    el.innerHTML='<div class="state"><p>No towers match your filter.</p></div>';
+    return;
+  }
+  el.innerHTML=list.map(t=>{
+    const s=towerStatus(t);
+    return `<div class="tower-card" onclick="openTower('${t.id}')">
+      <div class="tower-num">#${t.tower_number||'—'}</div>
+      <div class="tower-main">
+        <div class="tower-recipient">${t.recipient_name||'— unassigned —'}</div>
+        <div class="tower-loc">${t.tower_location||'Tap to fill in'}</div>
+      </div>
+      <div class="tower-status"><span class="status-pill status-${s}">${statusLabel(s)}</span></div>
+    </div>`;
+  }).join('');
+}
+function setTowerFilter(f){
+  towerFilter=f;
+  document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.toggle('selected',c.dataset.filter===f));
+  renderTowerList();
+}
+function filterTowers(){renderTowerList();}
+
+// ---- Tower form ----
+function openTower(id){
+  currentTower=TOWERS.find(t=>t.id===id);
+  if(!currentTower)return;
+  $('hdr-title').innerHTML=`Tower #${currentTower.tower_number||'—'}<div class="hdr-sub">Project ${currentTower.project_number} · ${PARTNER.name}</div>`;
+  renderForm();
+  showScreen('form');
+}
+
+function renderForm(){
+  const t=currentTower;
+  const ext=PARTNER.uses_extended_form;
+
+  // Helper renderers
+  const veg=OPTIONS.vegetable||[];
+  const challenges=OPTIONS.challenge||[];
+  const evals=OPTIONS.evaluation||[];
+  const replanted=OPTIONS.replanted||[];
+
+  const selectedVeg=t.vegetables_planted||[];
+  const selectedChallenges=parseMultiField(t.significant_challenges);
+
+  const html=`
+    <div class="card">
+      <div class="card-title">Basic info</div>
+      <div class="field">
+        <label>Date planted</label>
+        <input type="date" id="f-date_planted" value="${t.date_planted||''}">
+      </div>
+      <div class="field">
+        <label>Tower location (village, neighborhood)</label>
+        <input type="text" id="f-tower_location" value="${esc(t.tower_location)}" placeholder="e.g. Las Gallinas">
+      </div>
+      <div class="field">
+        <label>Country</label>
+        <input type="text" id="f-country" value="${esc(t.country)}" placeholder="e.g. Guatemala">
+      </div>
+      <div class="field">
+        <label>Person in charge (your name)</label>
+        <input type="text" id="f-person_in_charge" value="${esc(t.person_in_charge)}" placeholder="Full name">
+      </div>
+      <div class="field">
+        <label>Recipient name</label>
+        <input type="text" id="f-recipient_name" value="${esc(t.recipient_name)}" placeholder="Family member's full name">
+      </div>
+      <div class="field">
+        <label>Number of family members</label>
+        <input type="number" id="f-number_of_family_members" value="${t.number_of_family_members||''}" min="0" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>Notes about the family</label>
+        <textarea id="f-notes_about_family" placeholder="Their situation, gardening experience, hopes for the tower…">${esc(t.notes_about_family)}</textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Vegetables planted</div>
+      <div class="chips" id="f-vegetables_planted">
+        ${veg.map(v=>`<div class="chip ${selectedVeg.includes(v.value)?'selected':''}" data-val="${esc(v.value)}" onclick="toggleChip(this,'vegetables_planted')">${v.value}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tower construction photos</div>
+      ${renderPhotoGrid('tower_construction_photos',t.tower_construction_photos||[])}
+    </div>
+
+    <div class="card">
+      <div class="card-title">3-month evaluation</div>
+      <div class="eval-opts">
+        ${evals.map(o=>`<div data-field="three_month_evaluation" class="eval-opt ${t.three_month_evaluation===o.value?'selected':''}" data-val="${esc(o.value)}" onclick="selectEval(this,'three_month_evaluation')">
+          <div class="eval-dot" style="background:${o.color||'#999'};"></div>
+          <div><div class="eval-label">${o.value}</div><div class="eval-desc">${esc(o.description)}</div></div>
+        </div>`).join('')}
+      </div>
+      <div style="height:14px;"></div>
+      ${renderPhotoGrid('three_month_photos',t.three_month_photos||[])}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Significant challenges</div>
+      <div class="chips" id="f-significant_challenges">
+        ${challenges.map(c=>`<div class="chip ${selectedChallenges.includes(c.value)?'selected':''}" data-val="${esc(c.value)}" onclick="toggleChip(this,'significant_challenges')">${c.value}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">6-month evaluation</div>
+      <div class="eval-opts">
+        ${evals.map(o=>`<div data-field="six_month_evaluation" class="eval-opt ${t.six_month_evaluation===o.value?'selected':''}" data-val="${esc(o.value)}" onclick="selectEval(this,'six_month_evaluation')">
+          <div class="eval-dot" style="background:${o.color||'#999'};"></div>
+          <div><div class="eval-label">${o.value}</div><div class="eval-desc">${esc(o.description)}</div></div>
+        </div>`).join('')}
+      </div>
+      <div style="height:14px;"></div>
+      ${renderPhotoGrid('six_month_photos',t.six_month_photos||[])}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Family photos</div>
+      ${renderPhotoGrid('family_photos',t.family_photos||[])}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Was tower replanted?</div>
+      <div class="eval-opts">
+        ${replanted.map(o=>`<div data-field="was_tower_replanted" class="eval-opt ${t.was_tower_replanted===(o.value==='Yes')?'selected':''}" data-val="${o.value==='Yes'?'true':'false'}" onclick="selectEval(this,'was_tower_replanted')">
+          <div class="eval-dot" style="background:${o.color||'#999'};"></div>
+          <div><div class="eval-label">${o.value}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    ${ext?`
+    <!-- Extended form: 100 Humanitarians only -->
+    <div class="card" style="background:var(--blue-light);border-color:#b3d9f0;">
+      <div class="card-title" style="color:var(--blue);">Additional information (100 Humanitarians)</div>
+      <div class="field">
+        <label>Community</label>
+        <input type="text" id="f-communities" value="${esc(t.communities)}" placeholder="e.g. Lugari">
+      </div>
+      <div class="field">
+        <label>Number of children in household</label>
+        <input type="number" id="f-number_of_children_in_home" value="${t.number_of_children_in_home||''}" min="0" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>Number of children in school</label>
+        <input type="number" id="f-number_of_children_in_school" value="${t.number_of_children_in_school||''}" min="0" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>Family's monthly income</label>
+        <input type="text" id="f-family_monthly_income" value="${esc(t.family_monthly_income)}" placeholder="e.g. $50.00">
+      </div>
+      <div class="field">
+        <label>Did family help build the tower?</label>
+        <div class="eval-opts">
+          <div data-field="did_family_help_build" class="eval-opt ${t.did_family_help_build===true?'selected':''}" data-val="true" onclick="selectEval(this,'did_family_help_build')"><div class="eval-dot" style="background:#16a34a;"></div><div class="eval-label">Yes</div></div>
+          <div data-field="did_family_help_build" class="eval-opt ${t.did_family_help_build===false?'selected':''}" data-val="false" onclick="selectEval(this,'did_family_help_build')"><div class="eval-dot" style="background:#dc2626;"></div><div class="eval-label">No</div></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Water source for the family</label>
+        <input type="text" id="f-water_source" value="${esc(t.water_source)}" placeholder="e.g. River, well, rainwater">
+      </div>
+      <div class="field">
+        <label>Times per day water is collected</label>
+        <input type="number" id="f-water_trips_per_day" value="${t.water_trips_per_day||''}" min="0" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>Distance from home to water source</label>
+        <input type="text" id="f-water_distance_from_home" value="${esc(t.water_distance_from_home)}" placeholder="e.g. 2km">
+      </div>
+      <div class="field">
+        <label>Water used per week to water tower</label>
+        <input type="text" id="f-water_used_per_week" value="${esc(t.water_used_per_week)}" placeholder="e.g. 20 liters">
+      </div>
+      <div class="field">
+        <label>Meals per week that include vegetables from tower</label>
+        <input type="number" id="f-meals_per_week_from_garden" value="${t.meals_per_week_from_garden||''}" min="0" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>Extra vegetables sold each week / bi-weekly?</label>
+        <div class="eval-opts">
+          <div data-field="extra_vegetables_sold" class="eval-opt ${t.extra_vegetables_sold===true?'selected':''}" data-val="true" onclick="selectEval(this,'extra_vegetables_sold')"><div class="eval-dot" style="background:#16a34a;"></div><div class="eval-label">Yes</div></div>
+          <div data-field="extra_vegetables_sold" class="eval-opt ${t.extra_vegetables_sold===false?'selected':''}" data-val="false" onclick="selectEval(this,'extra_vegetables_sold')"><div class="eval-dot" style="background:#dc2626;"></div><div class="eval-label">No</div></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Money earned per week from vegetable sales</label>
+        <input type="number" step="0.01" id="f-money_earned_per_week" value="${t.money_earned_per_week||''}" inputmode="decimal" placeholder="0.00">
+      </div>
+    </div>
+    `:''}
+  `;
+  $('form-content').innerHTML=html;
+
+  // Wire up autosave on text/number inputs
+  document.querySelectorAll('#tower-form input, #tower-form textarea').forEach(inp=>{
+    inp.addEventListener('blur',scheduleAutosave);
+  });
+}
+
+function renderPhotoGrid(field,photos){
+  const items=photos.map((p,i)=>`<div class="photo-slot">
+    <img src="${esc(p.url)}" alt="${esc(p.filename||'')}">
+    <button type="button" class="photo-remove" onclick="removePhoto('${field}',${i})">×</button>
+  </div>`).join('');
+  return `<div class="photo-grid" data-field="${field}">
+    ${items}
+    <label class="photo-slot photo-slot-empty" onclick="this.querySelector('input').click()">
+      <span>+ Add<br>photo</span>
+      <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="addPhoto(event,'${field}')">
+    </label>
+  </div>`;
+}
+
+async function addPhoto(ev,field){
+  const file=ev.target.files[0];
+  if(!file)return;
+  showToast('Uploading photo…');
+  try{
+    const url=await uploadPhoto(file,currentTower.tower_number||'unknown',field);
+    const entry={filename:file.name,url,uploaded_at:new Date().toISOString()};
+    const existing=currentTower[field]||[];
+    currentTower[field]=[...existing,entry];
+    // Persist immediately for photos (they're heavy; don't rely on form save)
+    await sbPatch('gt_towers',currentTower.id,{[field]:currentTower[field]});
+    renderForm();
+    showToast('✓ Photo uploaded','success');
+  }catch(e){
+    console.error(e);
+    showToast('Photo upload failed: '+e.message,'error');
+  }finally{
+    ev.target.value='';
+  }
+}
+
+async function removePhoto(field,idx){
+  if(!confirm('Remove this photo?'))return;
+  currentTower[field].splice(idx,1);
+  try{
+    await sbPatch('gt_towers',currentTower.id,{[field]:currentTower[field]});
+    renderForm();
+    showToast('✓ Photo removed','success');
+  }catch(e){
+    showToast('Failed: '+e.message,'error');
+  }
+}
+
+function toggleChip(el,field){
+  el.classList.toggle('selected');
+  scheduleAutosave();
+}
+function selectEval(el,field){
+  const parent=el.parentElement;
+  parent.querySelectorAll('.eval-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  scheduleAutosave();
+}
+
+function collectFormValues(){
+  const out={};
+  const get=id=>$(id)?.value.trim()||null;
+  // Simple fields
+  ['date_planted','tower_location','country','person_in_charge','recipient_name',
+   'notes_about_family','communities','family_monthly_income','water_source',
+   'water_distance_from_home','water_used_per_week'].forEach(f=>out[f]=get('f-'+f));
+  // Int fields
+  ['number_of_family_members','number_of_children_in_home','number_of_children_in_school',
+   'water_trips_per_day','meals_per_week_from_garden'].forEach(f=>{
+    const v=get('f-'+f);
+    out[f]=v?parseInt(v):null;
+  });
+  // Money
+  const m=get('f-money_earned_per_week');
+  if(m!==undefined)out.money_earned_per_week=m?parseFloat(m):null;
+  // Vegetables (chips)
+  const vegEl=$('f-vegetables_planted');
+  if(vegEl){
+    out.vegetables_planted=[...vegEl.querySelectorAll('.chip.selected')].map(c=>c.dataset.val);
+    if(!out.vegetables_planted.length)out.vegetables_planted=null;
+  }
+  // Significant challenges (chips -> comma-separated text since that's how CSV had it)
+  const chEl=$('f-significant_challenges');
+  if(chEl){
+    const sel=[...chEl.querySelectorAll('.chip.selected')].map(c=>c.dataset.val);
+    out.significant_challenges=sel.length?sel.join(', '):null;
+  }
+  // Evaluation cards — use data-field attribute for clean lookup
+  document.querySelectorAll('#form-content .eval-opt.selected').forEach(sel=>{
+    const field=sel.dataset.field;
+    if(!field)return;
+    const val=sel.dataset.val;
+    if(field==='was_tower_replanted'||field==='did_family_help_build'||field==='extra_vegetables_sold'){
+      out[field]=val==='true';
+    }else{
+      out[field]=val;
+    }
+  });
+  // Fields that may not be set yet should stay null (don't overwrite if user didn't touch them)
+  // Actually, we DO want to clear them if they deselect — so keep nulls.
+  return out;
+}
+
+function scheduleAutosave(){
+  clearTimeout(autosaveTimer);
+  autosaveTimer=setTimeout(doAutosave,900);
+}
+async function doAutosave(){
+  if(!currentTower)return;
+  try{
+    const body=collectFormValues();
+    const updated=await sbPatch('gt_towers',currentTower.id,body);
+    if(updated&&updated[0]){
+      Object.assign(currentTower,updated[0]);
+      // also patch the entry in TOWERS
+      const i=TOWERS.findIndex(t=>t.id===currentTower.id);
+      if(i>=0)TOWERS[i]=currentTower;
+    }
+    const as=$('autosave');as.classList.add('show');
+    setTimeout(()=>as.classList.remove('show'),1400);
+  }catch(e){
+    console.warn('Autosave failed:',e);
+  }
+}
+
+async function saveTower(){
+  try{
+    const body=collectFormValues();
+    const updated=await sbPatch('gt_towers',currentTower.id,body);
+    if(updated&&updated[0]){
+      Object.assign(currentTower,updated[0]);
+      const i=TOWERS.findIndex(t=>t.id===currentTower.id);
+      if(i>=0)TOWERS[i]=currentTower;
+    }
+    showToast('✓ Tower saved','success');
+    setTimeout(()=>showTowerList(),600);
+  }catch(e){
+    showToast('Save failed: '+e.message,'error');
+  }
+}
+
+// ---- Reports ----
+function showReport(){
+  $('btn-back').style.display='flex';
+  $('hdr-title').innerHTML=`Reports<div class="hdr-sub">${PARTNER.name}</div>`;
+  $('report-partner').textContent=PARTNER.name;
+  renderReport();
+  showScreen('report');
+}
+
+function renderReport(){
+  const total=TOWERS.length;
+  const planted=TOWERS.filter(t=>t.date_planted).length;
+  const three=TOWERS.filter(t=>t.three_month_evaluation).length;
+  const six=TOWERS.filter(t=>t.six_month_evaluation).length;
+  $('report-metrics').innerHTML=[
+    ['Total towers',total],
+    ['Planted',planted],
+    ['3-month eval',three],
+    ['6-month eval',six],
+  ].map(([l,v])=>`<div class="card" style="margin:0;padding:14px;"><div style="font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase;">${l}</div><div style="font-size:24px;font-weight:700;color:var(--green);margin-top:4px;">${v.toLocaleString()}</div></div>`).join('');
+
+  // By project
+  const byProj={};
+  TOWERS.forEach(t=>{
+    if(!byProj[t.project_number])byProj[t.project_number]={project:t.project_number,total:0,planted:0,three:0,six:0};
+    byProj[t.project_number].total++;
+    if(t.date_planted)byProj[t.project_number].planted++;
+    if(t.three_month_evaluation)byProj[t.project_number].three++;
+    if(t.six_month_evaluation)byProj[t.project_number].six++;
+  });
+  const rows=Object.values(byProj).sort((a,b)=>a.project-b.project);
+  $('report-projects').innerHTML=`<div style="overflow-x:auto;"><table class="summary-table">
+    <thead><tr><th>Project</th><th>Total</th><th>Planted</th><th>3-mo</th><th>6-mo</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr><td><strong>${r.project}</strong></td><td>${r.total}</td><td>${r.planted}</td><td>${r.three}</td><td>${r.six}</td></tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function exportReportCsv(){
+  const headers=['Tower #','Project','Date Planted','Location','Country','Recipient','Family Size','Vegetables','3-mo Eval','6-mo Eval','Challenges','Replanted','Notes'];
+  const extHeaders=['Community','Children in home','Children in school','Monthly income','Water source','Water trips/day','Water distance','Water used/week','Meals/week','Extra veggies sold','$ earned/week'];
+  const allHeaders=PARTNER.uses_extended_form?[...headers,...extHeaders]:headers;
+
+  const rows=[allHeaders.join(',')];
+  TOWERS.forEach(t=>{
+    const base=[
+      t.tower_number||'',t.project_number||'',t.date_planted||'',t.tower_location||'',t.country||'',
+      t.recipient_name||'',t.number_of_family_members||'',(t.vegetables_planted||[]).join('; '),
+      t.three_month_evaluation||'',t.six_month_evaluation||'',t.significant_challenges||'',
+      t.was_tower_replanted===true?'Yes':t.was_tower_replanted===false?'No':'',
+      t.notes_about_family||'',
+    ];
+    const extData=PARTNER.uses_extended_form?[
+      t.communities||'',t.number_of_children_in_home||'',t.number_of_children_in_school||'',
+      t.family_monthly_income||'',t.water_source||'',t.water_trips_per_day||'',
+      t.water_distance_from_home||'',t.water_used_per_week||'',t.meals_per_week_from_garden||'',
+      t.extra_vegetables_sold===true?'Yes':t.extra_vegetables_sold===false?'No':'',
+      t.money_earned_per_week||'',
+    ]:[];
+    rows.push([...base,...extData].map(csvEscape).join(','));
+  });
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${PARTNER.slug}_towers_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+function csvEscape(v){
+  const s=String(v??'');
+  if(/[",\n]/.test(s))return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+
+// ---- Utils ----
+function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function parseMultiField(s){
+  // CSV had "Significant Challenges" as comma-separated text; this splits it back
+  if(!s)return [];
+  return s.split(/,|;/).map(x=>x.trim()).filter(Boolean);
+}
+
+init();
+</script>
+</body>
+</html>

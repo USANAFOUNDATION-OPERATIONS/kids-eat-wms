@@ -210,10 +210,14 @@
       <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
       <span>Stock levels</span>
     </div>
-    <div class="nav-section">Coming soon</div>
-    <div class="nav-item" style="opacity:.4;cursor:default;">
-      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <span>Tower tracker</span>
+    <div class="nav-section">Tower tracker</div>
+    <div class="nav-item" data-page="tracker">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v14M3 5h10M2.5 10h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>Projects</span>
+    </div>
+    <div class="nav-item" data-page="tracker-assign">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>Assign towers</span>
     </div>
   </div>
 
@@ -401,6 +405,109 @@
           <div class="table-wrap" id="inv-log-table"><div class="state-box">No movements recorded yet</div></div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- TRACKER: PROJECTS OVERVIEW -->
+    <div class="page" id="page-tracker">
+      <div class="topbar">
+        <button class="hamburger" id="hamburger-btn4"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
+        <div class="topbar-title">Tower tracker — Projects</div>
+        <div class="topbar-right">
+          <button class="btn btn-sm" onclick="showPage('tracker-assign')">+ Assign towers</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="metrics" id="tracker-metrics">
+          <div class="metric"><div class="metric-label">Total towers</div><div class="metric-value green" id="trk-m-total">—</div><div class="metric-foot">All projects</div></div>
+          <div class="metric"><div class="metric-label">Planted</div><div class="metric-value" id="trk-m-planted">—</div><div class="metric-foot">Date planted filled</div></div>
+          <div class="metric"><div class="metric-label">3-mo evaluated</div><div class="metric-value" id="trk-m-3mo">—</div><div class="metric-foot">Of planted towers</div></div>
+          <div class="metric"><div class="metric-label">6-mo evaluated</div><div class="metric-value" id="trk-m-6mo">—</div><div class="metric-foot">Of planted towers</div></div>
+          <div class="metric"><div class="metric-label">Partners</div><div class="metric-value green" id="trk-m-partners">—</div><div class="metric-foot">Active</div></div>
+        </div>
+
+        <!-- Partner filter -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head">
+            <div class="card-title">Filter by partner</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;" id="trk-partner-filter"></div>
+          </div>
+        </div>
+
+        <!-- Projects list -->
+        <div id="trk-projects-list"></div>
+      </div>
+    </div>
+
+    <!-- TRACKER: ASSIGN (bulk-assign tower numbers to a project) -->
+    <div class="page" id="page-tracker-assign">
+      <div class="topbar">
+        <button class="hamburger" id="hamburger-btn5"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
+        <div class="topbar-title">Bulk-assign tower numbers</div>
+        <div class="topbar-right">
+          <button class="btn btn-sm" onclick="showPage('tracker')">← Back</button>
+        </div>
+      </div>
+      <div class="content">
+        <div style="max-width:700px;">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-head"><div class="card-title">Reserve a tower number range</div></div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+                Creates empty tower records for the range below, all assigned to the chosen partner &amp; project.
+                Partners fill these in later from their phone. Safe to run multiple times — existing towers in
+                the range are skipped automatically, no duplicates created.
+              </p>
+              <div class="grid-2">
+                <div class="form-row">
+                  <label class="form-label">Partner</label>
+                  <select class="form-input" id="assign-partner"><option value="">Loading…</option></select>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Project #</label>
+                  <input type="number" class="form-input" id="assign-project" placeholder="e.g. 469" min="1"/>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div class="form-row">
+                  <label class="form-label">First tower #</label>
+                  <input type="number" class="form-input" id="assign-start" placeholder="e.g. 101001" min="1"/>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Last tower # (inclusive)</label>
+                  <input type="number" class="form-input" id="assign-end" placeholder="e.g. 102000" min="1"/>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div class="form-row">
+                  <label class="form-label">Country (optional)</label>
+                  <input type="text" class="form-input" id="assign-country" placeholder="e.g. Kenya"/>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">&nbsp;</label>
+                  <div id="assign-preview" style="font-size:13px;color:var(--text-muted);padding:9px 0;">
+                    Enter a range to see how many towers will be created
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                <button class="btn" onclick="showPage('tracker')">Cancel</button>
+                <button class="btn btn-primary" id="assign-submit-btn" onclick="submitBulkAssign()">Create tower records</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-title">Partner access links</div></div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
+                Copy a partner's link and send it to them. They'll bookmark it on their phone and use it to
+                fill out tower forms in the field.
+              </p>
+              <div id="partner-links-list"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -796,10 +903,11 @@ const ITEMS=[
   {id:'other',name:'Other',price:0},
 ];
 
-let DATA={shipments:[],inventory:[],invLog:[]};
+let DATA={shipments:[],inventory:[],invLog:[],towers:[],partners:[],towerOptions:{}};
 let dbReady=false;
 let shipFilter='all';
 let currentShipmentId=null;
+let trkPartnerFilter='all';
 
 async function sbGet(table,params=''){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`,{headers:HDR});
@@ -827,14 +935,22 @@ async function init(){
 
 async function loadAll(){
   try{
-    const [shipments,inventory,invLog]=await Promise.allSettled([
+    const [shipments,inventory,invLog,towers,partners,towerOpts]=await Promise.allSettled([
       sbGet('gt_shipments','select=*&order=created_at.desc'),
       sbGet('gt_inventory','select=*&order=location_id'),
       sbGet('gt_inventory_log','select=*&order=created_at.desc&limit=100'),
+      sbGet('gt_towers','select=id,tower_number,project_number,partner,country,date_planted,recipient_name,three_month_evaluation,six_month_evaluation,was_tower_replanted&order=project_number.asc,tower_number.asc'),
+      sbGet('gt_partners','select=*&order=name.asc'),
+      sbGet('gt_tower_options','select=*&order=display_order.asc'),
     ]);
     DATA.shipments=shipments.status==='fulfilled'?shipments.value||[]:[];
     DATA.inventory=inventory.status==='fulfilled'?inventory.value||[]:[];
     DATA.invLog=invLog.status==='fulfilled'?invLog.value||[]:[];
+    DATA.towers=towers.status==='fulfilled'?towers.value||[]:[];
+    DATA.partners=partners.status==='fulfilled'?partners.value||[]:[];
+    const opts=towerOpts.status==='fulfilled'?towerOpts.value||[]:[];
+    DATA.towerOptions={};
+    opts.forEach(o=>{(DATA.towerOptions[o.category]=DATA.towerOptions[o.category]||[]).push(o);});
     renderAll();
   }catch(e){
     console.error('loadAll error:',e);
@@ -846,6 +962,9 @@ function renderAll(){
   renderMetrics();
   renderShipmentsTable();
   updateBadge();
+  renderInventory();
+  renderTracker();
+  renderAssignPage();
 }
 
 function renderMetrics(){
@@ -1298,6 +1417,259 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(e.target===document.getElementById('modal-bg'))closeModal();
   });
 });
+
+// ========================================================================
+// ---- TOWER TRACKER ----
+// ========================================================================
+
+function trkTowerStatus(t){
+  // 'empty' | 'planted' | 'three_mo' | 'six_mo'
+  if(t.six_month_evaluation)return 'six_mo';
+  if(t.three_month_evaluation)return 'three_mo';
+  if(t.date_planted)return 'planted';
+  return 'empty';
+}
+
+function renderTracker(){
+  const el=document.getElementById('trk-projects-list');
+  if(!el)return;
+  const towers=DATA.towers||[];
+
+  // Metrics
+  const total=towers.length;
+  const planted=towers.filter(t=>t.date_planted).length;
+  const threeMo=towers.filter(t=>t.three_month_evaluation).length;
+  const sixMo=towers.filter(t=>t.six_month_evaluation).length;
+  const partners=new Set(towers.map(t=>t.partner).filter(Boolean)).size;
+  const me=id=>document.getElementById(id);
+  if(me('trk-m-total'))me('trk-m-total').textContent=total.toLocaleString();
+  if(me('trk-m-planted'))me('trk-m-planted').textContent=planted.toLocaleString();
+  if(me('trk-m-3mo'))me('trk-m-3mo').textContent=threeMo.toLocaleString();
+  if(me('trk-m-6mo'))me('trk-m-6mo').textContent=sixMo.toLocaleString();
+  if(me('trk-m-partners'))me('trk-m-partners').textContent=partners.toLocaleString();
+
+  // Partner filter chips
+  const pf=document.getElementById('trk-partner-filter');
+  if(pf){
+    const allPartners=[...new Set(towers.map(t=>t.partner).filter(Boolean))].sort();
+    pf.innerHTML=`<button class="btn btn-sm ${trkPartnerFilter==='all'?'active-filter':''}" onclick="setTrkFilter('all')">All</button>`+
+      allPartners.map(p=>`<button class="btn btn-sm ${trkPartnerFilter===p?'active-filter':''}" onclick="setTrkFilter(${JSON.stringify(p).replace(/"/g,'&quot;')})">${p}</button>`).join('');
+  }
+
+  // Group by (partner, project)
+  const filtered=trkPartnerFilter==='all'?towers:towers.filter(t=>t.partner===trkPartnerFilter);
+  const groups={};
+  filtered.forEach(t=>{
+    const key=`${t.partner||'—'}|${t.project_number||0}`;
+    if(!groups[key])groups[key]={partner:t.partner,project:t.project_number,towers:[]};
+    groups[key].towers.push(t);
+  });
+
+  const keys=Object.keys(groups).sort((a,b)=>{
+    const [pa,na]=a.split('|');const [pb,nb]=b.split('|');
+    if(pa!==pb)return pa.localeCompare(pb);
+    return Number(na)-Number(nb);
+  });
+
+  if(!keys.length){
+    el.innerHTML='<div class="card"><div class="card-body"><div class="state-box">No tower records yet. Click "Assign towers" to create some.</div></div></div>';
+    return;
+  }
+
+  el.innerHTML=keys.map(k=>{
+    const g=groups[k];
+    const n=g.towers.length;
+    const plantedN=g.towers.filter(t=>t.date_planted).length;
+    const threeN=g.towers.filter(t=>t.three_month_evaluation).length;
+    const sixN=g.towers.filter(t=>t.six_month_evaluation).length;
+    const pct=v=>n?Math.round(v/n*100):0;
+    const partner=DATA.partners.find(p=>p.name===g.partner);
+    const slug=partner?partner.slug:'';
+    const partnerBtn=slug?`<button class="btn btn-sm" onclick="copyPartnerLink('${slug}','${g.project}')" style="font-size:11px;padding:4px 10px;background:var(--moss);color:var(--green-dark);border-color:var(--bright);">🔗 Copy partner link</button>`:'';
+
+    const rangeStart=Math.min(...g.towers.map(t=>t.tower_number||Infinity));
+    const rangeEnd=Math.max(...g.towers.map(t=>t.tower_number||0));
+
+    return `<div class="card" style="margin-bottom:16px;">
+      <div class="card-head">
+        <div>
+          <div class="card-title">${g.partner||'—'} · Project ${g.project}</div>
+          <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${n.toLocaleString()} records</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${partnerBtn}
+        </div>
+      </div>
+      <div class="card-body" style="padding:14px 20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+          ${trkProgressBar('Planted',plantedN,n,'var(--green)',pct(plantedN))}
+          ${trkProgressBar('3-month eval',threeN,n,'var(--bright)',pct(threeN))}
+          ${trkProgressBar('6-month eval',sixN,n,'var(--blue)',pct(sixN))}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function trkProgressBar(label,num,denom,color,pct){
+  return `<div>
+    <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
+    <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px;">
+      <span style="font-size:18px;font-weight:700;color:var(--text);">${num.toLocaleString()}</span>
+      <span style="font-size:11px;color:var(--text-faint);">/ ${denom.toLocaleString()} (${pct}%)</span>
+    </div>
+    <div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden;">
+      <div style="height:100%;width:${pct}%;background:${color};transition:width .3s;"></div>
+    </div>
+  </div>`;
+}
+
+function setTrkFilter(partner){
+  trkPartnerFilter=partner;
+  renderTracker();
+}
+
+function copyPartnerLink(slug,project){
+  const base=window.location.href.split('?')[0].replace('garden_towers.html','partner_tower_form.html');
+  const url=`${base}?partner=${slug}${project?'&project='+project:''}`;
+  navigator.clipboard.writeText(url).then(()=>{
+    showToast('✓ Partner link copied: '+url,'success');
+  }).catch(()=>{
+    prompt('Copy this partner link:',url);
+  });
+}
+
+// ---- Bulk-assign page ----
+function renderAssignPage(){
+  const sel=document.getElementById('assign-partner');
+  if(sel){
+    const partners=(DATA.partners||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));
+    sel.innerHTML='<option value="">Choose a partner…</option>'+
+      partners.map(p=>`<option value="${p.id}" data-slug="${p.slug}" data-extended="${p.uses_extended_form}">${p.name}${p.uses_extended_form?' (extended form)':''}</option>`).join('');
+  }
+
+  // Wire up live preview
+  ['assign-start','assign-end'].forEach(id=>{
+    const e=document.getElementById(id);
+    if(e&&!e._wired){e._wired=true;e.addEventListener('input',updateAssignPreview);}
+  });
+  updateAssignPreview();
+
+  // Partner links list
+  const linksEl=document.getElementById('partner-links-list');
+  if(linksEl){
+    const partners=(DATA.partners||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));
+    if(!partners.length){
+      linksEl.innerHTML='<div class="state-box">No partners yet.</div>';
+    }else{
+      linksEl.innerHTML=partners.map(p=>{
+        const projectCount=new Set(DATA.towers.filter(t=>t.partner===p.name).map(t=>t.project_number)).size;
+        const towerCount=DATA.towers.filter(t=>t.partner===p.name).length;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-weight:600;font-size:13px;">${p.name}${p.uses_extended_form?' <span class="badge badge-blue" style="margin-left:6px;">extended</span>':''}</div>
+            <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${projectCount} project(s) · ${towerCount.toLocaleString()} towers · slug: <code>${p.slug}</code></div>
+          </div>
+          <button class="btn btn-sm" onclick="copyPartnerLink('${p.slug}','')">🔗 Copy link</button>
+        </div>`;
+      }).join('');
+    }
+  }
+}
+
+function updateAssignPreview(){
+  const s=parseInt(document.getElementById('assign-start')?.value);
+  const e=parseInt(document.getElementById('assign-end')?.value);
+  const el=document.getElementById('assign-preview');
+  if(!el)return;
+  if(!s||!e||e<s){
+    el.textContent='Enter a range to see how many towers will be created';
+    el.style.color='var(--text-muted)';
+    return;
+  }
+  const count=e-s+1;
+  if(count>5000){
+    el.textContent=`⚠ ${count.toLocaleString()} towers — consider splitting into smaller batches`;
+    el.style.color='var(--red-text)';
+  }else{
+    el.textContent=`✓ Will create up to ${count.toLocaleString()} tower record${count===1?'':'s'}`;
+    el.style.color='var(--green-dark)';
+  }
+}
+
+async function submitBulkAssign(){
+  const partnerSel=document.getElementById('assign-partner');
+  const partnerId=partnerSel?.value;
+  const partnerOpt=partnerSel?.selectedOptions[0];
+  const partnerName=partnerOpt?partnerOpt.textContent.replace(' (extended form)','').trim():'';
+  const project=parseInt(document.getElementById('assign-project').value);
+  const start=parseInt(document.getElementById('assign-start').value);
+  const end=parseInt(document.getElementById('assign-end').value);
+  const country=document.getElementById('assign-country').value.trim()||null;
+
+  // Validation
+  if(!partnerId){return showToast('Please choose a partner','error');}
+  if(!project||project<1){return showToast('Please enter a valid project number','error');}
+  if(!start||!end||end<start){return showToast('Please enter a valid tower number range','error');}
+  const count=end-start+1;
+  if(count>5000){return showToast('Range too large — max 5,000 at a time','error');}
+  if(!confirm(`Create ${count.toLocaleString()} empty tower records for ${partnerName}, project ${project}?\n\nExisting towers in this range will NOT be affected.`)){return;}
+
+  const btn=document.getElementById('assign-submit-btn');
+  const origText=btn.textContent;
+  btn.disabled=true;btn.textContent='Creating…';
+
+  try{
+    // Build the records
+    const rows=[];
+    for(let n=start;n<=end;n++){
+      rows.push({
+        tower_number:n,
+        project_number:project,
+        partner:partnerName,
+        country,
+      });
+    }
+
+    // Post in batches of 500. Use Prefer:resolution=ignore-duplicates so existing towers skip silently.
+    const batchSize=500;
+    let inserted=0;
+    for(let i=0;i<rows.length;i+=batchSize){
+      const batch=rows.slice(i,i+batchSize);
+      // We need the ignore-duplicates behavior; PostgREST supports it via Prefer header
+      const r=await fetch(`${SUPABASE_URL}/rest/v1/gt_towers`,{
+        method:'POST',
+        headers:{...HDR,'Prefer':'resolution=ignore-duplicates,return=representation','Content-Type':'application/json'},
+        body:JSON.stringify(batch),
+      });
+      if(!r.ok){
+        const t=await r.text();
+        throw new Error('Insert failed: '+r.status+' '+t);
+      }
+      const ret=await r.json();
+      inserted+=ret.length;
+      btn.textContent=`Creating… ${Math.min(i+batchSize,rows.length)}/${rows.length}`;
+    }
+
+    const skipped=count-inserted;
+    showToast(`✓ Created ${inserted.toLocaleString()} new towers${skipped>0?` (${skipped.toLocaleString()} already existed, skipped)`:''}`,'success');
+
+    // Reset the form
+    document.getElementById('assign-project').value='';
+    document.getElementById('assign-start').value='';
+    document.getElementById('assign-end').value='';
+    document.getElementById('assign-country').value='';
+
+    // Reload data so the Projects view reflects the new towers
+    await loadAll();
+    setTimeout(()=>showPage('tracker'),1200);
+  }catch(e){
+    console.error(e);
+    showToast('Error: '+e.message,'error');
+  }finally{
+    btn.disabled=false;btn.textContent=origText;
+  }
+}
 
 // Set default date
 document.addEventListener('DOMContentLoaded',()=>{
