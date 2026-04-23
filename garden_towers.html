@@ -181,15 +181,16 @@
   .partner-detail-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 
   .partner-detail-projects{background:#fff;border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);border-top:none;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);margin-bottom:24px;}
-  .project-row{padding:14px 20px;border-top:1px solid var(--border);cursor:pointer;transition:background .1s;}
+  .project-row{padding:14px 20px;border-top:1px solid var(--border);cursor:pointer;transition:background .12s,padding-left .12s;position:relative;}
   .project-row:first-child{border-top:none;}
-  .project-row:hover{background:#f8fdf8;}
+  .project-row:hover{background:#f4faf7;padding-left:24px;}
+  .project-row:hover .project-row-chev{color:var(--green);transform:translateX(3px);}
   .project-row-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;}
   .project-row-name{font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
   .project-row-meta{font-size:11px;color:var(--text-faint);font-weight:400;}
   .project-row-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-  .project-row-actions{display:flex;gap:6px;flex-shrink:0;}
-  .project-row-chev{color:var(--text-faint);font-size:14px;margin-left:4px;}
+  .project-row-actions{display:flex;gap:6px;flex-shrink:0;align-items:center;}
+  .project-row-chev{color:var(--text-faint);font-size:16px;margin-left:6px;transition:transform .15s,color .15s;font-weight:600;}
 
   /* Detail table (Airtable-style) */
   .detail-table-wrap{overflow:auto;max-height:calc(100vh - 380px);}
@@ -1770,8 +1771,6 @@ function copyPartnerLink(slug,project){
 
 // ---- Project detail view ----
 function openProjectDetail(partner,project){
-  trkActiveProjectKey=partner+'|'+project;
-  trkExpandedPartners.add(partner);
   trkDetailPartner=partner;
   trkDetailProject=project;
   showPage('tracker-detail');
@@ -2052,7 +2051,6 @@ async function performDeleteProject(){
     if(!r.ok){const t=await r.text();throw new Error('Delete failed: '+r.status+' '+t);}
     showToast(`✓ Project deleted`,'success');
     closeModal();
-    trkActiveProjectKey=null;
     await loadAll();
     showPage('tracker');
   }catch(e){
