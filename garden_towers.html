@@ -354,6 +354,10 @@
       <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <span>Assign towers</span>
     </div>
+    <div class="nav-item" data-page="worldmap">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><ellipse cx="8" cy="8" rx="2.5" ry="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 8h13" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span>World Map</span>
+    </div>
     <div class="nav-item" data-page="reports">
       <svg viewBox="0 0 16 16" fill="none"><path d="M2 14V4M2 14h12M5 11V7M8 11V5M11 11V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <span>Reports</span>
@@ -389,6 +393,13 @@
               <div class="home-action-body">
                 <div class="home-action-title">Reports</div>
                 <div class="home-action-desc">Impact metrics across the whole program</div>
+              </div>
+            </div>
+            <div class="home-action-card" onclick="showPage('worldmap');renderWorldMap();">
+              <div class="home-action-icon" style="background:linear-gradient(135deg,#0891b2,#0e7490);">🌍</div>
+              <div class="home-action-body">
+                <div class="home-action-title">World Map</div>
+                <div class="home-action-desc">See every country we reach — hover for stats</div>
               </div>
             </div>
             <div class="home-action-card" onclick="showPage('shipping');">
@@ -736,6 +747,44 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- WORLD MAP PAGE -->
+    <div class="page" id="page-worldmap">
+      <div class="topbar">
+        <button class="hamburger" id="hamburger-btn8"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
+        <div class="topbar-title">World Map</div>
+        <div class="topbar-right">
+          <span id="worldmap-legend" style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:10px;">
+            <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:10px;background:var(--green);border:1px solid var(--green-dark);border-radius:2px;"></span> Has projects</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:10px;background:#e5e7eb;border:1px solid #cbd5e1;border-radius:2px;"></span> No projects</span>
+          </span>
+        </div>
+      </div>
+      <div class="content" style="padding:20px 24px 40px;">
+        <div class="metrics" style="margin-bottom:16px;">
+          <div class="metric"><div class="metric-label">Countries reached</div><div class="metric-value green" id="wm-m-countries">—</div><div class="metric-foot">with active towers</div></div>
+          <div class="metric"><div class="metric-label">Total towers</div><div class="metric-value" id="wm-m-towers">—</div><div class="metric-foot">across all countries</div></div>
+          <div class="metric"><div class="metric-label">Partners</div><div class="metric-value" id="wm-m-partners">—</div><div class="metric-foot">global network</div></div>
+          <div class="metric"><div class="metric-label">Families served</div><div class="metric-value" id="wm-m-families">—</div><div class="metric-foot">with recipients recorded</div></div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="card-head" style="padding:12px 18px;">
+            <div class="card-title">Global tower distribution</div>
+            <div style="font-size:11px;color:var(--text-faint);">Hover a country for stats · click for partner breakdown</div>
+          </div>
+          <div id="worldmap-container" style="position:relative;background:#f0f8ff;min-height:520px;">
+            <div id="worldmap-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px;">
+              <div style="text-align:center;">
+                <div style="font-size:24px;margin-bottom:8px;">🌍</div>
+                <div>Loading world map…</div>
+              </div>
+            </div>
+            <svg id="worldmap-svg" viewBox="0 0 960 500" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;"></svg>
+          </div>
+        </div>
+        <div id="worldmap-tooltip" style="position:fixed;display:none;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:12px 14px;pointer-events:none;z-index:1000;min-width:200px;font-size:13px;"></div>
       </div>
     </div>
 
@@ -1214,6 +1263,7 @@ function renderAll(){
   renderAssignPage();
   renderReports();
   renderHome();
+  renderWorldMap();
   if(trkDetailPartner!=null)renderProjectDetail();
 }
 
@@ -1647,6 +1697,9 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
     if(item.dataset.page==='reports'){item.addEventListener('click',()=>{showPage('reports');renderReports();
       if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
     });return;}
+    if(item.dataset.page==='worldmap'){item.addEventListener('click',()=>{showPage('worldmap');renderWorldMap();
+      if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
+    });return;}
     if(item.dataset.page==='home'){item.addEventListener('click',()=>{showPage('home');renderHome();
       if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
     });return;}
@@ -1664,7 +1717,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
 
 // Hamburger
 document.addEventListener('DOMContentLoaded',()=>{
-  ['hamburger-btn0','hamburger-btn','hamburger-btn2','hamburger-btn3','hamburger-btn4','hamburger-btn5','hamburger-btn6','hamburger-btn7'].forEach(id=>{
+  ['hamburger-btn0','hamburger-btn','hamburger-btn2','hamburger-btn3','hamburger-btn4','hamburger-btn5','hamburger-btn6','hamburger-btn7','hamburger-btn8'].forEach(id=>{
     const btn=document.getElementById(id);
     if(btn)btn.addEventListener('click',()=>{
       document.getElementById('main-sidebar')?.classList.toggle('mobile-open');
@@ -3463,6 +3516,353 @@ function exportAllReports(){
   showToast('✓ Report exported','success');
 }
 
+// ========================================================================
+// ---- WORLD MAP ----
+// Uses D3 + TopoJSON loaded from cdnjs at the bottom of the page.
+// Country shapes come from cdn.jsdelivr.net/npm/world-atlas (cached by browser).
+// ========================================================================
+
+// Map of country name (as stored in tower data) → ISO 3166-1 numeric code
+// (TopoJSON world-atlas uses numeric IDs). Covers every common variant.
+const COUNTRY_NAME_TO_ISO = {
+  'afghanistan':'004','albania':'008','algeria':'012','american samoa':'016',
+  'andorra':'020','angola':'024','anguilla':'660','antarctica':'010',
+  'antigua and barbuda':'028','argentina':'032','armenia':'051','aruba':'533',
+  'australia':'036','austria':'040','azerbaijan':'031','bahamas':'044',
+  'bahrain':'048','bangladesh':'050','barbados':'052','belarus':'112',
+  'belgium':'056','belize':'084','benin':'204','bermuda':'060','bhutan':'064',
+  'bolivia':'068','bosnia and herzegovina':'070','botswana':'072','brazil':'076',
+  'british virgin islands':'092','brunei':'096','bulgaria':'100','burkina faso':'854',
+  'burundi':'108','cambodia':'116','cameroon':'120','canada':'124','cape verde':'132',
+  'cayman islands':'136','central african republic':'140','chad':'148','chile':'152',
+  'china':'156','colombia':'170','comoros':'174','congo':'178',
+  'democratic republic of the congo':'180','dr congo':'180','drc':'180',
+  'costa rica':'188','cote d\'ivoire':'384','ivory coast':'384','croatia':'191',
+  'cuba':'192','cyprus':'196','czech republic':'203','czechia':'203',
+  'denmark':'208','djibouti':'262','dominica':'212','dominican republic':'214',
+  'ecuador':'218','egypt':'818','el salvador':'222','equatorial guinea':'226',
+  'eritrea':'232','estonia':'233','eswatini':'748','swaziland':'748',
+  'ethiopia':'231','falkland islands':'238','faroe islands':'234','fiji':'242',
+  'finland':'246','france':'250','french guiana':'254','french polynesia':'258',
+  'gabon':'266','gambia':'270','georgia':'268','germany':'276','ghana':'288',
+  'gibraltar':'292','greece':'300','greenland':'304','grenada':'308','guam':'316',
+  'guatemala':'320','guinea':'324','guinea-bissau':'624','guyana':'328',
+  'haiti':'332','honduras':'340','hong kong':'344','hungary':'348','iceland':'352',
+  'india':'356','indonesia':'360','iran':'364','iraq':'368','ireland':'372',
+  'israel':'376','italy':'380','jamaica':'388','japan':'392','jordan':'400',
+  'kazakhstan':'398','kenya':'404','kiribati':'296','kosovo':'983','kuwait':'414',
+  'kyrgyzstan':'417','laos':'418','latvia':'428','lebanon':'422','lesotho':'426',
+  'liberia':'430','libya':'434','liechtenstein':'438','lithuania':'440',
+  'luxembourg':'442','macao':'446','madagascar':'450','malawi':'454',
+  'malaysia':'458','maldives':'462','mali':'466','malta':'470',
+  'marshall islands':'584','martinique':'474','mauritania':'478','mauritius':'480',
+  'mexico':'484','micronesia':'583','moldova':'498','monaco':'492',
+  'mongolia':'496','montenegro':'499','montserrat':'500','morocco':'504',
+  'mozambique':'508','myanmar':'104','burma':'104','namibia':'516','nauru':'520',
+  'nepal':'524','netherlands':'528','new caledonia':'540','new zealand':'554',
+  'nicaragua':'558','niger':'562','nigeria':'566','niue':'570','north korea':'408',
+  'north macedonia':'807','macedonia':'807','northern mariana islands':'580',
+  'norway':'578','oman':'512','pakistan':'586','palau':'585','palestine':'275',
+  'panama':'591','papua new guinea':'598','paraguay':'600','peru':'604',
+  'philippines':'608','poland':'616','portugal':'620','puerto rico':'630',
+  'qatar':'634','republic of korea':'410','south korea':'410','romania':'642',
+  'russia':'643','russian federation':'643','rwanda':'646','saint kitts and nevis':'659',
+  'saint lucia':'662','saint martin':'663','saint pierre and miquelon':'666',
+  'saint vincent and the grenadines':'670','samoa':'882','san marino':'674',
+  'sao tome and principe':'678','saudi arabia':'682','senegal':'686','serbia':'688',
+  'seychelles':'690','sierra leone':'694','singapore':'702','slovakia':'703',
+  'slovenia':'705','solomon islands':'090','somalia':'706','somaliland':'706',
+  'south africa':'710','south sudan':'728','spain':'724','sri lanka':'144',
+  'sudan':'729','suriname':'740','sweden':'752','switzerland':'756','syria':'760',
+  'taiwan':'158','tajikistan':'762','tanzania':'834','thailand':'764',
+  'timor-leste':'626','east timor':'626','togo':'768','tonga':'776',
+  'trinidad and tobago':'780','tunisia':'788','turkey':'792','turkmenistan':'795',
+  'turks and caicos islands':'796','tuvalu':'798','uganda':'800','ukraine':'804',
+  'united arab emirates':'784','uae':'784','united kingdom':'826','uk':'826',
+  'england':'826','great britain':'826','united states':'840','usa':'840','us':'840',
+  'united states of america':'840','uruguay':'858','uzbekistan':'860','vanuatu':'548',
+  'venezuela':'862','vietnam':'704','virgin islands':'850','yemen':'887',
+  'zambia':'894','zimbabwe':'716',
+};
+
+function countryNameToIso(name){
+  if(!name)return null;
+  const key=String(name).trim().toLowerCase().replace(/\.$/,'').replace(/\s+/g,' ');
+  return COUNTRY_NAME_TO_ISO[key]||null;
+}
+
+// Cached topology so we don't refetch on every re-render
+let _worldMapTopology=null;
+let _worldMapLoading=false;
+
+async function renderWorldMap(){
+  if(!document.getElementById('page-worldmap'))return;
+
+  const towers=DATA.towers||[];
+
+  // Update top metrics ------------------------------------------------------
+  const byCountry={};
+  towers.forEach(t=>{
+    const c=(t.country||'').trim();
+    if(!c)return;
+    if(!byCountry[c])byCountry[c]={towers:[],partners:new Set(),projects:new Set(),families:0,people:0};
+    byCountry[c].towers.push(t);
+    if(t.partner)byCountry[c].partners.add(t.partner);
+    if(t.project_number)byCountry[c].projects.add(t.project_number);
+    if(t.recipient_name)byCountry[c].families++;
+    byCountry[c].people+=Number(t.number_of_family_members)||0;
+  });
+  const setMetric=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setMetric('wm-m-countries',Object.keys(byCountry).length);
+  setMetric('wm-m-towers',towers.length.toLocaleString());
+  setMetric('wm-m-partners',new Set(towers.map(t=>t.partner).filter(Boolean)).size);
+  setMetric('wm-m-families',towers.filter(t=>t.recipient_name).length.toLocaleString());
+
+  // Build ISO → country-data lookup (for coloring)
+  const byIso={};
+  Object.entries(byCountry).forEach(([name,data])=>{
+    const iso=countryNameToIso(name);
+    if(iso){
+      if(!byIso[iso])byIso[iso]={name,...data,towers:[...data.towers]};
+      else{
+        // Merge if multiple name variants map to the same ISO
+        byIso[iso].towers.push(...data.towers);
+        data.partners.forEach(p=>byIso[iso].partners.add(p));
+        data.projects.forEach(p=>byIso[iso].projects.add(p));
+        byIso[iso].families+=data.families;
+        byIso[iso].people+=data.people;
+      }
+    }
+  });
+
+  // If libs haven't loaded yet (or are still downloading), retry shortly
+  if(typeof d3==='undefined'||typeof topojson==='undefined'){
+    const loadingEl=document.getElementById('worldmap-loading');
+    if(loadingEl)loadingEl.innerHTML='<div style="text-align:center;"><div style="font-size:24px;margin-bottom:8px;">⏳</div><div>Loading map library…</div></div>';
+    setTimeout(renderWorldMap,300);
+    return;
+  }
+
+  const svg=document.getElementById('worldmap-svg');
+  const loadingEl=document.getElementById('worldmap-loading');
+  if(!svg)return;
+
+  // Fetch topology once
+  if(!_worldMapTopology){
+    if(_worldMapLoading)return;  // already fetching
+    _worldMapLoading=true;
+    try{
+      const r=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      _worldMapTopology=await r.json();
+    }catch(e){
+      console.error('Could not load world atlas',e);
+      if(loadingEl)loadingEl.innerHTML='<div style="text-align:center;color:var(--red-text);"><div style="font-size:24px;margin-bottom:8px;">⚠️</div><div>Could not load world map.<br><span style="font-size:11px;">Check internet connection and refresh.</span></div></div>';
+      _worldMapLoading=false;
+      return;
+    }
+    _worldMapLoading=false;
+  }
+
+  // Convert topology → GeoJSON FeatureCollection for countries
+  const countries=topojson.feature(_worldMapTopology,_worldMapTopology.objects.countries);
+
+  // Natural Earth Robinson-like projection that fits 960x500 nicely
+  const projection=d3.geoNaturalEarth1()
+    .fitSize([960,500],countries);
+  const pathGen=d3.geoPath(projection);
+
+  // Clear existing content (in case of re-render after data update)
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+
+  // Ocean background rect (so the SVG has a colored backdrop)
+  const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bg.setAttribute('x','0');bg.setAttribute('y','0');
+  bg.setAttribute('width','960');bg.setAttribute('height','500');
+  bg.setAttribute('fill','#f0f8ff');
+  svg.appendChild(bg);
+
+  // Build each country path
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  svg.appendChild(g);
+
+  countries.features.forEach(feat=>{
+    const d=pathGen(feat);
+    if(!d)return;
+    // In world-atlas v2, feat.id is the ISO numeric as a string (e.g. "840")
+    const iso=String(feat.id).padStart(3,'0');
+    const countryData=byIso[iso];
+    const hasData=!!countryData;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',d);
+    path.setAttribute('data-iso',iso);
+    path.setAttribute('data-name',feat.properties?feat.properties.name||'':'');
+    path.setAttribute('fill',hasData?'var(--green)':'#e5e7eb');
+    path.setAttribute('stroke',hasData?'var(--green-dark)':'#cbd5e1');
+    path.setAttribute('stroke-width','0.5');
+    path.style.cursor=hasData?'pointer':'default';
+    path.style.transition='fill .15s,opacity .15s';
+    if(hasData){
+      path.addEventListener('mouseenter',e=>showWorldMapTooltip(e,iso,countryData,feat));
+      path.addEventListener('mousemove',moveWorldMapTooltip);
+      path.addEventListener('mouseleave',hideWorldMapTooltip);
+      path.addEventListener('click',()=>openWorldMapCountryDetail(iso,countryData,feat));
+    }
+    g.appendChild(path);
+  });
+
+  if(loadingEl)loadingEl.style.display='none';
+}
+
+function showWorldMapTooltip(e,iso,data,feat){
+  const tip=document.getElementById('worldmap-tooltip');
+  if(!tip)return;
+  e.target.setAttribute('fill','var(--green-dark)');
+  const name=feat.properties?.name||data.name;
+  tip.innerHTML=`
+    <div style="font-weight:700;font-size:14px;color:var(--green-dark);margin-bottom:6px;">${esc(name)}</div>
+    <div style="display:grid;grid-template-columns:auto auto;gap:4px 12px;font-size:12px;">
+      <span style="color:var(--text-muted);">Towers:</span><span style="font-weight:600;text-align:right;">${data.towers.length.toLocaleString()}</span>
+      <span style="color:var(--text-muted);">Partners:</span><span style="font-weight:600;text-align:right;">${data.partners.size}</span>
+      <span style="color:var(--text-muted);">Projects:</span><span style="font-weight:600;text-align:right;">${data.projects.size}</span>
+      <span style="color:var(--text-muted);">Families:</span><span style="font-weight:600;text-align:right;">${data.families.toLocaleString()}</span>
+      <span style="color:var(--text-muted);">People impacted:</span><span style="font-weight:600;text-align:right;">${data.people.toLocaleString()}</span>
+    </div>
+    <div style="font-size:10px;color:var(--text-faint);margin-top:6px;text-align:center;">Click for details</div>
+  `;
+  tip.style.display='block';
+  moveWorldMapTooltip(e);
+}
+
+function moveWorldMapTooltip(e){
+  const tip=document.getElementById('worldmap-tooltip');
+  if(!tip)return;
+  const pad=14;
+  const tw=tip.offsetWidth||220;
+  const th=tip.offsetHeight||120;
+  let x=e.clientX+pad;
+  let y=e.clientY+pad;
+  if(x+tw>window.innerWidth-10)x=e.clientX-tw-pad;
+  if(y+th>window.innerHeight-10)y=e.clientY-th-pad;
+  tip.style.left=x+'px';
+  tip.style.top=y+'px';
+}
+
+function hideWorldMapTooltip(e){
+  const tip=document.getElementById('worldmap-tooltip');
+  if(tip)tip.style.display='none';
+  if(e&&e.target&&e.target.getAttribute('data-iso')){
+    e.target.setAttribute('fill','var(--green)');
+  }
+}
+
+function openWorldMapCountryDetail(iso,data,feat){
+  const name=feat.properties?.name||data.name;
+  const modal=document.getElementById('modal-content');
+  if(!modal)return;
+
+  // Partner breakdown for this country
+  const partnerRows=Array.from(data.partners).map(p=>{
+    const pTowers=data.towers.filter(t=>t.partner===p);
+    const pPlanted=pTowers.filter(t=>t.date_planted).length;
+    const p3=pTowers.filter(t=>t.three_month_evaluation).length;
+    const p6=pTowers.filter(t=>t.six_month_evaluation).length;
+    return {name:p,towers:pTowers.length,planted:pPlanted,three:p3,six:p6};
+  }).sort((a,b)=>b.towers-a.towers);
+
+  // Top vegetables in this country
+  const vegCounts={};
+  data.towers.forEach(t=>{
+    if(!Array.isArray(t.vegetables_planted))return;
+    t.vegetables_planted.forEach(v=>{const c=(v||'').trim();if(c)vegCounts[c]=(vegCounts[c]||0)+1;});
+  });
+  const topVeg=Object.entries(vegCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // Evaluation distribution (3-mo OR 6-mo)
+  const evals={Excellent:0,Good:0,Fair:0,Poor:0};
+  data.towers.forEach(t=>{
+    const v=t.three_month_evaluation||t.six_month_evaluation;
+    if(v&&evals.hasOwnProperty(v))evals[v]++;
+  });
+  const evalTotal=Object.values(evals).reduce((s,n)=>s+n,0);
+  const evalColors={Excellent:'#16a34a',Good:'#84cc16',Fair:'#f59e0b',Poor:'#dc2626'};
+
+  const planted=data.towers.filter(t=>t.date_planted).length;
+  const fillRate=data.towers.length?Math.round(planted/data.towers.length*100):0;
+
+  modal.innerHTML=`
+    <h2 style="display:flex;align-items:center;gap:10px;">🌍 ${esc(name)}</h2>
+    <p class="modal-sub">Garden tower program at a glance</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0 18px;">
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px;">Towers</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${data.towers.length.toLocaleString()}</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px;">Planted</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${planted.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text-faint);margin-top:2px;">${fillRate}% fill rate</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px;">Partners</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${data.partners.size}</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px;">Projects</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${data.projects.size}</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px;">Families</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${data.families.toLocaleString()}</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px;">People</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${data.people.toLocaleString()}</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Partners active here</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--text-faint);text-transform:uppercase;">Partner</th><th style="text-align:right;padding:6px 8px;font-size:10px;color:var(--text-faint);text-transform:uppercase;">Towers</th><th style="text-align:right;padding:6px 8px;font-size:10px;color:var(--text-faint);text-transform:uppercase;">Planted</th><th style="text-align:right;padding:6px 8px;font-size:10px;color:var(--text-faint);text-transform:uppercase;">3-mo</th><th style="text-align:right;padding:6px 8px;font-size:10px;color:var(--text-faint);text-transform:uppercase;">6-mo</th></tr></thead>
+        <tbody>${partnerRows.map(p=>`<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px;font-weight:600;">${esc(p.name)}</td>
+          <td style="padding:8px;text-align:right;font-family:'Courier New',monospace;">${p.towers}</td>
+          <td style="padding:8px;text-align:right;font-family:'Courier New',monospace;">${p.planted}</td>
+          <td style="padding:8px;text-align:right;font-family:'Courier New',monospace;">${p.three}</td>
+          <td style="padding:8px;text-align:right;font-family:'Courier New',monospace;">${p.six}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+
+    ${topVeg.length?`<div style="margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Most-planted vegetables in ${esc(name)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${topVeg.map(([v,n])=>`<span style="background:var(--green-light);color:var(--green-dark);padding:4px 10px;border-radius:14px;font-size:12px;font-weight:500;">${esc(v)} <span style="color:var(--text-muted);font-weight:400;">· ${n}</span></span>`).join('')}
+      </div>
+    </div>`:''}
+
+    ${evalTotal>0?`<div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Tower health (${evalTotal} evaluated)</div>
+      <div style="display:flex;gap:4px;height:26px;border-radius:6px;overflow:hidden;background:var(--bg);">
+        ${Object.entries(evals).filter(([,n])=>n>0).map(([r,n])=>{
+          const pct=Math.round(n/evalTotal*100);
+          return `<div style="background:${evalColors[r]};width:${pct}%;min-width:30px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;" title="${r}: ${n} (${pct}%)">${pct}%</div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px;">
+        ${Object.entries(evals).filter(([,n])=>n>0).map(([r,n])=>`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${evalColors[r]};"></span>${r}: ${n}</span>`).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
 // Set default date
 document.addEventListener('DOMContentLoaded',()=>{
   const dateEl=document.getElementById('req-date');
@@ -3471,5 +3871,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 init();
 </script>
+<!-- World Map libraries (loaded from CDN, cached forever by the browser) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 </body>
 </html>
