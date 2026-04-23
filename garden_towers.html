@@ -220,6 +220,27 @@
   .st-three_mo{background:var(--blue-light);color:var(--blue);}
   .st-six_mo{background:#e0f2e0;color:var(--green-dark);}
 
+  /* Home / landing page */
+  .home-content{padding:0;background:linear-gradient(180deg,#f4f9f4 0%,#eaf4ea 40%,#f4f9f4 100%);min-height:calc(100vh - 60px);display:flex;align-items:flex-start;justify-content:center;}
+  .home-hero{max-width:900px;width:100%;padding:48px 40px 60px;text-align:center;}
+  .home-logo{display:flex;justify-content:center;margin-bottom:18px;animation:homeFadeIn .6s ease;}
+  .home-logo svg{filter:drop-shadow(0 4px 12px rgba(0,105,83,0.2));}
+  .home-title{font-size:30px;font-weight:700;color:var(--green-dark);margin:0 0 10px;line-height:1.2;letter-spacing:-.01em;animation:homeFadeIn .7s ease;}
+  .home-subtitle{font-size:14px;color:var(--text-muted);margin:0 0 28px;font-weight:400;animation:homeFadeIn .8s ease;}
+  .home-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:36px;max-width:720px;margin-left:auto;margin-right:auto;animation:homeFadeIn .9s ease;}
+  .home-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+  .home-stat-value{font-size:24px;font-weight:700;color:var(--green-dark);line-height:1;margin-bottom:4px;}
+  .home-stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+  .home-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;max-width:720px;margin:0 auto;animation:homeFadeIn 1s ease;}
+  .home-action-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;text-align:left;}
+  .home-action-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:var(--bright);}
+  .home-action-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;color:#fff;}
+  .home-action-body{flex:1;min-width:0;}
+  .home-action-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+  .home-action-desc{font-size:11px;color:var(--text-muted);line-height:1.35;}
+  @keyframes homeFadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  @media(max-width:640px){.home-title{font-size:22px;}.home-hero{padding:30px 18px 40px;}}
+
   /* Logo upload dropzone inside edit-partner modal */
   .logo-upload{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
   .logo-upload:hover{border-color:var(--green);background:var(--bg);}
@@ -304,8 +325,12 @@
       <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Back to portal
     </div>
+    <div class="nav-item active" data-page="home" style="margin-top:10px;">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 7L8 2l6 5v7a1 1 0 01-1 1h-3v-5H7v5H4a1 1 0 01-1-1V7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span>Home</span>
+    </div>
     <div class="nav-section">Shipping</div>
-    <div class="nav-item active" data-page="shipping">
+    <div class="nav-item" data-page="shipping">
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M4 5V4a4 4 0 018 0v1" stroke="currentColor" stroke-width="1.5"/></svg>
       <span>Shipments</span>
       <span class="nav-badge" id="pending-badge" style="display:none">0</span>
@@ -336,8 +361,87 @@
 
   <div class="main">
 
+    <!-- HOME PAGE (landing) -->
+    <div class="page active" id="page-home">
+      <div class="topbar">
+        <button class="hamburger" id="hamburger-btn0"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
+        <div class="topbar-title">Home</div>
+      </div>
+      <div class="content home-content">
+        <div class="home-hero">
+          <div class="home-logo">
+            <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" width="120" height="144">
+              <!-- Pot -->
+              <path d="M 25 85 L 30 115 L 70 115 L 75 85 Z" fill="#8b6f47" stroke="#6b5333" stroke-width="1.5"/>
+              <ellipse cx="50" cy="85" rx="25" ry="4" fill="#a18056" stroke="#6b5333" stroke-width="1.5"/>
+              <!-- Tower column -->
+              <path d="M 42 85 L 42 20 Q 42 15 45 15 L 55 15 Q 58 15 58 20 L 58 85 Z" fill="#d4c5a0" stroke="#8b6f47" stroke-width="1.2"/>
+              <!-- Tower rings -->
+              <line x1="42" y1="30" x2="58" y2="30" stroke="#8b6f47" stroke-width="0.6"/>
+              <line x1="42" y1="45" x2="58" y2="45" stroke="#8b6f47" stroke-width="0.6"/>
+              <line x1="42" y1="60" x2="58" y2="60" stroke="#8b6f47" stroke-width="0.6"/>
+              <line x1="42" y1="75" x2="58" y2="75" stroke="#8b6f47" stroke-width="0.6"/>
+              <!-- Plants at each level - left side -->
+              <path d="M 42 28 Q 32 25 28 22 Q 34 24 36 28 Q 33 25 30 26" fill="#3a7d3a" stroke="#2d5f2d" stroke-width="0.8" stroke-linejoin="round"/>
+              <path d="M 42 43 Q 30 43 26 40 Q 32 42 35 44 Q 30 41 27 43" fill="#4a9d4a" stroke="#2d5f2d" stroke-width="0.8" stroke-linejoin="round"/>
+              <path d="M 42 58 Q 31 56 27 52 Q 33 55 36 58 Q 31 54 28 55" fill="#3a7d3a" stroke="#2d5f2d" stroke-width="0.8" stroke-linejoin="round"/>
+              <path d="M 42 73 Q 32 73 27 70 Q 33 72 36 74 Q 31 71 28 72" fill="#4a9d4a" stroke="#2d5f2d" stroke-width="0.8" stroke-linejoin="round"/>
+              <!-- Plants at each level - right side -->
+              <path d="M 58 28 Q 68 25 72 22 Q 66 24 64 28 Q 67 25 70 26" fill="#4a9d4a" stroke="#2d5f2d" stroke-width="0.8" stroke-linejoin="round"/>
+              <path d="M 58 43 Q 70 43 74 40 Q 68 42 65 44 Q 70 41 73 43" fill="#3a7d3a" stroke="#2d5f2d" stroke-width="0.8" stroke-linejoin="round"/>
+              <path d="M 58 58 Q 69 56 73 52 Q 67 55 64 58 Q 69 54 72 55" fill="#4a9d4a" stroke="#2d5f2d" stroke-width="0.8" stroke-linejoin="round"/>
+              <path d="M 58 73 Q 68 73 73 70 Q 67 72 64 74 Q 69 71 72 72" fill="#3a7d3a" stroke="#2d5f2d" stroke-width="0.8" stroke-linejoin="round"/>
+              <!-- Top greenery -->
+              <circle cx="50" cy="13" r="5" fill="#4a9d4a" stroke="#2d5f2d" stroke-width="0.8"/>
+              <circle cx="44" cy="11" r="3.5" fill="#3a7d3a" stroke="#2d5f2d" stroke-width="0.8"/>
+              <circle cx="56" cy="11" r="3.5" fill="#5aad5a" stroke="#2d5f2d" stroke-width="0.8"/>
+              <!-- Fruit/tomato accents -->
+              <circle cx="34" cy="40" r="1.8" fill="#dc2626"/>
+              <circle cx="66" cy="55" r="1.8" fill="#dc2626"/>
+              <circle cx="35" cy="70" r="1.8" fill="#ea580c"/>
+            </svg>
+          </div>
+          <h1 class="home-title">Global Garden Tower Management System</h1>
+          <p class="home-subtitle">A USANA Foundation initiative feeding families, one tower at a time.</p>
+          <div class="home-stats" id="home-stats">
+            <!-- Populated by renderHome() -->
+          </div>
+          <div class="home-actions">
+            <div class="home-action-card" onclick="showPage('tracker');renderTracker();">
+              <div class="home-action-icon" style="background:linear-gradient(135deg,var(--green),var(--green-dark));">🌱</div>
+              <div class="home-action-body">
+                <div class="home-action-title">Tower Tracker</div>
+                <div class="home-action-desc">See every partner, project, and tower</div>
+              </div>
+            </div>
+            <div class="home-action-card" onclick="showPage('reports');renderReports();">
+              <div class="home-action-icon" style="background:linear-gradient(135deg,#0066aa,#004477);">📊</div>
+              <div class="home-action-body">
+                <div class="home-action-title">Reports</div>
+                <div class="home-action-desc">Impact metrics across the whole program</div>
+              </div>
+            </div>
+            <div class="home-action-card" onclick="showPage('shipping');">
+              <div class="home-action-icon" style="background:linear-gradient(135deg,#c77e23,#8b5a18);">📦</div>
+              <div class="home-action-body">
+                <div class="home-action-title">Shipments</div>
+                <div class="home-action-desc">Request and track tower shipments</div>
+              </div>
+            </div>
+            <div class="home-action-card" onclick="showPage('inventory');renderInventory();">
+              <div class="home-action-icon" style="background:linear-gradient(135deg,#5f6368,#3c4043);">📋</div>
+              <div class="home-action-body">
+                <div class="home-action-title">Inventory</div>
+                <div class="home-action-desc">Stock levels at the warehouse</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- SHIPMENTS PAGE -->
-    <div class="page active" id="page-shipping">
+    <div class="page" id="page-shipping">
       <div class="topbar">
         <button class="hamburger" id="hamburger-btn"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
         <div class="topbar-title">Shipments</div>
@@ -1139,6 +1243,7 @@ function renderAll(){
   renderTracker();
   renderAssignPage();
   renderReports();
+  renderHome();
   if(trkDetailPartner!=null)renderProjectDetail();
 }
 
@@ -1572,6 +1677,9 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
     if(item.dataset.page==='reports'){item.addEventListener('click',()=>{showPage('reports');renderReports();
       if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
     });return;}
+    if(item.dataset.page==='home'){item.addEventListener('click',()=>{showPage('home');renderHome();
+      if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
+    });return;}
     if(item.dataset.page==='tracker'){item.addEventListener('click',()=>{trkSelectedPartner=null;showPage('tracker');renderTracker();
       if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
     });return;}
@@ -1586,7 +1694,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
 
 // Hamburger
 document.addEventListener('DOMContentLoaded',()=>{
-  ['hamburger-btn','hamburger-btn2','hamburger-btn3'].forEach(id=>{
+  ['hamburger-btn0','hamburger-btn','hamburger-btn2','hamburger-btn3','hamburger-btn4','hamburger-btn5','hamburger-btn6','hamburger-btn7'].forEach(id=>{
     const btn=document.getElementById(id);
     if(btn)btn.addEventListener('click',()=>{
       document.getElementById('main-sidebar')?.classList.toggle('mobile-open');
@@ -1612,6 +1720,25 @@ function trkTowerStatus(t){
   if(t.three_month_evaluation)return 'three_mo';
   if(t.date_planted)return 'planted';
   return 'empty';
+}
+
+function renderHome(){
+  const el=document.getElementById('home-stats');
+  if(!el)return;
+  const towers=DATA.towers||[];
+  const planted=towers.filter(t=>t.date_planted).length;
+  const partners=new Set(towers.map(t=>t.partner).filter(Boolean)).size;
+  const countries=new Set(towers.map(t=>(t.country||'').trim()).filter(Boolean)).size;
+  const families=towers.filter(t=>t.recipient_name).length;
+  const people=towers.reduce((s,t)=>s+(Number(t.number_of_family_members)||0),0);
+  el.innerHTML=`
+    <div class="home-stat"><div class="home-stat-value">${towers.length.toLocaleString()}</div><div class="home-stat-label">Towers</div></div>
+    <div class="home-stat"><div class="home-stat-value">${planted.toLocaleString()}</div><div class="home-stat-label">Planted</div></div>
+    <div class="home-stat"><div class="home-stat-value">${families.toLocaleString()}</div><div class="home-stat-label">Families</div></div>
+    <div class="home-stat"><div class="home-stat-value">${people.toLocaleString()}</div><div class="home-stat-label">People impacted</div></div>
+    <div class="home-stat"><div class="home-stat-value">${countries}</div><div class="home-stat-label">Countries</div></div>
+    <div class="home-stat"><div class="home-stat-value">${partners}</div><div class="home-stat-label">Partners</div></div>
+  `;
 }
 
 function renderTracker(){
