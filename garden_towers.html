@@ -153,6 +153,16 @@
   .partner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;}
   .partner-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;display:flex;flex-direction:column;gap:14px;}
   .partner-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:var(--bright);}
+
+  /* All Projects variant: dark green, stands out */
+  .all-projects-card{background:linear-gradient(135deg,var(--green-dark),var(--green));color:#fff;border-color:var(--green-dark);grid-column:1/-1;}
+  .all-projects-card:hover{border-color:#003325;box-shadow:0 8px 24px rgba(0,105,83,0.35);}
+  .all-projects-logo{background:rgba(255,255,255,0.15) !important;border:1px solid rgba(255,255,255,0.3) !important;color:#fff;font-size:26px;}
+  .all-projects-stats{border-top-color:rgba(255,255,255,0.25) !important;}
+  .all-projects-stats > div > div:first-child{color:rgba(255,255,255,0.8) !important;}
+  .all-projects-stats > div > div:nth-child(2) > span:first-child{color:#fff !important;}
+  .all-projects-stats > div > div:nth-child(2) > span:last-child{color:rgba(255,255,255,0.75) !important;}
+  .all-projects-stats > div > div:last-child{background:rgba(255,255,255,0.18) !important;}
   .partner-card-head{display:flex;align-items:center;gap:14px;}
   .partner-card-logo{width:56px;height:56px;border-radius:12px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;padding:4px;}
   .partner-card-logo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;}
@@ -216,6 +226,37 @@
   .logo-upload.has-logo{border-style:solid;padding:12px;}
   .logo-upload img{max-width:100%;max-height:120px;display:block;margin:0 auto;}
   .logo-upload-label{font-size:12px;color:var(--text-muted);margin-top:8px;}
+
+  /* Reports page */
+  .report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-bottom:24px;}
+  .report-grid.wide{grid-template-columns:1fr;}
+  .report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,0.04);overflow:hidden;display:flex;flex-direction:column;}
+  .report-card-head{padding:14px 18px 10px;border-bottom:1px solid var(--border);background:linear-gradient(to bottom,#fff,var(--bg));}
+  .report-card-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .report-card-title .report-icon{font-size:16px;}
+  .report-card-desc{font-size:11px;color:var(--text-muted);margin-top:3px;font-weight:400;}
+  .report-card-body{padding:14px 18px 16px;flex:1;}
+  .report-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .report-table th{text-align:left;padding:7px 8px;font-size:10px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);}
+  .report-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .report-table tr:last-child td{border-bottom:none;}
+  .report-table td.num{font-family:'Courier New',monospace;font-weight:600;text-align:right;color:var(--green-dark);}
+  .report-table td.pct{font-size:11px;color:var(--text-muted);text-align:right;font-family:'Courier New',monospace;}
+  .report-table .bar{display:inline-block;width:50px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;vertical-align:middle;margin-left:6px;}
+  .report-table .bar-fill{height:100%;background:var(--green);transition:width .3s;}
+  .report-table .bar-fill.amber{background:var(--amber);}
+  .report-table .bar-fill.red{background:var(--red);}
+  .report-table .bar-fill.blue{background:var(--blue);}
+  .report-big{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:16px;}
+  .report-big-stat{background:var(--bg);border-radius:10px;padding:14px;text-align:center;}
+  .report-big-stat-label{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+  .report-big-stat-value{font-size:26px;font-weight:700;color:var(--green-dark);line-height:1;}
+  .report-big-stat-sub{font-size:11px;color:var(--text-faint);margin-top:4px;}
+  .report-section{margin-bottom:28px;}
+  .report-section-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+  .report-section-sub{font-size:12px;color:var(--text-muted);margin-bottom:14px;}
+  .report-empty{text-align:center;padding:24px 12px;color:var(--text-faint);font-size:12px;}
+  .report-eval-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;}
 
   /* Location logo badge - uniform 48x48 with object-fit:contain for aspect-ratio consistency */
   .loc-logo{width:48px;height:48px;background:#fff;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:4px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.04);overflow:hidden;}
@@ -286,6 +327,10 @@
     <div class="nav-item" data-page="tracker-assign">
       <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <span>Assign towers</span>
+    </div>
+    <div class="nav-item" data-page="reports">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 14V4M2 14h12M5 11V7M8 11V5M11 11V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>Reports</span>
     </div>
   </div>
 
@@ -617,6 +662,23 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- REPORTS PAGE -->
+    <div class="page" id="page-reports">
+      <div class="topbar">
+        <button class="hamburger" id="hamburger-btn7"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
+        <div class="topbar-title">Reports</div>
+        <div class="topbar-right">
+          <select class="form-input" id="report-partner-filter" onchange="renderReports()" style="font-size:12px;padding:6px 10px;min-width:180px;">
+            <option value="">All partners</option>
+          </select>
+          <button class="btn btn-sm" onclick="exportAllReports()">⬇ Export all</button>
+        </div>
+      </div>
+      <div class="content" id="reports-content">
+        <!-- Reports rendered by renderReports() -->
       </div>
     </div>
 
@@ -1076,6 +1138,7 @@ function renderAll(){
   renderInventory();
   renderTracker();
   renderAssignPage();
+  renderReports();
   if(trkDetailPartner!=null)renderProjectDetail();
 }
 
@@ -1506,6 +1569,9 @@ function showToast(msg,type=''){
 // Nav click handlers
 document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
     if(item.dataset.page==='inventory'){item.addEventListener('click',()=>{showPage('inventory');renderInventory();});return;}
+    if(item.dataset.page==='reports'){item.addEventListener('click',()=>{showPage('reports');renderReports();
+      if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
+    });return;}
     if(item.dataset.page==='tracker'){item.addEventListener('click',()=>{trkSelectedPartner=null;showPage('tracker');renderTracker();
       if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
     });return;}
@@ -1624,7 +1690,33 @@ function renderPartnerGrid(){
     return;
   }
 
-  gridEl.innerHTML='<div class="partner-grid">'+partnerNames.map(name=>{
+  // Build an "All Projects" card first so it's always on top of the grid
+  const allTowers=towers;
+  const aN=allTowers.length;
+  const aPl=allTowers.filter(t=>t.date_planted).length;
+  const aTh=allTowers.filter(t=>t.three_month_evaluation).length;
+  const aSi=allTowers.filter(t=>t.six_month_evaluation).length;
+  const aPct=v=>aN?Math.round(v/aN*100):0;
+  const totalProjects=new Set(allTowers.map(t=>t.project_number).filter(Boolean)).size;
+  const totalPartners=new Set(allTowers.map(t=>t.partner).filter(Boolean)).size;
+
+  const allCard=`<div class="partner-card all-projects-card" onclick="openAllProjects()">
+    <div class="partner-card-head">
+      <div class="partner-card-logo all-projects-logo">🌍</div>
+      <div class="partner-card-title">
+        <div class="partner-card-name" style="color:#fff;">All Projects</div>
+        <div class="partner-card-meta" style="color:rgba(255,255,255,0.85);">${aN.toLocaleString()} towers · ${totalProjects} project${totalProjects===1?'':'s'} · ${totalPartners} partner${totalPartners===1?'':'s'}</div>
+        <div class="partner-card-badges"><span class="partner-card-badge" style="background:rgba(255,255,255,0.2);color:#fff;">Everything in one view</span></div>
+      </div>
+    </div>
+    <div class="partner-card-stats all-projects-stats">
+      ${trkProgressBar('Planted',aPl,aN,'#fff',aPct(aPl))}
+      ${trkProgressBar('3-month eval',aTh,aN,'#fff',aPct(aTh))}
+      ${trkProgressBar('6-month eval',aSi,aN,'#fff',aPct(aSi))}
+    </div>
+  </div>`;
+
+  gridEl.innerHTML='<div class="partner-grid">'+allCard+partnerNames.map(name=>{
     const g=byPartner[name];
     const partnerRec=(DATA.partners||[]).find(p=>p.name===name);
     const n=g.towers.length;
@@ -1769,6 +1861,15 @@ function copyPartnerLink(slug,project){
   });
 }
 
+// ---- All projects (cross-partner view) ----
+function openAllProjects(){
+  trkSelectedPartner=null;  // so Back button returns to grid, not a drill-in
+  trkDetailPartner='__all__';
+  trkDetailProject=null;
+  showPage('tracker-detail');
+  renderProjectDetail();
+}
+
 // ---- Project detail view ----
 function openProjectDetail(partner,project){
   trkDetailPartner=partner;
@@ -1778,26 +1879,43 @@ function openProjectDetail(partner,project){
 }
 
 function renderProjectDetail(){
-  const towers=(DATA.towers||[]).filter(t=>t.partner===trkDetailPartner&&t.project_number===Number(trkDetailProject));
+  const allMode=(trkDetailPartner==='__all__');
+  const towers=allMode
+    ? (DATA.towers||[])
+    : (DATA.towers||[]).filter(t=>t.partner===trkDetailPartner&&t.project_number===Number(trkDetailProject));
   const titleEl=document.getElementById('detail-title');
   const headTitle=document.getElementById('detail-head-title');
   const headSub=document.getElementById('detail-head-sub');
   const progEl=document.getElementById('detail-progress');
   const tblWrap=document.getElementById('detail-table-wrap');
   const countEl=document.getElementById('detail-count');
+  const delBtn=document.getElementById('detail-delete-btn');
+  const linkBtn=document.querySelector('#detail-head-title')?.parentElement?.parentElement?.querySelector('button[onclick*="copyDetailPartnerLink"]');
   if(!tblWrap)return;
 
-  const partnerRec=DATA.partners.find(p=>p.name===trkDetailPartner);
-  const uses_ext=partnerRec?partnerRec.uses_extended_form:false;
+  // If in all mode, any 100H tower makes us show extended columns
+  const partnerRec=allMode?null:DATA.partners.find(p=>p.name===trkDetailPartner);
+  const uses_ext=allMode
+    ? towers.some(t=>{
+        const p=DATA.partners.find(pp=>pp.name===t.partner);
+        return p&&p.uses_extended_form;
+      })
+    : (partnerRec?partnerRec.uses_extended_form:false);
 
   // Header + progress
-  if(titleEl)titleEl.textContent=`${trkDetailPartner} · Project ${trkDetailProject}`;
-  if(headTitle)headTitle.textContent=`${trkDetailPartner} · Project ${trkDetailProject}`;
-  const n=towers.length;
-  const rangeStart=n?Math.min(...towers.map(t=>t.tower_number||Infinity)):0;
-  const rangeEnd=n?Math.max(...towers.map(t=>t.tower_number||0)):0;
-  if(headSub)headSub.textContent=n?`Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${n.toLocaleString()} records${uses_ext?' · extended form':''}`:'No towers in this project';
+  const titleStr=allMode?'All Projects':`${trkDetailPartner} · Project ${trkDetailProject}`;
+  const subStr=allMode
+    ? `${towers.length.toLocaleString()} towers across ${new Set(towers.map(t=>t.partner)).size} partners, ${new Set(towers.map(t=>t.project_number).filter(Boolean)).size} projects`
+    : (towers.length?`Tower #s ${Math.min(...towers.map(t=>t.tower_number||Infinity)).toLocaleString()}–${Math.max(...towers.map(t=>t.tower_number||0)).toLocaleString()} · ${towers.length.toLocaleString()} records${uses_ext?' · extended form':''}`:'No towers in this project');
+  if(titleEl)titleEl.textContent=titleStr;
+  if(headTitle)headTitle.textContent=titleStr;
+  if(headSub)headSub.textContent=subStr;
 
+  // Hide delete + partner-link buttons in all mode
+  if(delBtn)delBtn.style.display=allMode?'none':'';
+  if(linkBtn)linkBtn.style.display=allMode?'none':'';
+
+  const n=towers.length;
   const plantedN=towers.filter(t=>t.date_planted).length;
   const threeN=towers.filter(t=>t.three_month_evaluation).length;
   const sixN=towers.filter(t=>t.six_month_evaluation).length;
@@ -1816,14 +1934,29 @@ function renderProjectDetail(){
       (t.recipient_name||'').toLowerCase().includes(q)||
       (t.tower_location||'').toLowerCase().includes(q)||
       (t.notes_about_family||'').toLowerCase().includes(q)||
-      (t.communities||'').toLowerCase().includes(q)
+      (t.communities||'').toLowerCase().includes(q)||
+      (t.partner||'').toLowerCase().includes(q)
     );
   }
-  rows=rows.slice().sort((a,b)=>(a.tower_number||0)-(b.tower_number||0));
+  rows=rows.slice().sort((a,b)=>{
+    // In all mode, sort by partner then project then tower#
+    if(allMode){
+      const pc=(a.partner||'').localeCompare(b.partner||'');
+      if(pc!==0)return pc;
+      const jc=(a.project_number||0)-(b.project_number||0);
+      if(jc!==0)return jc;
+    }
+    return (a.tower_number||0)-(b.tower_number||0);
+  });
   if(countEl)countEl.textContent=`${rows.length.toLocaleString()} of ${n.toLocaleString()} towers`;
 
-  // Build the table
+  // Build the table — in all mode, add Partner + Project columns at the front
+  const allModeCols=allMode?[
+    ['Partner','partner'],
+    ['Project','project_number'],
+  ]:[];
   const baseCols=[
+    ...allModeCols,
     ['Tower #','tower_number','tc-num'],
     ['Status','_status','tc-status-cell'],
     ['Date planted','date_planted','date'],
@@ -1975,19 +2108,37 @@ function copyDetailPartnerLink(){
 }
 
 function exportProjectCsv(){
-  const towers=(DATA.towers||[]).filter(t=>t.partner===trkDetailPartner&&t.project_number===Number(trkDetailProject));
-  const partnerRec=DATA.partners.find(p=>p.name===trkDetailPartner);
-  const ext=partnerRec?partnerRec.uses_extended_form:false;
+  const allMode=(trkDetailPartner==='__all__');
+  const towers=allMode
+    ? (DATA.towers||[])
+    : (DATA.towers||[]).filter(t=>t.partner===trkDetailPartner&&t.project_number===Number(trkDetailProject));
+  const partnerRec=allMode?null:DATA.partners.find(p=>p.name===trkDetailPartner);
+  const ext=allMode
+    ? towers.some(t=>{const p=DATA.partners.find(pp=>pp.name===t.partner);return p&&p.uses_extended_form;})
+    : (partnerRec?partnerRec.uses_extended_form:false);
 
-  const headers=['Tower #','Status','Date Planted','Location','Country','Person in Charge','Recipient','Family Size','Vegetables','Notes About Family','3-mo Eval','6-mo Eval','Challenges','Replanted'];
+  const baseHeaders=allMode
+    ? ['Partner','Project','Tower #','Status','Date Planted','Location','Country','Person in Charge','Recipient','Family Size','Vegetables','Notes About Family','3-mo Eval','6-mo Eval','Challenges','Replanted']
+    : ['Tower #','Status','Date Planted','Location','Country','Person in Charge','Recipient','Family Size','Vegetables','Notes About Family','3-mo Eval','6-mo Eval','Challenges','Replanted'];
   const extHeaders=['Community','Children in Home','Children in School','Monthly Income','Family Helped Build','Water Source','Water Trips/Day','Water Distance','Water Used/Week','Meals/Week','Extra Veg Sold','$ Earned/Week'];
-  const allHeaders=ext?[...headers,...extHeaders]:headers;
+  const allHeaders=ext?[...baseHeaders,...extHeaders]:baseHeaders;
   const escCsv=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
 
   const lines=[allHeaders.join(',')];
-  towers.sort((a,b)=>(a.tower_number||0)-(b.tower_number||0)).forEach(t=>{
+  const sorted=towers.slice().sort((a,b)=>{
+    if(allMode){
+      const pc=(a.partner||'').localeCompare(b.partner||'');
+      if(pc!==0)return pc;
+      const jc=(a.project_number||0)-(b.project_number||0);
+      if(jc!==0)return jc;
+    }
+    return (a.tower_number||0)-(b.tower_number||0);
+  });
+  sorted.forEach(t=>{
     const status=({empty:'Not started',planted:'Planted',three_mo:'3-mo done',six_mo:'6-mo done'})[trkTowerStatus(t)];
+    const allColsPrefix=allMode?[t.partner||'',t.project_number||'']:[];
     const base=[
+      ...allColsPrefix,
       t.tower_number||'',status,t.date_planted||'',t.tower_location||'',t.country||'',
       t.person_in_charge||'',t.recipient_name||'',t.number_of_family_members||'',
       (t.vegetables_planted||[]).join('; '),t.notes_about_family||'',
@@ -2008,7 +2159,10 @@ function exportProjectCsv(){
   const blob=new Blob([lines.join('\n')],{type:'text/csv'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download=`${(partnerRec?.slug||'project')}_proj${trkDetailProject}_${new Date().toISOString().split('T')[0]}.csv`;
+  const fname=allMode
+    ? `all_towers_${new Date().toISOString().split('T')[0]}.csv`
+    : `${(partnerRec?.slug||'project')}_proj${trkDetailProject}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.download=fname;
   a.click();
 }
 
@@ -2451,6 +2605,766 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(e.target===bg)closeModal();
   });
 });
+
+// ========================================================================
+// ---- REPORTS ----
+// Fifteen different reports across program scope, health, agronomy, community
+// impact, and operations. All pure data transformations — no API calls needed
+// beyond the initial DATA.towers fetch.
+// ========================================================================
+
+function renderReports(){
+  const el=document.getElementById('reports-content');
+  if(!el)return;
+
+  // Populate partner filter (once, first render)
+  const selEl=document.getElementById('report-partner-filter');
+  if(selEl && selEl.options.length<=1){
+    const partners=(DATA.partners||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));
+    partners.forEach(p=>{
+      const o=document.createElement('option');o.value=p.name;o.textContent=p.name;
+      selEl.appendChild(o);
+    });
+  }
+  const filterPartner=selEl?selEl.value:'';
+
+  // Filter tower dataset
+  const allTowers=DATA.towers||[];
+  const towers=filterPartner?allTowers.filter(t=>t.partner===filterPartner):allTowers;
+  const hasData=towers.length>0;
+
+  if(!hasData){
+    el.innerHTML=`<div class="card"><div class="card-body"><div class="state-box">No tower data yet. Once towers are planted, reports will appear here.</div></div></div>`;
+    return;
+  }
+
+  // Top-line stats
+  const planted=towers.filter(t=>t.date_planted);
+  const withRecipient=towers.filter(t=>t.recipient_name);
+  const totalFamilyMembers=towers.reduce((s,t)=>s+(Number(t.number_of_family_members)||0),0);
+  const countries=new Set(towers.map(t=>(t.country||'').trim()).filter(Boolean));
+  const communities=new Set(towers.map(t=>(t.communities||'').trim()).filter(Boolean));
+  const partnerCount=new Set(towers.map(t=>t.partner).filter(Boolean)).size;
+
+  let html=`
+    <!-- Hero stats -->
+    <div class="report-section">
+      <div class="report-section-title">Program Scope</div>
+      <div class="report-section-sub">${filterPartner?`Filtered to <strong>${esc(filterPartner)}</strong>`:'Across every partner, project, and country'}</div>
+      <div class="report-big">
+        <div class="report-big-stat"><div class="report-big-stat-label">Towers</div><div class="report-big-stat-value">${towers.length.toLocaleString()}</div><div class="report-big-stat-sub">assigned</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Planted</div><div class="report-big-stat-value">${planted.length.toLocaleString()}</div><div class="report-big-stat-sub">${towers.length?Math.round(planted.length/towers.length*100):0}% of assigned</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Families served</div><div class="report-big-stat-value">${withRecipient.length.toLocaleString()}</div><div class="report-big-stat-sub">with recipients recorded</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">People impacted</div><div class="report-big-stat-value">${totalFamilyMembers.toLocaleString()}</div><div class="report-big-stat-sub">family members</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Countries</div><div class="report-big-stat-value">${countries.size}</div><div class="report-big-stat-sub">${communities.size} community${communities.size===1?'':'ies'}</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Partners</div><div class="report-big-stat-value">${partnerCount}</div><div class="report-big-stat-sub">active</div></div>
+      </div>
+    </div>
+  `;
+
+  // ------------- SECTION: Geographic reach -------------
+  html+=`<div class="report-section">
+    <div class="report-section-title">Geographic Reach</div>
+    <div class="report-section-sub">Where the program operates</div>
+    <div class="report-grid">
+      ${reportTowersByCountry(towers)}
+      ${reportTowersByCommunity(towers)}
+    </div>
+  </div>`;
+
+  // ------------- SECTION: Growth over time -------------
+  html+=`<div class="report-section">
+    <div class="report-section-title">Growth Over Time</div>
+    <div class="report-section-sub">Planting velocity by month</div>
+    <div class="report-grid wide">
+      ${reportGrowthOverTime(towers)}
+    </div>
+  </div>`;
+
+  // ------------- SECTION: Tower health -------------
+  html+=`<div class="report-section">
+    <div class="report-section-title">Tower Health &amp; Success</div>
+    <div class="report-section-sub">Evaluation outcomes and replant rates</div>
+    <div class="report-grid">
+      ${reportEvaluationBreakdown(towers,'three_month_evaluation','3-Month Evaluation')}
+      ${reportEvaluationBreakdown(towers,'six_month_evaluation','6-Month Evaluation')}
+      ${reportReplantRate(towers)}
+      ${reportEvaluationByPartner(towers)}
+    </div>
+  </div>`;
+
+  // ------------- SECTION: Challenges -------------
+  html+=`<div class="report-section">
+    <div class="report-section-title">Challenges</div>
+    <div class="report-section-sub">What's getting in the way — helps prioritize training &amp; support</div>
+    <div class="report-grid">
+      ${reportChallengesTop(towers)}
+      ${reportChallengesByPartner(towers)}
+    </div>
+  </div>`;
+
+  // ------------- SECTION: Agronomic -------------
+  html+=`<div class="report-section">
+    <div class="report-section-title">Vegetables &amp; Crop Diversity</div>
+    <div class="report-section-sub">What's being grown</div>
+    <div class="report-grid">
+      ${reportVegetablesRanked(towers)}
+      ${reportCropDiversity(towers)}
+    </div>
+  </div>`;
+
+  // ------------- SECTION: Community impact (extended form) -------------
+  const extTowers=towers.filter(t=>{
+    const p=DATA.partners.find(pp=>pp.name===t.partner);
+    return p&&p.uses_extended_form;
+  });
+  if(extTowers.length>0){
+    html+=`<div class="report-section">
+      <div class="report-section-title">Community Impact</div>
+      <div class="report-section-sub">Food security, economic impact, water access — from 100 Humanitarians-style towers (${extTowers.length.toLocaleString()} towers with extended data)</div>
+      <div class="report-grid">
+        ${reportFoodSecurity(extTowers)}
+        ${reportEconomicImpact(extTowers)}
+        ${reportWaterAccess(extTowers)}
+      </div>
+    </div>`;
+  }
+
+  // ------------- SECTION: Operations -------------
+  html+=`<div class="report-section">
+    <div class="report-section-title">Operations</div>
+    <div class="report-section-sub">Fill rate and time-to-plant metrics — useful for knowing which partners need support</div>
+    <div class="report-grid">
+      ${reportFillRate(allTowers)}
+      ${reportTimeToPlant(towers)}
+    </div>
+  </div>`;
+
+  el.innerHTML=html;
+}
+
+// ---------- Individual report renderers ----------
+
+function reportTowersByCountry(towers){
+  const byCountry={};
+  towers.forEach(t=>{
+    const c=(t.country||'').trim();
+    if(!c)return;
+    if(!byCountry[c])byCountry[c]={towers:0,planted:0};
+    byCountry[c].towers++;
+    if(t.date_planted)byCountry[c].planted++;
+  });
+  const rows=Object.entries(byCountry).sort((a,b)=>b[1].towers-a[1].towers);
+  if(!rows.length)return reportEmptyCard('🌍','Towers by country','No country data recorded yet');
+  const max=Math.max(...rows.map(r=>r[1].towers));
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">🌍</span> Towers by Country</div>
+      <div class="report-card-desc">${rows.length} countries</div>
+    </div>
+    <div class="report-card-body">
+      <table class="report-table">
+        <thead><tr><th>Country</th><th>Planted</th><th style="text-align:right;">Towers</th><th></th></tr></thead>
+        <tbody>${rows.map(([c,s])=>`<tr>
+          <td>${esc(c)}</td>
+          <td class="pct">${s.planted}/${s.towers} (${s.towers?Math.round(s.planted/s.towers*100):0}%)</td>
+          <td class="num">${s.towers.toLocaleString()}</td>
+          <td><span class="bar"><span class="bar-fill" style="width:${Math.round(s.towers/max*100)}%;"></span></span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportTowersByCommunity(towers){
+  const byComm={};
+  towers.forEach(t=>{
+    const c=(t.communities||'').trim();
+    if(!c)return;
+    if(!byComm[c])byComm[c]={towers:0,planted:0,country:t.country||''};
+    byComm[c].towers++;
+    if(t.date_planted)byComm[c].planted++;
+  });
+  const rows=Object.entries(byComm).sort((a,b)=>b[1].towers-a[1].towers).slice(0,15);
+  if(!rows.length)return reportEmptyCard('📍','Top Communities','No community data — only shown for 100 Humanitarians-style projects');
+  const max=Math.max(...rows.map(r=>r[1].towers));
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">📍</span> Top Communities</div>
+      <div class="report-card-desc">Ranked by tower count · top 15 shown</div>
+    </div>
+    <div class="report-card-body">
+      <table class="report-table">
+        <thead><tr><th>Community</th><th>Country</th><th style="text-align:right;">Towers</th><th></th></tr></thead>
+        <tbody>${rows.map(([c,s])=>`<tr>
+          <td>${esc(c)}</td>
+          <td class="pct" style="text-align:left;color:var(--text-muted);">${esc(s.country)}</td>
+          <td class="num">${s.towers.toLocaleString()}</td>
+          <td><span class="bar"><span class="bar-fill" style="width:${Math.round(s.towers/max*100)}%;"></span></span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportGrowthOverTime(towers){
+  const byMonth={};
+  towers.forEach(t=>{
+    if(!t.date_planted)return;
+    const d=new Date(t.date_planted);
+    if(isNaN(d))return;
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    byMonth[key]=(byMonth[key]||0)+1;
+  });
+  const keys=Object.keys(byMonth).sort();
+  if(!keys.length)return reportEmptyCard('📈','Growth Over Time','No planting dates recorded yet');
+  const max=Math.max(...keys.map(k=>byMonth[k]));
+  let cum=0;
+  const rows=keys.map(k=>{cum+=byMonth[k];return {month:k,n:byMonth[k],cum};});
+  const formatMonth=k=>{const [y,m]=k.split('-');return new Date(Number(y),Number(m)-1,1).toLocaleDateString(undefined,{month:'short',year:'numeric'});};
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">📈</span> Planting Activity by Month</div>
+      <div class="report-card-desc">${keys.length} months of data · ${rows[rows.length-1].cum.toLocaleString()} planted total</div>
+    </div>
+    <div class="report-card-body">
+      <table class="report-table">
+        <thead><tr><th>Month</th><th style="text-align:right;">Planted</th><th style="text-align:right;">Running total</th><th></th></tr></thead>
+        <tbody>${rows.slice().reverse().map(r=>`<tr>
+          <td>${formatMonth(r.month)}</td>
+          <td class="num">${r.n.toLocaleString()}</td>
+          <td class="pct">${r.cum.toLocaleString()}</td>
+          <td><span class="bar" style="width:120px;"><span class="bar-fill" style="width:${Math.round(r.n/max*100)}%;"></span></span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportEvaluationBreakdown(towers,field,title){
+  const evalOpts=(DATA.towerOptions&&DATA.towerOptions.evaluation)||[
+    {value:'Excellent',color:'#16a34a'},
+    {value:'Good',color:'#84cc16'},
+    {value:'Fair',color:'#f59e0b'},
+    {value:'Poor',color:'#dc2626'},
+  ];
+  const counts={};
+  evalOpts.forEach(o=>counts[o.value]=0);
+  towers.forEach(t=>{if(t[field]&&counts.hasOwnProperty(t[field]))counts[t[field]]++;});
+  const total=Object.values(counts).reduce((s,n)=>s+n,0);
+  if(!total)return reportEmptyCard(field==='three_month_evaluation'?'🌱':'🌿',title,'No evaluations recorded yet');
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">${field==='three_month_evaluation'?'🌱':'🌿'}</span> ${title}</div>
+      <div class="report-card-desc">${total.toLocaleString()} towers evaluated</div>
+    </div>
+    <div class="report-card-body">
+      <table class="report-table">
+        <thead><tr><th>Rating</th><th style="text-align:right;">Count</th><th style="text-align:right;">%</th><th></th></tr></thead>
+        <tbody>${evalOpts.map(o=>{
+          const c=counts[o.value]||0;
+          const pct=total?Math.round(c/total*100):0;
+          return `<tr>
+            <td><span class="report-eval-dot" style="background:${o.color};"></span>${o.value}</td>
+            <td class="num">${c}</td>
+            <td class="pct">${pct}%</td>
+            <td><span class="bar"><span class="bar-fill" style="width:${pct}%;background:${o.color};"></span></span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportReplantRate(towers){
+  const answered=towers.filter(t=>t.was_tower_replanted===true||t.was_tower_replanted===false);
+  const yes=answered.filter(t=>t.was_tower_replanted===true).length;
+  const no=answered.filter(t=>t.was_tower_replanted===false).length;
+  if(!answered.length)return reportEmptyCard('🔄','Replant Rate','Replant data not yet recorded');
+  const pctYes=Math.round(yes/answered.length*100);
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">🔄</span> Replant Rate</div>
+      <div class="report-card-desc">Did the family replant after the first cycle?</div>
+    </div>
+    <div class="report-card-body">
+      <div class="report-big" style="margin-bottom:10px;">
+        <div class="report-big-stat"><div class="report-big-stat-label">Replanted</div><div class="report-big-stat-value" style="color:#16a34a;">${yes}</div><div class="report-big-stat-sub">${pctYes}% of answered</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Not replanted</div><div class="report-big-stat-value" style="color:#dc2626;">${no}</div><div class="report-big-stat-sub">${100-pctYes}% of answered</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-faint);text-align:center;">${answered.length.toLocaleString()} of ${towers.length.toLocaleString()} towers have a replant answer</div>
+    </div>
+  </div>`;
+}
+
+function reportEvaluationByPartner(towers){
+  const byPartner={};
+  towers.forEach(t=>{
+    const p=t.partner||'—';
+    if(!byPartner[p])byPartner[p]={Excellent:0,Good:0,Fair:0,Poor:0,total:0,evaluated:0};
+    byPartner[p].total++;
+    const v=t.three_month_evaluation||t.six_month_evaluation;
+    if(v&&byPartner[p].hasOwnProperty(v)){byPartner[p][v]++;byPartner[p].evaluated++;}
+  });
+  const rows=Object.entries(byPartner).filter(([,s])=>s.evaluated>0).sort((a,b)=>{
+    // Rank by % Excellent+Good
+    const ga=(a[1].Excellent+a[1].Good)/(a[1].evaluated||1);
+    const gb=(b[1].Excellent+b[1].Good)/(b[1].evaluated||1);
+    return gb-ga;
+  });
+  if(!rows.length)return reportEmptyCard('🏆','Tower Health by Partner','No evaluations recorded yet');
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">🏆</span> Tower Health by Partner</div>
+      <div class="report-card-desc">Ranked by % Excellent or Good (3-mo or 6-mo)</div>
+    </div>
+    <div class="report-card-body">
+      <table class="report-table">
+        <thead><tr><th>Partner</th><th style="text-align:right;">Excellent/Good</th><th style="text-align:right;">Fair</th><th style="text-align:right;">Poor</th><th></th></tr></thead>
+        <tbody>${rows.map(([p,s])=>{
+          const good=s.Excellent+s.Good;
+          const goodPct=s.evaluated?Math.round(good/s.evaluated*100):0;
+          return `<tr>
+            <td>${esc(p)}</td>
+            <td class="num" style="color:#16a34a;">${good}</td>
+            <td class="num" style="color:#f59e0b;">${s.Fair}</td>
+            <td class="num" style="color:#dc2626;">${s.Poor}</td>
+            <td><span class="bar"><span class="bar-fill" style="width:${goodPct}%;background:#16a34a;"></span></span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportChallengesTop(towers){
+  const counts={};
+  towers.forEach(t=>{
+    if(!t.significant_challenges)return;
+    // Challenges stored as comma/semicolon-separated text
+    String(t.significant_challenges).split(/,|;/).forEach(c=>{
+      const clean=c.trim();
+      if(clean)counts[clean]=(counts[clean]||0)+1;
+    });
+  });
+  const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if(!rows.length)return reportEmptyCard('⚠️','Most Common Challenges','No challenges reported yet');
+  const max=rows[0][1];
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">⚠️</span> Most Common Challenges</div>
+      <div class="report-card-desc">${rows.reduce((s,r)=>s+r[1],0)} total mentions across ${towers.filter(t=>t.significant_challenges).length} towers</div>
+    </div>
+    <div class="report-card-body">
+      <table class="report-table">
+        <thead><tr><th>Challenge</th><th style="text-align:right;">Towers</th><th></th></tr></thead>
+        <tbody>${rows.map(([c,n])=>`<tr>
+          <td>${esc(c)}</td>
+          <td class="num">${n}</td>
+          <td><span class="bar"><span class="bar-fill amber" style="width:${Math.round(n/max*100)}%;"></span></span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportChallengesByPartner(towers){
+  const byPartner={};
+  towers.forEach(t=>{
+    const p=t.partner||'—';
+    if(!byPartner[p])byPartner[p]={total:0,withChallenges:0,top:null,counts:{}};
+    byPartner[p].total++;
+    if(t.significant_challenges){
+      byPartner[p].withChallenges++;
+      String(t.significant_challenges).split(/,|;/).forEach(c=>{
+        const clean=c.trim();
+        if(clean)byPartner[p].counts[clean]=(byPartner[p].counts[clean]||0)+1;
+      });
+    }
+  });
+  const rows=Object.entries(byPartner).filter(([,s])=>s.withChallenges>0).sort((a,b)=>b[1].withChallenges/b[1].total-a[1].withChallenges/a[1].total);
+  if(!rows.length)return reportEmptyCard('📊','Challenge Rate by Partner','No challenges reported yet');
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">📊</span> Challenge Rate by Partner</div>
+      <div class="report-card-desc">% of towers reporting challenges, and what's most common</div>
+    </div>
+    <div class="report-card-body">
+      <table class="report-table">
+        <thead><tr><th>Partner</th><th style="text-align:right;">With issues</th><th>Most common</th></tr></thead>
+        <tbody>${rows.map(([p,s])=>{
+          const pct=s.total?Math.round(s.withChallenges/s.total*100):0;
+          const top=Object.entries(s.counts).sort((a,b)=>b[1]-a[1])[0];
+          return `<tr>
+            <td>${esc(p)}</td>
+            <td class="num" style="color:var(--amber-text);">${s.withChallenges}/${s.total} (${pct}%)</td>
+            <td style="font-size:11px;color:var(--text-muted);">${top?esc(top[0])+' ('+top[1]+')':'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportVegetablesRanked(towers){
+  const counts={};
+  towers.forEach(t=>{
+    if(!Array.isArray(t.vegetables_planted))return;
+    t.vegetables_planted.forEach(v=>{
+      const c=(v||'').trim();
+      if(c)counts[c]=(counts[c]||0)+1;
+    });
+  });
+  const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  if(!rows.length)return reportEmptyCard('🥬','Vegetables Planted','No vegetables recorded yet');
+  const max=rows[0][1];
+  const totalMentions=Object.values(counts).reduce((s,n)=>s+n,0);
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">🥬</span> Most Popular Vegetables</div>
+      <div class="report-card-desc">${totalMentions.toLocaleString()} total plantings · top 20 shown</div>
+    </div>
+    <div class="report-card-body">
+      <table class="report-table">
+        <thead><tr><th>Vegetable</th><th style="text-align:right;">Towers</th><th></th></tr></thead>
+        <tbody>${rows.map(([v,n])=>`<tr>
+          <td>${esc(v)}</td>
+          <td class="num">${n}</td>
+          <td><span class="bar"><span class="bar-fill" style="width:${Math.round(n/max*100)}%;"></span></span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportCropDiversity(towers){
+  const withVeg=towers.filter(t=>Array.isArray(t.vegetables_planted)&&t.vegetables_planted.length>0);
+  if(!withVeg.length)return reportEmptyCard('🌾','Crop Diversity','No vegetables recorded yet');
+  const counts=withVeg.map(t=>t.vegetables_planted.length);
+  const total=counts.reduce((s,n)=>s+n,0);
+  const avg=total/withVeg.length;
+  // Distribution buckets
+  const buckets={'1-2':0,'3-5':0,'6-9':0,'10+':0};
+  counts.forEach(n=>{
+    if(n<=2)buckets['1-2']++;
+    else if(n<=5)buckets['3-5']++;
+    else if(n<=9)buckets['6-9']++;
+    else buckets['10+']++;
+  });
+  const max=Math.max(...Object.values(buckets));
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">🌾</span> Crop Diversity</div>
+      <div class="report-card-desc">More variety per tower = better food security</div>
+    </div>
+    <div class="report-card-body">
+      <div class="report-big" style="margin-bottom:12px;">
+        <div class="report-big-stat"><div class="report-big-stat-label">Avg varieties/tower</div><div class="report-big-stat-value">${avg.toFixed(1)}</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Max in a tower</div><div class="report-big-stat-value">${Math.max(...counts)}</div></div>
+      </div>
+      <table class="report-table">
+        <thead><tr><th>Variety count</th><th style="text-align:right;">Towers</th><th></th></tr></thead>
+        <tbody>${Object.entries(buckets).map(([b,n])=>`<tr>
+          <td>${b} vegetables</td>
+          <td class="num">${n}</td>
+          <td><span class="bar"><span class="bar-fill" style="width:${max?Math.round(n/max*100):0}%;"></span></span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportFoodSecurity(towers){
+  const withMeals=towers.filter(t=>t.meals_per_week_from_garden!=null&&!isNaN(Number(t.meals_per_week_from_garden)));
+  if(!withMeals.length)return reportEmptyCard('🍽️','Food Security Impact','No meals-per-week data yet');
+  const vals=withMeals.map(t=>Number(t.meals_per_week_from_garden));
+  const total=vals.reduce((s,n)=>s+n,0);
+  const avg=total/vals.length;
+  // Weekly meals × 52 weeks = annualized (rough estimate for whole dataset)
+  const annualMeals=total*52;
+  // By community
+  const byComm={};
+  withMeals.forEach(t=>{
+    const c=(t.communities||'').trim()||'—';
+    if(!byComm[c])byComm[c]={towers:0,meals:0};
+    byComm[c].towers++;byComm[c].meals+=Number(t.meals_per_week_from_garden);
+  });
+  const topComms=Object.entries(byComm).sort((a,b)=>b[1].meals-a[1].meals).slice(0,5);
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">🍽️</span> Food Security Impact</div>
+      <div class="report-card-desc">Meals per week that include vegetables from the tower</div>
+    </div>
+    <div class="report-card-body">
+      <div class="report-big" style="margin-bottom:12px;">
+        <div class="report-big-stat"><div class="report-big-stat-label">Total meals/week</div><div class="report-big-stat-value">${total.toLocaleString()}</div><div class="report-big-stat-sub">${annualMeals.toLocaleString()}/year</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Avg per family</div><div class="report-big-stat-value">${avg.toFixed(1)}</div><div class="report-big-stat-sub">meals/week</div></div>
+      </div>
+      <table class="report-table">
+        <thead><tr><th>Top communities</th><th style="text-align:right;">Meals/wk</th></tr></thead>
+        <tbody>${topComms.map(([c,s])=>`<tr>
+          <td>${esc(c)} <span style="color:var(--text-faint);font-size:10px;">(${s.towers} towers)</span></td>
+          <td class="num">${s.meals.toLocaleString()}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportEconomicImpact(towers){
+  const withMoney=towers.filter(t=>t.money_earned_per_week!=null&&!isNaN(Number(t.money_earned_per_week))&&Number(t.money_earned_per_week)>0);
+  if(!withMoney.length)return reportEmptyCard('💵','Economic Impact','No sales data reported yet — families may not be selling extras yet');
+  const vals=withMoney.map(t=>Number(t.money_earned_per_week));
+  const total=vals.reduce((s,n)=>s+n,0);
+  const avg=total/vals.length;
+  const annualTotal=total*52;
+  // Selling rate
+  const answered=towers.filter(t=>t.extra_vegetables_sold===true||t.extra_vegetables_sold===false);
+  const sellers=towers.filter(t=>t.extra_vegetables_sold===true).length;
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">💵</span> Economic Impact</div>
+      <div class="report-card-desc">Income from selling extra vegetables</div>
+    </div>
+    <div class="report-card-body">
+      <div class="report-big" style="margin-bottom:12px;">
+        <div class="report-big-stat"><div class="report-big-stat-label">Total/week</div><div class="report-big-stat-value">$${total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="report-big-stat-sub">$${annualTotal.toLocaleString(undefined,{maximumFractionDigits:0})}/year</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Avg seller</div><div class="report-big-stat-value">$${avg.toFixed(2)}</div><div class="report-big-stat-sub">per week</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Selling</div><div class="report-big-stat-value">${sellers}</div><div class="report-big-stat-sub">${answered.length?Math.round(sellers/answered.length*100):0}% of asked</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-faint);text-align:center;">Based on ${withMoney.length.toLocaleString()} towers with recorded earnings</div>
+    </div>
+  </div>`;
+}
+
+function reportWaterAccess(towers){
+  const withTrips=towers.filter(t=>t.water_trips_per_day!=null&&!isNaN(Number(t.water_trips_per_day)));
+  if(!withTrips.length)return reportEmptyCard('💧','Water Access','No water data reported yet');
+  const trips=withTrips.map(t=>Number(t.water_trips_per_day));
+  const avgTrips=trips.reduce((s,n)=>s+n,0)/trips.length;
+  // Distance (stored as text like "2km"), extract numeric portion where possible
+  const distances=towers.map(t=>{
+    const d=String(t.water_distance_from_home||'');
+    const m=d.match(/(\d+(?:\.\d+)?)/);
+    if(!m)return null;
+    let n=parseFloat(m[1]);
+    // If the string mentions 'm' but not 'km', assume meters -> convert
+    if(/\bm\b/i.test(d)&&!/km/i.test(d))n=n/1000;
+    return n;
+  }).filter(n=>n!=null&&!isNaN(n));
+  const avgDist=distances.length?distances.reduce((s,n)=>s+n,0)/distances.length:null;
+  // Source breakdown
+  const sources={};
+  towers.forEach(t=>{
+    const s=(t.water_source||'').trim();
+    if(!s)return;
+    // Normalize common values
+    const key=s.length>40?s.slice(0,40)+'…':s;
+    sources[key]=(sources[key]||0)+1;
+  });
+  const topSources=Object.entries(sources).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">💧</span> Water Access</div>
+      <div class="report-card-desc">How easily families get water to their towers</div>
+    </div>
+    <div class="report-card-body">
+      <div class="report-big" style="margin-bottom:12px;">
+        <div class="report-big-stat"><div class="report-big-stat-label">Avg trips/day</div><div class="report-big-stat-value">${avgTrips.toFixed(1)}</div><div class="report-big-stat-sub">to fetch water</div></div>
+        ${avgDist!=null?`<div class="report-big-stat"><div class="report-big-stat-label">Avg distance</div><div class="report-big-stat-value">${avgDist.toFixed(1)}</div><div class="report-big-stat-sub">km to source</div></div>`:''}
+      </div>
+      <table class="report-table">
+        <thead><tr><th>Water sources</th><th style="text-align:right;">Towers</th></tr></thead>
+        <tbody>${topSources.map(([s,n])=>`<tr>
+          <td>${esc(s)}</td>
+          <td class="num">${n}</td>
+        </tr>`).join('')||'<tr><td colspan="2" style="text-align:center;color:var(--text-faint);">No source data</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportFillRate(allTowers){
+  // Always calculated across all towers (not filtered), since this is about operations health
+  const byPartner={};
+  allTowers.forEach(t=>{
+    const p=t.partner||'—';
+    if(!byPartner[p])byPartner[p]={assigned:0,planted:0,evaluated:0};
+    byPartner[p].assigned++;
+    if(t.date_planted)byPartner[p].planted++;
+    if(t.three_month_evaluation||t.six_month_evaluation)byPartner[p].evaluated++;
+  });
+  const rows=Object.entries(byPartner).sort((a,b)=>{
+    const ra=a[1].planted/(a[1].assigned||1);
+    const rb=b[1].planted/(b[1].assigned||1);
+    return rb-ra;
+  });
+  if(!rows.length)return reportEmptyCard('📋','Fill Rate by Partner','No data');
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">📋</span> Fill Rate by Partner</div>
+      <div class="report-card-desc">% of assigned towers that have been planted — flags partners who may need support</div>
+    </div>
+    <div class="report-card-body">
+      <table class="report-table">
+        <thead><tr><th>Partner</th><th style="text-align:right;">Assigned</th><th style="text-align:right;">Planted</th><th style="text-align:right;">Fill rate</th><th></th></tr></thead>
+        <tbody>${rows.map(([p,s])=>{
+          const pct=s.assigned?Math.round(s.planted/s.assigned*100):0;
+          const barColor=pct>=75?'':(pct>=40?'amber':'red');
+          return `<tr>
+            <td>${esc(p)}</td>
+            <td class="num" style="color:var(--text);">${s.assigned}</td>
+            <td class="num">${s.planted}</td>
+            <td class="pct"><strong>${pct}%</strong></td>
+            <td><span class="bar"><span class="bar-fill ${barColor}" style="width:${pct}%;"></span></span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportTimeToPlant(towers){
+  // We don't store an assignment date per tower, but created_at serves as proxy
+  const withBoth=towers.filter(t=>t.date_planted&&t.created_at);
+  if(!withBoth.length)return reportEmptyCard('⏱️','Time to Plant','Requires assignment &amp; plant date — data builds up as new projects are assigned');
+  const days=withBoth.map(t=>{
+    const a=new Date(t.created_at);
+    const p=new Date(t.date_planted);
+    return Math.round((p-a)/(1000*60*60*24));
+  }).filter(n=>!isNaN(n)&&n>=0);
+  if(!days.length)return reportEmptyCard('⏱️','Time to Plant','Not enough date data yet');
+  const avg=days.reduce((s,n)=>s+n,0)/days.length;
+  const sorted=days.slice().sort((a,b)=>a-b);
+  const median=sorted[Math.floor(sorted.length/2)];
+  // By partner
+  const byPartner={};
+  withBoth.forEach(t=>{
+    const a=new Date(t.created_at);
+    const p=new Date(t.date_planted);
+    const d=Math.round((p-a)/(1000*60*60*24));
+    if(isNaN(d)||d<0)return;
+    const n=t.partner||'—';
+    if(!byPartner[n])byPartner[n]={days:[]};
+    byPartner[n].days.push(d);
+  });
+  const partnerRows=Object.entries(byPartner).map(([p,s])=>{
+    const a=s.days.reduce((x,y)=>x+y,0)/s.days.length;
+    return [p,a,s.days.length];
+  }).sort((a,b)=>a[1]-b[1]);
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">⏱️</span> Time from Assignment to Planting</div>
+      <div class="report-card-desc">How long between reserving a tower # and it getting into the ground</div>
+    </div>
+    <div class="report-card-body">
+      <div class="report-big" style="margin-bottom:12px;">
+        <div class="report-big-stat"><div class="report-big-stat-label">Average</div><div class="report-big-stat-value">${avg.toFixed(0)}</div><div class="report-big-stat-sub">days</div></div>
+        <div class="report-big-stat"><div class="report-big-stat-label">Median</div><div class="report-big-stat-value">${median}</div><div class="report-big-stat-sub">days</div></div>
+      </div>
+      <table class="report-table">
+        <thead><tr><th>Partner</th><th style="text-align:right;">Avg days</th><th style="text-align:right;">Towers</th></tr></thead>
+        <tbody>${partnerRows.map(([p,a,n])=>`<tr>
+          <td>${esc(p)}</td>
+          <td class="num">${a.toFixed(0)}</td>
+          <td class="pct">${n}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function reportEmptyCard(icon,title,msg){
+  return `<div class="report-card">
+    <div class="report-card-head">
+      <div class="report-card-title"><span class="report-icon">${icon}</span> ${title}</div>
+    </div>
+    <div class="report-card-body"><div class="report-empty">${msg}</div></div>
+  </div>`;
+}
+
+function exportAllReports(){
+  // Export a comprehensive CSV file with every report
+  const selEl=document.getElementById('report-partner-filter');
+  const filterPartner=selEl?selEl.value:'';
+  const allTowers=DATA.towers||[];
+  const towers=filterPartner?allTowers.filter(t=>t.partner===filterPartner):allTowers;
+  if(!towers.length){return showToast('No data to export','error');}
+
+  const escCsv=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const lines=[];
+  const section=(title)=>{lines.push('');lines.push('--- '+title+' ---');};
+
+  lines.push('USANA Foundation — Garden Tower Reports');
+  lines.push('Generated: '+new Date().toISOString());
+  if(filterPartner)lines.push('Filtered to: '+filterPartner);
+  lines.push('');
+
+  // Summary
+  section('Program Summary');
+  lines.push(['Metric','Value'].join(','));
+  lines.push(['Total towers',towers.length].map(escCsv).join(','));
+  lines.push(['Planted',towers.filter(t=>t.date_planted).length].map(escCsv).join(','));
+  lines.push(['Families served',towers.filter(t=>t.recipient_name).length].map(escCsv).join(','));
+  lines.push(['Family members impacted',towers.reduce((s,t)=>s+(Number(t.number_of_family_members)||0),0)].map(escCsv).join(','));
+  lines.push(['Countries',new Set(towers.map(t=>(t.country||'').trim()).filter(Boolean)).size].map(escCsv).join(','));
+  lines.push(['Partners',new Set(towers.map(t=>t.partner).filter(Boolean)).size].map(escCsv).join(','));
+
+  // By country
+  section('Towers by Country');
+  lines.push(['Country','Assigned','Planted','Fill %'].join(','));
+  const byCountry={};
+  towers.forEach(t=>{
+    const c=(t.country||'').trim();if(!c)return;
+    if(!byCountry[c])byCountry[c]={a:0,p:0};byCountry[c].a++;if(t.date_planted)byCountry[c].p++;
+  });
+  Object.entries(byCountry).sort((a,b)=>b[1].a-a[1].a).forEach(([c,s])=>{
+    lines.push([c,s.a,s.p,s.a?Math.round(s.p/s.a*100)+'%':''].map(escCsv).join(','));
+  });
+
+  // Vegetables
+  section('Most Popular Vegetables');
+  lines.push(['Vegetable','Towers'].join(','));
+  const vegCounts={};
+  towers.forEach(t=>{
+    if(!Array.isArray(t.vegetables_planted))return;
+    t.vegetables_planted.forEach(v=>{const c=(v||'').trim();if(c)vegCounts[c]=(vegCounts[c]||0)+1;});
+  });
+  Object.entries(vegCounts).sort((a,b)=>b[1]-a[1]).forEach(([v,n])=>{
+    lines.push([v,n].map(escCsv).join(','));
+  });
+
+  // Challenges
+  section('Most Common Challenges');
+  lines.push(['Challenge','Towers'].join(','));
+  const chCounts={};
+  towers.forEach(t=>{
+    if(!t.significant_challenges)return;
+    String(t.significant_challenges).split(/,|;/).forEach(c=>{const clean=c.trim();if(clean)chCounts[clean]=(chCounts[clean]||0)+1;});
+  });
+  Object.entries(chCounts).sort((a,b)=>b[1]-a[1]).forEach(([c,n])=>{
+    lines.push([c,n].map(escCsv).join(','));
+  });
+
+  // Fill rate
+  section('Fill Rate by Partner');
+  lines.push(['Partner','Assigned','Planted','Fill rate %'].join(','));
+  const byPartner={};
+  allTowers.forEach(t=>{
+    const p=t.partner||'—';
+    if(!byPartner[p])byPartner[p]={a:0,p:0};byPartner[p].a++;if(t.date_planted)byPartner[p].p++;
+  });
+  Object.entries(byPartner).forEach(([p,s])=>{
+    lines.push([p,s.a,s.p,s.a?Math.round(s.p/s.a*100)+'%':''].map(escCsv).join(','));
+  });
+
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`usana_foundation_reports_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Report exported','success');
+}
 
 // Set default date
 document.addEventListener('DOMContentLoaded',()=>{
