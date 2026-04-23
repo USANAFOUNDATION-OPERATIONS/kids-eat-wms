@@ -149,23 +149,24 @@
   .print-only{display:none;}
   #print-area{display:none;}
 
-  /* Tracker two-pane layout */
-  .tracker-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:flex-start;}
-  .tracker-tree{position:sticky;top:16px;max-height:calc(100vh - 200px);overflow-y:auto;}
-  .tracker-tree .card-head{padding:12px 16px;}
-  .tracker-tree-partner{padding:8px 12px;margin:1px 6px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between;transition:background .1s;}
-  .tracker-tree-partner:hover{background:var(--bg);}
-  .tracker-tree-partner.expanded{background:var(--green-light);color:var(--green-dark);}
-  .tracker-tree-partner .chev{font-size:10px;color:var(--text-faint);transition:transform .15s;}
-  .tracker-tree-partner.expanded .chev{transform:rotate(90deg);}
-  .tracker-tree-projects{padding:2px 0 6px 22px;display:none;}
-  .tracker-tree-projects.open{display:block;}
-  .tracker-tree-project{padding:7px 12px;margin:1px 6px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--text-muted);transition:background .1s;display:flex;align-items:center;justify-content:space-between;}
-  .tracker-tree-project:hover{background:var(--bg);color:var(--text);}
-  .tracker-tree-project.active{background:var(--green);color:#fff;font-weight:600;}
-  .tracker-tree-project .proj-count{font-size:10px;color:var(--text-faint);font-weight:500;}
-  .tracker-tree-project.active .proj-count{color:rgba(255,255,255,0.8);}
-  .tracker-tree-empty{padding:16px;color:var(--text-faint);font-size:12px;text-align:center;}
+  /* Partner group: header + nested projects */
+  .partner-group{margin-bottom:24px;}
+  .partner-header{background:#fff;border:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border-bottom:none;}
+  .partner-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .partner-header-name{font-size:17px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;gap:10px;}
+  .partner-badge{background:var(--green-light);color:var(--green-dark);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:.03em;text-transform:uppercase;}
+  .partner-header-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:4px 0 0;}
+
+  .partner-projects{background:#fff;border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);border-top:none;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+  .project-row{padding:14px 20px;border-top:1px solid var(--border);cursor:pointer;transition:background .1s;}
+  .project-row:first-child{border-top:1px solid var(--border);}
+  .project-row:hover{background:#f8fdf8;}
+  .project-row-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;}
+  .project-row-name{font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+  .project-row-meta{font-size:11px;color:var(--text-faint);font-weight:400;}
+  .project-row-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .project-row-actions{display:flex;gap:6px;flex-shrink:0;}
+  .project-row-chev{color:var(--text-faint);font-size:14px;margin-left:4px;}
 
   /* Detail table (Airtable-style) */
   .detail-table-wrap{overflow:auto;max-height:calc(100vh - 380px);}
@@ -184,15 +185,6 @@
   .st-planted{background:var(--moss);color:var(--green-dark);}
   .st-three_mo{background:var(--blue-light);color:var(--blue);}
   .st-six_mo{background:#e0f2e0;color:var(--green-dark);}
-
-  /* Clickable card variant for projects list */
-  .project-card{cursor:pointer;transition:transform .1s,box-shadow .1s;}
-  .project-card:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.08);}
-
-  @media(max-width:900px){
-    .tracker-layout{grid-template-columns:1fr;}
-    .tracker-tree{position:relative;max-height:none;}
-  }
 
   /* Location logo badge - uniform 48x48 with object-fit:contain for aspect-ratio consistency */
   .loc-logo{width:48px;height:48px;background:#fff;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:4px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.04);overflow:hidden;}
@@ -471,19 +463,8 @@
           <div class="metric"><div class="metric-label">Partners</div><div class="metric-value green" id="trk-m-partners">—</div><div class="metric-foot">Active</div></div>
         </div>
 
-        <!-- Two-pane layout: partner tree on left, project cards on right -->
-        <div class="tracker-layout">
-          <div class="tracker-tree card" id="trk-tree">
-            <div class="card-head">
-              <div class="card-title">Partners</div>
-            </div>
-            <div id="trk-tree-body"></div>
-          </div>
-          <div class="tracker-panel" id="trk-panel">
-            <!-- Projects list gets rendered here -->
-            <div id="trk-projects-list"></div>
-          </div>
-        </div>
+        <!-- Single-column layout: partner header + nested project rows -->
+        <div id="trk-projects-list"></div>
       </div>
     </div>
 
@@ -1533,8 +1514,7 @@ function trkTowerStatus(t){
 
 function renderTracker(){
   const panelEl=document.getElementById('trk-projects-list');
-  const treeEl=document.getElementById('trk-tree-body');
-  if(!panelEl||!treeEl)return;
+  if(!panelEl)return;
   const towers=DATA.towers||[];
 
   // Top metrics
@@ -1550,7 +1530,7 @@ function renderTracker(){
   if(me('trk-m-6mo'))me('trk-m-6mo').textContent=sixMo.toLocaleString();
   if(me('trk-m-partners'))me('trk-m-partners').textContent=partnerCount.toLocaleString();
 
-  // Build the partner→projects map
+  // Build partner → projects map
   const byPartner={};
   towers.forEach(t=>{
     const p=t.partner||'—';
@@ -1562,88 +1542,78 @@ function renderTracker(){
 
   const partnerNames=Object.keys(byPartner).sort();
 
-  // --- Sidebar tree ---
-  if(!partnerNames.length){
-    treeEl.innerHTML='<div class="tracker-tree-empty">No tower records yet.<br>Click "+ Assign towers" to start.</div>';
-  }else{
-    treeEl.innerHTML=partnerNames.map(name=>{
-      const p=byPartner[name];
-      const projects=Object.values(p.projects).sort((a,b)=>Number(a.project)-Number(b.project));
-      const expanded=trkExpandedPartners.has(name);
-      const totalTowers=projects.reduce((s,pr)=>s+pr.towers.length,0);
-      return `<div>
-        <div class="tracker-tree-partner${expanded?' expanded':''}" onclick="togglePartner(${JSON.stringify(name).replace(/"/g,'&quot;')})">
-          <span>${esc(name)}</span>
-          <span style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:10px;color:var(--text-faint);font-weight:500;">${totalTowers.toLocaleString()}</span>
-            <span class="chev">▶</span>
-          </span>
-        </div>
-        <div class="tracker-tree-projects${expanded?' open':''}">
-          ${projects.map(pr=>{
-            const active=trkActiveProjectKey===(name+'|'+pr.project);
-            return `<div class="tracker-tree-project${active?' active':''}" onclick="openProjectDetail(${JSON.stringify(name).replace(/"/g,'&quot;')},${pr.project})">
-              <span>Project ${pr.project}</span>
-              <span class="proj-count">${pr.towers.length}</span>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // --- Right panel: project cards (clickable to open detail) ---
   if(!partnerNames.length){
     panelEl.innerHTML='<div class="card"><div class="card-body"><div class="state-box">No tower records yet. Click "+ Assign towers" to create some.</div></div></div>';
     return;
   }
 
-  // Show cards for expanded partners (or all if nothing is expanded yet)
-  const showPartners=trkExpandedPartners.size?partnerNames.filter(n=>trkExpandedPartners.has(n)):partnerNames;
-  const cards=[];
-  showPartners.forEach(name=>{
+  panelEl.innerHTML=partnerNames.map(name=>{
     const p=byPartner[name];
+    const allTowers=Object.values(p.projects).flatMap(pr=>pr.towers);
+    const partnerRec=DATA.partners.find(pp=>pp.name===name);
+    const slug=partnerRec?partnerRec.slug:'';
+    const ext=partnerRec?partnerRec.uses_extended_form:false;
+
+    // Partner totals
+    const pn=allTowers.length;
+    const pPlanted=allTowers.filter(t=>t.date_planted).length;
+    const pThree=allTowers.filter(t=>t.three_month_evaluation).length;
+    const pSix=allTowers.filter(t=>t.six_month_evaluation).length;
+    const pPct=v=>pn?Math.round(v/pn*100):0;
+
+    // Sorted projects
     const projects=Object.values(p.projects).sort((a,b)=>Number(a.project)-Number(b.project));
-    projects.forEach(pr=>{
-      const n=pr.towers.length;
-      const plantedN=pr.towers.filter(t=>t.date_planted).length;
-      const threeN=pr.towers.filter(t=>t.three_month_evaluation).length;
-      const sixN=pr.towers.filter(t=>t.six_month_evaluation).length;
-      const pct=v=>n?Math.round(v/n*100):0;
-      const partnerRec=DATA.partners.find(pp=>pp.name===name);
-      const slug=partnerRec?partnerRec.slug:'';
-      const partnerBtn=slug?`<button class="btn btn-sm" onclick="event.stopPropagation();copyPartnerLink('${slug}','${pr.project}')" style="font-size:11px;padding:4px 10px;background:var(--moss);color:var(--green-dark);border-color:var(--bright);">🔗 Partner link</button>`:'';
-      const rangeStart=Math.min(...pr.towers.map(t=>t.tower_number||Infinity));
-      const rangeEnd=Math.max(...pr.towers.map(t=>t.tower_number||0));
 
-      cards.push(`<div class="card project-card" style="margin-bottom:14px;" onclick="openProjectDetail(${JSON.stringify(name).replace(/"/g,'&quot;')},${pr.project})">
-        <div class="card-head">
-          <div>
-            <div class="card-title">${esc(name)} · Project ${pr.project}</div>
-            <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${n.toLocaleString()} records · click to view all</div>
+    return `<div class="partner-group">
+      <div class="partner-header">
+        <div class="partner-header-top">
+          <div class="partner-header-name">
+            ${esc(name)}
+            ${ext?`<span class="partner-badge">Extended</span>`:''}
+            <span style="font-size:11px;color:var(--text-faint);font-weight:400;">${pn.toLocaleString()} towers · ${projects.length} project${projects.length===1?'':'s'}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">${partnerBtn}</div>
+          ${slug?`<button class="btn btn-sm" onclick="copyPartnerLink('${slug}','')" style="font-size:11px;padding:4px 10px;background:var(--moss);color:var(--green-dark);border-color:var(--bright);">🔗 Partner link</button>`:''}
         </div>
-        <div class="card-body" style="padding:14px 20px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-            ${trkProgressBar('Planted',plantedN,n,'var(--green)',pct(plantedN))}
-            ${trkProgressBar('3-month eval',threeN,n,'var(--bright)',pct(threeN))}
-            ${trkProgressBar('6-month eval',sixN,n,'var(--blue)',pct(sixN))}
-          </div>
+        <div class="partner-header-stats">
+          ${trkProgressBar('Planted',pPlanted,pn,'var(--green)',pPct(pPlanted))}
+          ${trkProgressBar('3-month eval',pThree,pn,'var(--bright)',pPct(pThree))}
+          ${trkProgressBar('6-month eval',pSix,pn,'var(--blue)',pPct(pSix))}
         </div>
-      </div>`);
-    });
-  });
-
-  panelEl.innerHTML=cards.length?cards.join(''):'<div class="card"><div class="card-body"><div class="state-box">Pick a partner from the left to see their projects.</div></div></div>';
+      </div>
+      <div class="partner-projects">
+        ${projects.map(pr=>{
+          const n=pr.towers.length;
+          const plantedN=pr.towers.filter(t=>t.date_planted).length;
+          const threeN=pr.towers.filter(t=>t.three_month_evaluation).length;
+          const sixN=pr.towers.filter(t=>t.six_month_evaluation).length;
+          const pct=v=>n?Math.round(v/n*100):0;
+          const rangeStart=Math.min(...pr.towers.map(t=>t.tower_number||Infinity));
+          const rangeEnd=Math.max(...pr.towers.map(t=>t.tower_number||0));
+          return `<div class="project-row" onclick="openProjectDetail(${JSON.stringify(name).replace(/"/g,'&quot;')},${pr.project})">
+            <div class="project-row-top">
+              <div class="project-row-name">
+                Project ${pr.project}
+                <span class="project-row-meta">· Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${n.toLocaleString()} records</span>
+              </div>
+              <div class="project-row-actions">
+                ${slug?`<button class="btn btn-sm" onclick="event.stopPropagation();copyPartnerLink('${slug}','${pr.project}')" style="font-size:11px;padding:3px 8px;">🔗 Link</button>`:''}
+                <span class="project-row-chev">→</span>
+              </div>
+            </div>
+            <div class="project-row-stats">
+              ${trkProgressBar('Planted',plantedN,n,'var(--green)',pct(plantedN))}
+              ${trkProgressBar('3-month eval',threeN,n,'var(--bright)',pct(threeN))}
+              ${trkProgressBar('6-month eval',sixN,n,'var(--blue)',pct(sixN))}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function togglePartner(name){
-  if(trkExpandedPartners.has(name)){
-    trkExpandedPartners.delete(name);
-  }else{
-    trkExpandedPartners.add(name);
-  }
+  // Kept for backward compat, no-op now (layout is always visible)
   renderTracker();
 }
 
