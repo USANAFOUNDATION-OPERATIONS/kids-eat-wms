@@ -151,11 +151,14 @@
 
   /* Partner group: header + nested projects */
   .partner-group{margin-bottom:24px;}
-  .partner-header{background:#fff;border:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border-bottom:none;}
-  .partner-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-  .partner-header-name{font-size:17px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;gap:10px;}
-  .partner-badge{background:var(--green-light);color:var(--green-dark);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:.03em;text-transform:uppercase;}
+  .partner-header{background:linear-gradient(135deg,var(--green-light),#dceee7);border:1px solid var(--bright);border-radius:var(--radius) var(--radius) 0 0;padding:18px 20px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border-bottom:2px solid var(--green);}
+  .partner-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .partner-header-name{font-size:18px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;gap:10px;flex:1;justify-content:center;text-align:center;}
+  .partner-badge{background:#fff;color:var(--green-dark);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:.03em;text-transform:uppercase;border:1px solid var(--bright);}
+  .partner-header-link-slot{min-width:110px;display:flex;justify-content:flex-end;}
+  .partner-header-link-slot-left{min-width:110px;}
   .partner-header-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:4px 0 0;}
+  .partner-header-meta{font-size:11px;color:var(--text-muted);font-weight:500;text-align:center;margin-top:-8px;margin-bottom:12px;}
 
   .partner-projects{background:#fff;border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);border-top:none;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
   .project-row{padding:14px 20px;border-top:1px solid var(--border);cursor:pointer;transition:background .1s;}
@@ -1567,13 +1570,16 @@ function renderTracker(){
     return `<div class="partner-group">
       <div class="partner-header">
         <div class="partner-header-top">
+          <div class="partner-header-link-slot-left"></div>
           <div class="partner-header-name">
             ${esc(name)}
             ${ext?`<span class="partner-badge">Extended</span>`:''}
-            <span style="font-size:11px;color:var(--text-faint);font-weight:400;">${pn.toLocaleString()} towers · ${projects.length} project${projects.length===1?'':'s'}</span>
           </div>
-          ${slug?`<button class="btn btn-sm" onclick="copyPartnerLink('${slug}','')" style="font-size:11px;padding:4px 10px;background:var(--moss);color:var(--green-dark);border-color:var(--bright);">🔗 Partner link</button>`:''}
+          <div class="partner-header-link-slot">
+            ${slug?`<button class="btn btn-sm" onclick="copyPartnerLink('${slug}','')" style="font-size:11px;padding:4px 10px;background:#fff;color:var(--green-dark);border-color:var(--bright);">🔗 Partner link</button>`:''}
+          </div>
         </div>
+        <div class="partner-header-meta">${pn.toLocaleString()} towers · ${projects.length} project${projects.length===1?'':'s'}</div>
         <div class="partner-header-stats">
           ${trkProgressBar('Planted',pPlanted,pn,'var(--green)',pPct(pPlanted))}
           ${trkProgressBar('3-month eval',pThree,pn,'var(--bright)',pPct(pThree))}
