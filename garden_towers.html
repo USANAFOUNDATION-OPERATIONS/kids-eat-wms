@@ -149,20 +149,40 @@
   .print-only{display:none;}
   #print-area{display:none;}
 
-  /* Partner group: header + nested projects */
-  .partner-group{margin-bottom:24px;}
-  .partner-header{background:linear-gradient(135deg,var(--green-light),#dceee7);border:1px solid var(--bright);border-radius:var(--radius) var(--radius) 0 0;padding:18px 20px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border-bottom:2px solid var(--green);}
-  .partner-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-  .partner-header-name{font-size:18px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;gap:10px;flex:1;justify-content:center;text-align:center;}
-  .partner-badge{background:#fff;color:var(--green-dark);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:.03em;text-transform:uppercase;border:1px solid var(--bright);}
-  .partner-header-link-slot{min-width:110px;display:flex;justify-content:flex-end;}
-  .partner-header-link-slot-left{min-width:110px;}
-  .partner-header-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:4px 0 0;}
-  .partner-header-meta{font-size:11px;color:var(--text-muted);font-weight:500;text-align:center;margin-top:-8px;margin-bottom:12px;}
+  /* Partner card grid (front page) */
+  .partner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;}
+  .partner-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;display:flex;flex-direction:column;gap:14px;}
+  .partner-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:var(--bright);}
+  .partner-card-head{display:flex;align-items:center;gap:14px;}
+  .partner-card-logo{width:56px;height:56px;border-radius:12px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;padding:4px;}
+  .partner-card-logo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;}
+  .partner-card-logo.placeholder{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;font-weight:700;font-size:18px;letter-spacing:.02em;padding:0;}
+  .partner-card-title{flex:1;min-width:0;}
+  .partner-card-name{font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.25;}
+  .partner-card-meta{font-size:11px;color:var(--text-muted);font-weight:500;}
+  .partner-card-badges{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;}
+  .partner-card-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.03em;}
+  .partner-card-badge.ext{background:var(--blue-light);color:var(--blue);}
+  .partner-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding-top:14px;border-top:1px solid var(--border);}
+  .partner-card-edit{position:absolute;top:10px;right:10px;width:28px;height:28px;border:none;background:rgba(0,0,0,0.04);color:var(--text-muted);border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s,background .15s;}
+  .partner-card{position:relative;}
+  .partner-card:hover .partner-card-edit{opacity:1;}
+  .partner-card-edit:hover{background:var(--bg);color:var(--text);}
 
-  .partner-projects{background:#fff;border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);border-top:none;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+  /* Partner detail view (drilled-in) — project rows */
+  .partner-detail-header{background:linear-gradient(135deg,var(--green-light),#dceee7);border:1px solid var(--bright);border-bottom:2px solid var(--green);border-radius:var(--radius) var(--radius) 0 0;padding:20px 22px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+  .partner-detail-header-top{display:flex;align-items:center;gap:16px;margin-bottom:14px;}
+  .partner-detail-logo{width:60px;height:60px;border-radius:12px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;padding:4px;}
+  .partner-detail-logo img{max-width:100%;max-height:100%;object-fit:contain;}
+  .partner-detail-logo.placeholder{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;font-weight:700;font-size:22px;padding:0;}
+  .partner-detail-title{flex:1;min-width:0;}
+  .partner-detail-name{font-size:20px;font-weight:700;color:var(--green-dark);margin-bottom:3px;}
+  .partner-detail-meta{font-size:12px;color:var(--text-muted);font-weight:500;}
+  .partner-detail-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+  .partner-detail-projects{background:#fff;border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);border-top:none;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);margin-bottom:24px;}
   .project-row{padding:14px 20px;border-top:1px solid var(--border);cursor:pointer;transition:background .1s;}
-  .project-row:first-child{border-top:1px solid var(--border);}
+  .project-row:first-child{border-top:none;}
   .project-row:hover{background:#f8fdf8;}
   .project-row-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;}
   .project-row-name{font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
@@ -188,6 +208,13 @@
   .st-planted{background:var(--moss);color:var(--green-dark);}
   .st-three_mo{background:var(--blue-light);color:var(--blue);}
   .st-six_mo{background:#e0f2e0;color:var(--green-dark);}
+
+  /* Logo upload dropzone inside edit-partner modal */
+  .logo-upload{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
+  .logo-upload:hover{border-color:var(--green);background:var(--bg);}
+  .logo-upload.has-logo{border-style:solid;padding:12px;}
+  .logo-upload img{max-width:100%;max-height:120px;display:block;margin:0 auto;}
+  .logo-upload-label{font-size:12px;color:var(--text-muted);margin-top:8px;}
 
   /* Location logo badge - uniform 48x48 with object-fit:contain for aspect-ratio consistency */
   .loc-logo{width:48px;height:48px;background:#fff;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:4px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.04);overflow:hidden;}
@@ -448,12 +475,13 @@
       </div>
     </div>
 
-    <!-- TRACKER: PROJECTS OVERVIEW -->
+    <!-- TRACKER: PARTNER GRID (front page) -->
     <div class="page" id="page-tracker">
       <div class="topbar">
         <button class="hamburger" id="hamburger-btn4"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
-        <div class="topbar-title">Tower tracker — Projects</div>
+        <div class="topbar-title" id="tracker-topbar-title">Tower tracker — Partners</div>
         <div class="topbar-right">
+          <button class="btn btn-sm" id="tracker-back-btn" onclick="showPartnerGrid()" style="display:none;">← All partners</button>
           <button class="btn btn-sm" onclick="showPage('tracker-assign')">+ Assign towers</button>
         </div>
       </div>
@@ -466,8 +494,11 @@
           <div class="metric"><div class="metric-label">Partners</div><div class="metric-value green" id="trk-m-partners">—</div><div class="metric-foot">Active</div></div>
         </div>
 
-        <!-- Single-column layout: partner header + nested project rows -->
-        <div id="trk-projects-list"></div>
+        <!-- Partner grid view (front page) -->
+        <div id="trk-partner-grid"></div>
+
+        <!-- Partner-drilled-in view (project rows for one partner) -->
+        <div id="trk-partner-detail" style="display:none;"></div>
       </div>
     </div>
 
@@ -984,9 +1015,7 @@ let DATA={shipments:[],inventory:[],invLog:[],towers:[],partners:[],towerOptions
 let dbReady=false;
 let shipFilter='all';
 let currentShipmentId=null;
-let trkPartnerFilter='all';
-let trkExpandedPartners=new Set();
-let trkActiveProjectKey=null;
+let trkSelectedPartner=null;
 let trkDetailPartner=null;
 let trkDetailProject=null;
 
@@ -1476,6 +1505,9 @@ function showToast(msg,type=''){
 // Nav click handlers
 document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
     if(item.dataset.page==='inventory'){item.addEventListener('click',()=>{showPage('inventory');renderInventory();});return;}
+    if(item.dataset.page==='tracker'){item.addEventListener('click',()=>{trkSelectedPartner=null;showPage('tracker');renderTracker();
+      if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
+    });return;}
   item.addEventListener('click',()=>{
     showPage(item.dataset.page);
     if(window.innerWidth<=768){
@@ -1516,11 +1548,11 @@ function trkTowerStatus(t){
 }
 
 function renderTracker(){
-  const panelEl=document.getElementById('trk-projects-list');
-  if(!panelEl)return;
+  // Renders the front-page partner grid OR the drilled-in partner detail
+  // based on trkSelectedPartner state.
   const towers=DATA.towers||[];
 
-  // Top metrics
+  // Top metrics (always visible)
   const total=towers.length;
   const planted=towers.filter(t=>t.date_planted).length;
   const threeMo=towers.filter(t=>t.three_month_evaluation).length;
@@ -1533,93 +1565,183 @@ function renderTracker(){
   if(me('trk-m-6mo'))me('trk-m-6mo').textContent=sixMo.toLocaleString();
   if(me('trk-m-partners'))me('trk-m-partners').textContent=partnerCount.toLocaleString();
 
-  // Build partner → projects map
+  if(trkSelectedPartner){
+    renderPartnerDetail();
+  }else{
+    renderPartnerGrid();
+  }
+}
+
+function partnerInitials(name){
+  if(!name)return '??';
+  const parts=name.trim().split(/\s+/).filter(Boolean);
+  if(parts.length===1){
+    const w=parts[0];
+    return (w[0]+(w[1]||'')).toUpperCase();
+  }
+  return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
+
+function renderLogoEl(partnerRec,size){
+  if(partnerRec&&partnerRec.logo_url){
+    return `<div class="${size==='lg'?'partner-detail-logo':'partner-card-logo'}"><img src="${esc(partnerRec.logo_url)}" alt="${esc(partnerRec.name)} logo"/></div>`;
+  }
+  const initials=partnerInitials(partnerRec?partnerRec.name:'');
+  return `<div class="${size==='lg'?'partner-detail-logo':'partner-card-logo'} placeholder">${initials}</div>`;
+}
+
+function renderPartnerGrid(){
+  // Show the card grid; hide the drill-in
+  const gridEl=document.getElementById('trk-partner-grid');
+  const detEl=document.getElementById('trk-partner-detail');
+  const backBtn=document.getElementById('tracker-back-btn');
+  const topTitle=document.getElementById('tracker-topbar-title');
+  if(gridEl)gridEl.style.display='';
+  if(detEl)detEl.style.display='none';
+  if(backBtn)backBtn.style.display='none';
+  if(topTitle)topTitle.textContent='Tower tracker — Partners';
+
+  const towers=DATA.towers||[];
   const byPartner={};
   towers.forEach(t=>{
     const p=t.partner||'—';
-    if(!byPartner[p])byPartner[p]={name:p,projects:{}};
-    const proj=t.project_number||0;
-    if(!byPartner[p].projects[proj])byPartner[p].projects[proj]={project:proj,towers:[]};
-    byPartner[p].projects[proj].towers.push(t);
+    if(!byPartner[p])byPartner[p]={name:p,towers:[],projects:new Set()};
+    byPartner[p].towers.push(t);
+    if(t.project_number)byPartner[p].projects.add(t.project_number);
+  });
+
+  // Include partners from gt_partners even if they have no towers yet (so empty
+  // partners still show up in the grid and you can manage them / upload a logo)
+  (DATA.partners||[]).forEach(p=>{
+    if(!byPartner[p.name])byPartner[p.name]={name:p.name,towers:[],projects:new Set()};
   });
 
   const partnerNames=Object.keys(byPartner).sort();
 
   if(!partnerNames.length){
-    panelEl.innerHTML='<div class="card"><div class="card-body"><div class="state-box">No tower records yet. Click "+ Assign towers" to create some.</div></div></div>';
+    gridEl.innerHTML='<div class="card"><div class="card-body"><div class="state-box">No partners yet. Go to <strong>Assign towers</strong> to add one.</div></div></div>';
     return;
   }
 
-  panelEl.innerHTML=partnerNames.map(name=>{
-    const p=byPartner[name];
-    const allTowers=Object.values(p.projects).flatMap(pr=>pr.towers);
-    const partnerRec=DATA.partners.find(pp=>pp.name===name);
-    const slug=partnerRec?partnerRec.slug:'';
-    const ext=partnerRec?partnerRec.uses_extended_form:false;
+  gridEl.innerHTML='<div class="partner-grid">'+partnerNames.map(name=>{
+    const g=byPartner[name];
+    const partnerRec=(DATA.partners||[]).find(p=>p.name===name);
+    const n=g.towers.length;
+    const pl=g.towers.filter(t=>t.date_planted).length;
+    const th=g.towers.filter(t=>t.three_month_evaluation).length;
+    const si=g.towers.filter(t=>t.six_month_evaluation).length;
+    const pct=v=>n?Math.round(v/n*100):0;
+    const ext=partnerRec&&partnerRec.uses_extended_form;
+    const projCount=g.projects.size;
 
-    // Partner totals
-    const pn=allTowers.length;
-    const pPlanted=allTowers.filter(t=>t.date_planted).length;
-    const pThree=allTowers.filter(t=>t.three_month_evaluation).length;
-    const pSix=allTowers.filter(t=>t.six_month_evaluation).length;
-    const pPct=v=>pn?Math.round(v/pn*100):0;
-
-    // Sorted projects
-    const projects=Object.values(p.projects).sort((a,b)=>Number(a.project)-Number(b.project));
-
-    return `<div class="partner-group">
-      <div class="partner-header">
-        <div class="partner-header-top">
-          <div class="partner-header-link-slot-left"></div>
-          <div class="partner-header-name">
-            ${esc(name)}
-            ${ext?`<span class="partner-badge">Extended</span>`:''}
-          </div>
-          <div class="partner-header-link-slot">
-            ${slug?`<button class="btn btn-sm" onclick="copyPartnerLink('${slug}','')" style="font-size:11px;padding:4px 10px;background:#fff;color:var(--green-dark);border-color:var(--bright);">🔗 Partner link</button>`:''}
-          </div>
-        </div>
-        <div class="partner-header-meta">${pn.toLocaleString()} towers · ${projects.length} project${projects.length===1?'':'s'}</div>
-        <div class="partner-header-stats">
-          ${trkProgressBar('Planted',pPlanted,pn,'var(--green)',pPct(pPlanted))}
-          ${trkProgressBar('3-month eval',pThree,pn,'var(--bright)',pPct(pThree))}
-          ${trkProgressBar('6-month eval',pSix,pn,'var(--blue)',pPct(pSix))}
+    return `<div class="partner-card" onclick="openPartnerDetail(${JSON.stringify(name).replace(/"/g,'&quot;')})">
+      <button class="partner-card-edit" onclick="event.stopPropagation();openEditPartner(${JSON.stringify(name).replace(/"/g,'&quot;')})" title="Edit partner">✎</button>
+      <div class="partner-card-head">
+        ${renderLogoEl(partnerRec,'sm')}
+        <div class="partner-card-title">
+          <div class="partner-card-name">${esc(name)}</div>
+          <div class="partner-card-meta">${n.toLocaleString()} tower${n===1?'':'s'} · ${projCount} project${projCount===1?'':'s'}</div>
+          ${ext?`<div class="partner-card-badges"><span class="partner-card-badge ext">Extended form</span></div>`:''}
         </div>
       </div>
-      <div class="partner-projects">
-        ${projects.map(pr=>{
-          const n=pr.towers.length;
-          const plantedN=pr.towers.filter(t=>t.date_planted).length;
-          const threeN=pr.towers.filter(t=>t.three_month_evaluation).length;
-          const sixN=pr.towers.filter(t=>t.six_month_evaluation).length;
-          const pct=v=>n?Math.round(v/n*100):0;
-          const rangeStart=Math.min(...pr.towers.map(t=>t.tower_number||Infinity));
-          const rangeEnd=Math.max(...pr.towers.map(t=>t.tower_number||0));
-          return `<div class="project-row" onclick="openProjectDetail(${JSON.stringify(name).replace(/"/g,'&quot;')},${pr.project})">
-            <div class="project-row-top">
-              <div class="project-row-name">
-                Project ${pr.project}
-                <span class="project-row-meta">· Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${n.toLocaleString()} records</span>
-              </div>
-              <div class="project-row-actions">
-                ${slug?`<button class="btn btn-sm" onclick="event.stopPropagation();copyPartnerLink('${slug}','${pr.project}')" style="font-size:11px;padding:3px 8px;">🔗 Link</button>`:''}
-                <span class="project-row-chev">→</span>
-              </div>
-            </div>
-            <div class="project-row-stats">
-              ${trkProgressBar('Planted',plantedN,n,'var(--green)',pct(plantedN))}
-              ${trkProgressBar('3-month eval',threeN,n,'var(--bright)',pct(threeN))}
-              ${trkProgressBar('6-month eval',sixN,n,'var(--blue)',pct(sixN))}
-            </div>
-          </div>`;
-        }).join('')}
+      <div class="partner-card-stats">
+        ${trkProgressBar('Planted',pl,n,'var(--green)',pct(pl))}
+        ${trkProgressBar('3-month eval',th,n,'var(--bright)',pct(th))}
+        ${trkProgressBar('6-month eval',si,n,'var(--blue)',pct(si))}
       </div>
     </div>`;
-  }).join('');
+  }).join('')+'</div>';
 }
 
-function togglePartner(name){
-  // Kept for backward compat, no-op now (layout is always visible)
+function renderPartnerDetail(){
+  const gridEl=document.getElementById('trk-partner-grid');
+  const detEl=document.getElementById('trk-partner-detail');
+  const backBtn=document.getElementById('tracker-back-btn');
+  const topTitle=document.getElementById('tracker-topbar-title');
+  if(gridEl)gridEl.style.display='none';
+  if(detEl)detEl.style.display='';
+  if(backBtn)backBtn.style.display='';
+  if(topTitle)topTitle.textContent='Tower tracker — '+trkSelectedPartner;
+
+  const towers=(DATA.towers||[]).filter(t=>t.partner===trkSelectedPartner);
+  const partnerRec=(DATA.partners||[]).find(p=>p.name===trkSelectedPartner);
+  const slug=partnerRec?partnerRec.slug:'';
+  const ext=partnerRec?partnerRec.uses_extended_form:false;
+
+  // Totals
+  const n=towers.length;
+  const pl=towers.filter(t=>t.date_planted).length;
+  const th=towers.filter(t=>t.three_month_evaluation).length;
+  const si=towers.filter(t=>t.six_month_evaluation).length;
+  const pct=v=>n?Math.round(v/n*100):0;
+
+  // Group into projects
+  const projects={};
+  towers.forEach(t=>{
+    const k=t.project_number||0;
+    if(!projects[k])projects[k]={project:k,towers:[]};
+    projects[k].towers.push(t);
+  });
+  const projList=Object.values(projects).sort((a,b)=>Number(a.project)-Number(b.project));
+
+  const projectsHtml=projList.length?projList.map(pr=>{
+    const pn=pr.towers.length;
+    const pPl=pr.towers.filter(t=>t.date_planted).length;
+    const pTh=pr.towers.filter(t=>t.three_month_evaluation).length;
+    const pSi=pr.towers.filter(t=>t.six_month_evaluation).length;
+    const ppct=v=>pn?Math.round(v/pn*100):0;
+    const rangeStart=Math.min(...pr.towers.map(t=>t.tower_number||Infinity));
+    const rangeEnd=Math.max(...pr.towers.map(t=>t.tower_number||0));
+    return `<div class="project-row" onclick="openProjectDetail(${JSON.stringify(trkSelectedPartner).replace(/"/g,'&quot;')},${pr.project})">
+      <div class="project-row-top">
+        <div class="project-row-name">
+          Project ${pr.project}
+          <span class="project-row-meta">· Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${pn.toLocaleString()} records</span>
+        </div>
+        <div class="project-row-actions">
+          ${slug?`<button class="btn btn-sm" onclick="event.stopPropagation();copyPartnerLink('${slug}','${pr.project}')" style="font-size:11px;padding:3px 8px;">🔗 Link</button>`:''}
+          <span class="project-row-chev">→</span>
+        </div>
+      </div>
+      <div class="project-row-stats">
+        ${trkProgressBar('Planted',pPl,pn,'var(--green)',ppct(pPl))}
+        ${trkProgressBar('3-month eval',pTh,pn,'var(--bright)',ppct(pTh))}
+        ${trkProgressBar('6-month eval',pSi,pn,'var(--blue)',ppct(pSi))}
+      </div>
+    </div>`;
+  }).join(''):'<div style="padding:30px;text-align:center;color:var(--text-faint);font-size:13px;">No projects yet. Go to <strong>Assign towers</strong> to create one for this partner.</div>';
+
+  detEl.innerHTML=`
+    <div class="partner-detail-header">
+      <div class="partner-detail-header-top">
+        ${renderLogoEl(partnerRec,'lg')}
+        <div class="partner-detail-title">
+          <div class="partner-detail-name">${esc(trkSelectedPartner)}${ext?' <span class="partner-card-badge ext" style="vertical-align:middle;margin-left:6px;">Extended</span>':''}</div>
+          <div class="partner-detail-meta">${n.toLocaleString()} tower${n===1?'':'s'} · ${projList.length} project${projList.length===1?'':'s'}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          ${slug?`<button class="btn btn-sm" onclick="copyPartnerLink('${slug}','')" style="background:#fff;color:var(--green-dark);border-color:var(--bright);">🔗 Partner link</button>`:''}
+          <button class="btn btn-sm" onclick="openEditPartner(${JSON.stringify(trkSelectedPartner).replace(/"/g,'&quot;')})">✎ Edit</button>
+        </div>
+      </div>
+      <div class="partner-detail-stats">
+        ${trkProgressBar('Planted',pl,n,'var(--green)',pct(pl))}
+        ${trkProgressBar('3-month eval',th,n,'var(--bright)',pct(th))}
+        ${trkProgressBar('6-month eval',si,n,'var(--blue)',pct(si))}
+      </div>
+    </div>
+    <div class="partner-detail-projects">${projectsHtml}</div>
+  `;
+}
+
+function openPartnerDetail(name){
+  trkSelectedPartner=name;
+  renderTracker();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showPartnerGrid(){
+  trkSelectedPartner=null;
   renderTracker();
 }
 
@@ -1966,12 +2088,19 @@ function renderAssignPage(){
       linksEl.innerHTML=partners.map(p=>{
         const projectCount=new Set(DATA.towers.filter(t=>t.partner===p.name).map(t=>t.project_number)).size;
         const towerCount=DATA.towers.filter(t=>t.partner===p.name).length;
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
-          <div>
-            <div style="font-weight:600;font-size:13px;">${p.name}${p.uses_extended_form?' <span class="badge badge-blue" style="margin-left:6px;">extended</span>':''}</div>
+        const logoEl=p.logo_url
+          ? `<div style="width:36px;height:36px;border-radius:8px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;padding:3px;flex-shrink:0;"><img src="${esc(p.logo_url)}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;"/></div>`
+          : `<div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${partnerInitials(p.name)}</div>`;
+        return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+          ${logoEl}
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:13px;">${esc(p.name)}${p.uses_extended_form?' <span class="badge badge-blue" style="margin-left:6px;">extended</span>':''}</div>
             <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${projectCount} project(s) · ${towerCount.toLocaleString()} towers · slug: <code>${p.slug}</code></div>
           </div>
-          <button class="btn btn-sm" onclick="copyPartnerLink('${p.slug}','')">🔗 Copy link</button>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="openEditPartner(${JSON.stringify(p.name).replace(/"/g,'&quot;')})">✎ Edit</button>
+            <button class="btn btn-sm" onclick="copyPartnerLink('${p.slug}','')">🔗 Copy link</button>
+          </div>
         </div>`;
       }).join('');
     }
@@ -2137,6 +2266,181 @@ async function saveNewPartner(){
   }catch(e){
     console.error(e);
     showToast('Could not add partner: '+e.message,'error');
+  }finally{
+    btn.disabled=false;btn.textContent=orig;
+  }
+}
+
+// ---- Edit partner (name, extended flag, logo) ----
+let _editPartnerRec=null;
+function openEditPartner(name){
+  const p=(DATA.partners||[]).find(pp=>pp.name===name);
+  if(!p){return showToast('Partner not found','error');}
+  _editPartnerRec={...p};
+  const modal=document.getElementById('modal-content');
+  const logoBlock=p.logo_url
+    ? `<div class="logo-upload has-logo" id="logo-dropzone" onclick="document.getElementById('logo-file-input').click()">
+         <img src="${esc(p.logo_url)}" alt="logo"/>
+         <div class="logo-upload-label">Click to replace &middot; <a href="#" onclick="event.preventDefault();event.stopPropagation();removePartnerLogo()" style="color:var(--red);">Remove</a></div>
+       </div>`
+    : `<div class="logo-upload" id="logo-dropzone" onclick="document.getElementById('logo-file-input').click()">
+         <div style="font-size:28px;color:var(--text-faint);">📷</div>
+         <div class="logo-upload-label">Click to upload a logo</div>
+       </div>`;
+  modal.innerHTML=`
+    <h2>Edit partner</h2>
+    <p class="modal-sub">Changes here apply immediately to everywhere this partner appears.</p>
+    <div class="form-row">
+      <label class="form-label">Logo</label>
+      ${logoBlock}
+      <input type="file" id="logo-file-input" accept="image/*" style="display:none;" onchange="handlePartnerLogoUpload(event)"/>
+      <div style="font-size:11px;color:var(--text-faint);margin-top:6px;">Recommended: square image, PNG or JPG, under 1&nbsp;MB. Uploads save automatically.</div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Partner name</label>
+      <input type="text" class="form-input" id="edit-partner-name" value="${esc(p.name)}"/>
+      <div style="font-size:11px;color:var(--text-faint);margin-top:6px;">Renaming also renames every tower record. URL slug stays fixed so partner links don't break.</div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">
+        <input type="checkbox" id="edit-partner-extended" ${p.uses_extended_form?'checked':''} style="margin-right:6px;vertical-align:middle;">
+        Uses the extended form (100 Humanitarians-style)
+      </label>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Contact email</label>
+      <input type="email" class="form-input" id="edit-partner-email" value="${esc(p.contact_email)}"/>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Notes</label>
+      <input type="text" class="form-input" id="edit-partner-notes" value="${esc(p.notes)}"/>
+    </div>
+    <div style="background:var(--bg);padding:10px 12px;border-radius:8px;margin-top:16px;font-size:12px;color:var(--text-muted);">
+      <strong>Partner link:</strong> <code style="font-size:11px;background:#fff;padding:2px 6px;border-radius:4px;">?partner=${esc(p.slug)}</code>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary" id="edit-partner-save-btn" onclick="saveEditPartner()">Save changes</button>
+    </div>
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+async function handlePartnerLogoUpload(ev){
+  const file=ev.target.files[0];
+  if(!file){return;}
+  if(!/^image\//.test(file.type||'')){return showToast('Please pick an image file','error');}
+  if(file.size>2*1024*1024){return showToast('File too big — keep it under 2 MB','error');}
+  if(!_editPartnerRec){return;}
+  const dz=document.getElementById('logo-dropzone');
+  if(dz){dz.innerHTML='<div style="font-size:13px;color:var(--text-muted);padding:30px;">Uploading…</div>';}
+  try{
+    // Path: slug/logo.ext — overwrites on re-upload thanks to x-upsert
+    const ext=(file.name.match(/\.[^.]+$/)||['.png'])[0];
+    const path=`${_editPartnerRec.slug}/logo${ext}`;
+    const encoded=encodeURIComponent(path);
+    const r=await fetch(`${SUPABASE_URL}/storage/v1/object/partner-logos/${encoded}`,{
+      method:'POST',
+      headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':file.type||'image/png','x-upsert':'true'},
+      body:file,
+    });
+    if(!r.ok){const t=await r.text();throw new Error('Upload failed: '+r.status+' '+t);}
+    // Add a cache-busting token so the browser picks up new uploads immediately
+    const publicUrl=`${SUPABASE_URL}/storage/v1/object/public/partner-logos/${encoded}?v=${Date.now()}`;
+    // Save to gt_partners
+    const upd=await fetch(`${SUPABASE_URL}/rest/v1/gt_partners?id=eq.${_editPartnerRec.id}`,{
+      method:'PATCH',
+      headers:{...HDR,'Prefer':'return=representation'},
+      body:JSON.stringify({logo_url:publicUrl}),
+    });
+    if(!upd.ok){const t=await upd.text();throw new Error('Save failed: '+upd.status+' '+t);}
+    _editPartnerRec.logo_url=publicUrl;
+    // Refresh the dropzone UI
+    if(dz){
+      dz.className='logo-upload has-logo';
+      dz.innerHTML=`<img src="${esc(publicUrl)}" alt="logo"/><div class="logo-upload-label">Click to replace · <a href="#" onclick="event.preventDefault();event.stopPropagation();removePartnerLogo()" style="color:var(--red);">Remove</a></div>`;
+    }
+    showToast('✓ Logo uploaded','success');
+    // Refresh global data so grid shows the logo immediately
+    await loadAll();
+  }catch(e){
+    console.error(e);
+    showToast('Logo upload failed: '+e.message,'error');
+    // Re-render dropzone to the original state
+    if(dz){
+      dz.className='logo-upload';
+      dz.innerHTML='<div style="font-size:28px;color:var(--text-faint);">📷</div><div class="logo-upload-label">Click to upload a logo</div>';
+    }
+  }finally{
+    ev.target.value='';
+  }
+}
+
+async function removePartnerLogo(){
+  if(!_editPartnerRec||!confirm('Remove this partner logo?'))return;
+  try{
+    const upd=await fetch(`${SUPABASE_URL}/rest/v1/gt_partners?id=eq.${_editPartnerRec.id}`,{
+      method:'PATCH',
+      headers:{...HDR,'Prefer':'return=representation'},
+      body:JSON.stringify({logo_url:null}),
+    });
+    if(!upd.ok)throw new Error('Save failed: '+upd.status);
+    _editPartnerRec.logo_url=null;
+    const dz=document.getElementById('logo-dropzone');
+    if(dz){
+      dz.className='logo-upload';
+      dz.innerHTML='<div style="font-size:28px;color:var(--text-faint);">📷</div><div class="logo-upload-label">Click to upload a logo</div>';
+    }
+    showToast('✓ Logo removed','success');
+    await loadAll();
+  }catch(e){showToast('Could not remove logo: '+e.message,'error');}
+}
+
+async function saveEditPartner(){
+  if(!_editPartnerRec)return;
+  const name=document.getElementById('edit-partner-name').value.trim();
+  const ext=document.getElementById('edit-partner-extended').checked;
+  const email=document.getElementById('edit-partner-email').value.trim()||null;
+  const notes=document.getElementById('edit-partner-notes').value.trim()||null;
+  if(!name){return showToast('Partner name is required','error');}
+  const oldName=_editPartnerRec.name;
+  const nameChanged=name!==oldName;
+  // If renaming, make sure the new name isn't already used by a different partner
+  if(nameChanged && DATA.partners.some(p=>p.id!==_editPartnerRec.id&&p.name.toLowerCase()===name.toLowerCase())){
+    return showToast('Another partner already has that name','error');
+  }
+
+  const btn=document.getElementById('edit-partner-save-btn');
+  const orig=btn.textContent;
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    // 1. Update the partner record
+    const upd=await fetch(`${SUPABASE_URL}/rest/v1/gt_partners?id=eq.${_editPartnerRec.id}`,{
+      method:'PATCH',
+      headers:{...HDR,'Prefer':'return=representation'},
+      body:JSON.stringify({name,uses_extended_form:ext,contact_email:email,notes}),
+    });
+    if(!upd.ok){const t=await upd.text();throw new Error('Save failed: '+upd.status+' '+t);}
+
+    // 2. If name changed, also update every tower row's partner column
+    if(nameChanged){
+      const qp=encodeURIComponent(oldName);
+      const r2=await fetch(`${SUPABASE_URL}/rest/v1/gt_towers?partner=eq.${qp}`,{
+        method:'PATCH',
+        headers:{...HDR,'Prefer':'return=minimal'},
+        body:JSON.stringify({partner:name}),
+      });
+      if(!r2.ok){const t=await r2.text();throw new Error('Rename failed: '+r2.status+' '+t);}
+    }
+
+    showToast('✓ Partner updated','success');
+    closeModal();
+    // Keep drill-in view on the renamed partner if applicable
+    if(trkSelectedPartner===oldName)trkSelectedPartner=name;
+    await loadAll();
+  }catch(e){
+    console.error(e);
+    showToast('Could not save: '+e.message,'error');
   }finally{
     btn.disabled=false;btn.textContent=orig;
   }
