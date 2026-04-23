@@ -149,6 +149,51 @@
   .print-only{display:none;}
   #print-area{display:none;}
 
+  /* Tracker two-pane layout */
+  .tracker-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:flex-start;}
+  .tracker-tree{position:sticky;top:16px;max-height:calc(100vh - 200px);overflow-y:auto;}
+  .tracker-tree .card-head{padding:12px 16px;}
+  .tracker-tree-partner{padding:8px 12px;margin:1px 6px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between;transition:background .1s;}
+  .tracker-tree-partner:hover{background:var(--bg);}
+  .tracker-tree-partner.expanded{background:var(--green-light);color:var(--green-dark);}
+  .tracker-tree-partner .chev{font-size:10px;color:var(--text-faint);transition:transform .15s;}
+  .tracker-tree-partner.expanded .chev{transform:rotate(90deg);}
+  .tracker-tree-projects{padding:2px 0 6px 22px;display:none;}
+  .tracker-tree-projects.open{display:block;}
+  .tracker-tree-project{padding:7px 12px;margin:1px 6px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--text-muted);transition:background .1s;display:flex;align-items:center;justify-content:space-between;}
+  .tracker-tree-project:hover{background:var(--bg);color:var(--text);}
+  .tracker-tree-project.active{background:var(--green);color:#fff;font-weight:600;}
+  .tracker-tree-project .proj-count{font-size:10px;color:var(--text-faint);font-weight:500;}
+  .tracker-tree-project.active .proj-count{color:rgba(255,255,255,0.8);}
+  .tracker-tree-empty{padding:16px;color:var(--text-faint);font-size:12px;text-align:center;}
+
+  /* Detail table (Airtable-style) */
+  .detail-table-wrap{overflow:auto;max-height:calc(100vh - 380px);}
+  .detail-table{border-collapse:collapse;font-size:12px;width:max-content;min-width:100%;}
+  .detail-table thead th{position:sticky;top:0;background:var(--bg);z-index:5;padding:10px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap;}
+  .detail-table tbody td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;}
+  .detail-table tbody tr{cursor:pointer;}
+  .detail-table tbody tr:hover td{background:#f8fdf8;}
+  .detail-table .tc-num{font-family:'Courier New',monospace;font-weight:700;color:var(--green-dark);}
+  .detail-table .tc-photos{display:flex;gap:3px;}
+  .detail-table .tc-photos img{width:28px;height:28px;object-fit:cover;border-radius:4px;border:1px solid var(--border);}
+  .detail-table .tc-veg{display:flex;gap:3px;flex-wrap:wrap;}
+  .detail-table .tc-veg .chip{padding:2px 7px;font-size:10px;border-radius:10px;background:var(--green-light);color:var(--green-dark);font-weight:500;}
+  .detail-table .tc-status{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+  .st-empty{background:var(--bg);color:var(--text-faint);}
+  .st-planted{background:var(--moss);color:var(--green-dark);}
+  .st-three_mo{background:var(--blue-light);color:var(--blue);}
+  .st-six_mo{background:#e0f2e0;color:var(--green-dark);}
+
+  /* Clickable card variant for projects list */
+  .project-card{cursor:pointer;transition:transform .1s,box-shadow .1s;}
+  .project-card:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.08);}
+
+  @media(max-width:900px){
+    .tracker-layout{grid-template-columns:1fr;}
+    .tracker-tree{position:relative;max-height:none;}
+  }
+
   /* Location logo badge - uniform 48x48 with object-fit:contain for aspect-ratio consistency */
   .loc-logo{width:48px;height:48px;background:#fff;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:4px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.04);overflow:hidden;}
   .loc-logo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;}
@@ -426,16 +471,61 @@
           <div class="metric"><div class="metric-label">Partners</div><div class="metric-value green" id="trk-m-partners">—</div><div class="metric-foot">Active</div></div>
         </div>
 
-        <!-- Partner filter -->
+        <!-- Two-pane layout: partner tree on left, project cards on right -->
+        <div class="tracker-layout">
+          <div class="tracker-tree card" id="trk-tree">
+            <div class="card-head">
+              <div class="card-title">Partners</div>
+            </div>
+            <div id="trk-tree-body"></div>
+          </div>
+          <div class="tracker-panel" id="trk-panel">
+            <!-- Projects list gets rendered here -->
+            <div id="trk-projects-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACKER: PROJECT DETAIL (Airtable-style row view) -->
+    <div class="page" id="page-tracker-detail">
+      <div class="topbar">
+        <button class="hamburger" id="hamburger-btn6"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
+        <div class="topbar-title" id="detail-title">Project detail</div>
+        <div class="topbar-right">
+          <button class="btn btn-sm" onclick="exportProjectCsv()">⬇ Export CSV</button>
+          <button class="btn btn-sm btn-danger" onclick="confirmDeleteProject()" id="detail-delete-btn" title="Delete all towers in this project">🗑 Delete project</button>
+          <button class="btn btn-sm" onclick="showPage('tracker')">← Back</button>
+        </div>
+      </div>
+      <div class="content" style="padding:16px 24px 40px;">
+        <!-- Progress bars card -->
         <div class="card" style="margin-bottom:16px;">
           <div class="card-head">
-            <div class="card-title">Filter by partner</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;" id="trk-partner-filter"></div>
+            <div>
+              <div class="card-title" id="detail-head-title">—</div>
+              <div style="font-size:11px;color:var(--text-faint);margin-top:2px;" id="detail-head-sub">—</div>
+            </div>
+            <button class="btn btn-sm" onclick="copyDetailPartnerLink()" style="background:var(--moss);color:var(--green-dark);border-color:var(--bright);">🔗 Copy partner link</button>
+          </div>
+          <div class="card-body" style="padding:14px 20px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;" id="detail-progress"></div>
           </div>
         </div>
 
-        <!-- Projects list -->
-        <div id="trk-projects-list"></div>
+        <!-- Airtable-style table -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="card-head" style="padding:12px 16px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div class="card-title" style="margin:0;">All towers</div>
+              <input type="search" id="detail-search" placeholder="Search tower #, recipient, notes…" oninput="renderProjectDetail()" style="padding:6px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;min-width:240px;"/>
+            </div>
+            <div style="font-size:11px;color:var(--text-faint);" id="detail-count">—</div>
+          </div>
+          <div id="detail-table-wrap" class="detail-table-wrap">
+            <!-- table gets rendered here -->
+          </div>
+        </div>
       </div>
     </div>
 
@@ -911,6 +1001,10 @@ let dbReady=false;
 let shipFilter='all';
 let currentShipmentId=null;
 let trkPartnerFilter='all';
+let trkExpandedPartners=new Set();
+let trkActiveProjectKey=null;
+let trkDetailPartner=null;
+let trkDetailProject=null;
 
 async function sbGet(table,params=''){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`,{headers:HDR});
@@ -942,7 +1036,7 @@ async function loadAll(){
       sbGet('gt_shipments','select=*&order=created_at.desc'),
       sbGet('gt_inventory','select=*&order=location_id'),
       sbGet('gt_inventory_log','select=*&order=created_at.desc&limit=100'),
-      sbGet('gt_towers','select=id,tower_number,project_number,partner,country,date_planted,recipient_name,three_month_evaluation,six_month_evaluation,was_tower_replanted&order=project_number.asc,tower_number.asc'),
+      sbGet('gt_towers','select=*&order=project_number.asc,tower_number.asc'),
       sbGet('gt_partners','select=*&order=name.asc'),
       sbGet('gt_tower_options','select=*&order=display_order.asc'),
     ]);
@@ -968,7 +1062,11 @@ function renderAll(){
   renderInventory();
   renderTracker();
   renderAssignPage();
+  if(trkDetailPartner!=null)renderProjectDetail();
 }
+
+// Small HTML escape helper used across tracker render
+function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function renderMetrics(){
   const s=DATA.shipments;
@@ -1434,84 +1532,119 @@ function trkTowerStatus(t){
 }
 
 function renderTracker(){
-  const el=document.getElementById('trk-projects-list');
-  if(!el)return;
+  const panelEl=document.getElementById('trk-projects-list');
+  const treeEl=document.getElementById('trk-tree-body');
+  if(!panelEl||!treeEl)return;
   const towers=DATA.towers||[];
 
-  // Metrics
+  // Top metrics
   const total=towers.length;
   const planted=towers.filter(t=>t.date_planted).length;
   const threeMo=towers.filter(t=>t.three_month_evaluation).length;
   const sixMo=towers.filter(t=>t.six_month_evaluation).length;
-  const partners=new Set(towers.map(t=>t.partner).filter(Boolean)).size;
+  const partnerCount=new Set(towers.map(t=>t.partner).filter(Boolean)).size;
   const me=id=>document.getElementById(id);
   if(me('trk-m-total'))me('trk-m-total').textContent=total.toLocaleString();
   if(me('trk-m-planted'))me('trk-m-planted').textContent=planted.toLocaleString();
   if(me('trk-m-3mo'))me('trk-m-3mo').textContent=threeMo.toLocaleString();
   if(me('trk-m-6mo'))me('trk-m-6mo').textContent=sixMo.toLocaleString();
-  if(me('trk-m-partners'))me('trk-m-partners').textContent=partners.toLocaleString();
+  if(me('trk-m-partners'))me('trk-m-partners').textContent=partnerCount.toLocaleString();
 
-  // Partner filter chips
-  const pf=document.getElementById('trk-partner-filter');
-  if(pf){
-    const allPartners=[...new Set(towers.map(t=>t.partner).filter(Boolean))].sort();
-    pf.innerHTML=`<button class="btn btn-sm ${trkPartnerFilter==='all'?'active-filter':''}" onclick="setTrkFilter('all')">All</button>`+
-      allPartners.map(p=>`<button class="btn btn-sm ${trkPartnerFilter===p?'active-filter':''}" onclick="setTrkFilter(${JSON.stringify(p).replace(/"/g,'&quot;')})">${p}</button>`).join('');
+  // Build the partner→projects map
+  const byPartner={};
+  towers.forEach(t=>{
+    const p=t.partner||'—';
+    if(!byPartner[p])byPartner[p]={name:p,projects:{}};
+    const proj=t.project_number||0;
+    if(!byPartner[p].projects[proj])byPartner[p].projects[proj]={project:proj,towers:[]};
+    byPartner[p].projects[proj].towers.push(t);
+  });
+
+  const partnerNames=Object.keys(byPartner).sort();
+
+  // --- Sidebar tree ---
+  if(!partnerNames.length){
+    treeEl.innerHTML='<div class="tracker-tree-empty">No tower records yet.<br>Click "+ Assign towers" to start.</div>';
+  }else{
+    treeEl.innerHTML=partnerNames.map(name=>{
+      const p=byPartner[name];
+      const projects=Object.values(p.projects).sort((a,b)=>Number(a.project)-Number(b.project));
+      const expanded=trkExpandedPartners.has(name);
+      const totalTowers=projects.reduce((s,pr)=>s+pr.towers.length,0);
+      return `<div>
+        <div class="tracker-tree-partner${expanded?' expanded':''}" onclick="togglePartner(${JSON.stringify(name).replace(/"/g,'&quot;')})">
+          <span>${esc(name)}</span>
+          <span style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:10px;color:var(--text-faint);font-weight:500;">${totalTowers.toLocaleString()}</span>
+            <span class="chev">▶</span>
+          </span>
+        </div>
+        <div class="tracker-tree-projects${expanded?' open':''}">
+          ${projects.map(pr=>{
+            const active=trkActiveProjectKey===(name+'|'+pr.project);
+            return `<div class="tracker-tree-project${active?' active':''}" onclick="openProjectDetail(${JSON.stringify(name).replace(/"/g,'&quot;')},${pr.project})">
+              <span>Project ${pr.project}</span>
+              <span class="proj-count">${pr.towers.length}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('');
   }
 
-  // Group by (partner, project)
-  const filtered=trkPartnerFilter==='all'?towers:towers.filter(t=>t.partner===trkPartnerFilter);
-  const groups={};
-  filtered.forEach(t=>{
-    const key=`${t.partner||'—'}|${t.project_number||0}`;
-    if(!groups[key])groups[key]={partner:t.partner,project:t.project_number,towers:[]};
-    groups[key].towers.push(t);
-  });
-
-  const keys=Object.keys(groups).sort((a,b)=>{
-    const [pa,na]=a.split('|');const [pb,nb]=b.split('|');
-    if(pa!==pb)return pa.localeCompare(pb);
-    return Number(na)-Number(nb);
-  });
-
-  if(!keys.length){
-    el.innerHTML='<div class="card"><div class="card-body"><div class="state-box">No tower records yet. Click "Assign towers" to create some.</div></div></div>';
+  // --- Right panel: project cards (clickable to open detail) ---
+  if(!partnerNames.length){
+    panelEl.innerHTML='<div class="card"><div class="card-body"><div class="state-box">No tower records yet. Click "+ Assign towers" to create some.</div></div></div>';
     return;
   }
 
-  el.innerHTML=keys.map(k=>{
-    const g=groups[k];
-    const n=g.towers.length;
-    const plantedN=g.towers.filter(t=>t.date_planted).length;
-    const threeN=g.towers.filter(t=>t.three_month_evaluation).length;
-    const sixN=g.towers.filter(t=>t.six_month_evaluation).length;
-    const pct=v=>n?Math.round(v/n*100):0;
-    const partner=DATA.partners.find(p=>p.name===g.partner);
-    const slug=partner?partner.slug:'';
-    const partnerBtn=slug?`<button class="btn btn-sm" onclick="copyPartnerLink('${slug}','${g.project}')" style="font-size:11px;padding:4px 10px;background:var(--moss);color:var(--green-dark);border-color:var(--bright);">🔗 Copy partner link</button>`:'';
+  // Show cards for expanded partners (or all if nothing is expanded yet)
+  const showPartners=trkExpandedPartners.size?partnerNames.filter(n=>trkExpandedPartners.has(n)):partnerNames;
+  const cards=[];
+  showPartners.forEach(name=>{
+    const p=byPartner[name];
+    const projects=Object.values(p.projects).sort((a,b)=>Number(a.project)-Number(b.project));
+    projects.forEach(pr=>{
+      const n=pr.towers.length;
+      const plantedN=pr.towers.filter(t=>t.date_planted).length;
+      const threeN=pr.towers.filter(t=>t.three_month_evaluation).length;
+      const sixN=pr.towers.filter(t=>t.six_month_evaluation).length;
+      const pct=v=>n?Math.round(v/n*100):0;
+      const partnerRec=DATA.partners.find(pp=>pp.name===name);
+      const slug=partnerRec?partnerRec.slug:'';
+      const partnerBtn=slug?`<button class="btn btn-sm" onclick="event.stopPropagation();copyPartnerLink('${slug}','${pr.project}')" style="font-size:11px;padding:4px 10px;background:var(--moss);color:var(--green-dark);border-color:var(--bright);">🔗 Partner link</button>`:'';
+      const rangeStart=Math.min(...pr.towers.map(t=>t.tower_number||Infinity));
+      const rangeEnd=Math.max(...pr.towers.map(t=>t.tower_number||0));
 
-    const rangeStart=Math.min(...g.towers.map(t=>t.tower_number||Infinity));
-    const rangeEnd=Math.max(...g.towers.map(t=>t.tower_number||0));
+      cards.push(`<div class="card project-card" style="margin-bottom:14px;" onclick="openProjectDetail(${JSON.stringify(name).replace(/"/g,'&quot;')},${pr.project})">
+        <div class="card-head">
+          <div>
+            <div class="card-title">${esc(name)} · Project ${pr.project}</div>
+            <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${n.toLocaleString()} records · click to view all</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">${partnerBtn}</div>
+        </div>
+        <div class="card-body" style="padding:14px 20px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            ${trkProgressBar('Planted',plantedN,n,'var(--green)',pct(plantedN))}
+            ${trkProgressBar('3-month eval',threeN,n,'var(--bright)',pct(threeN))}
+            ${trkProgressBar('6-month eval',sixN,n,'var(--blue)',pct(sixN))}
+          </div>
+        </div>
+      </div>`);
+    });
+  });
 
-    return `<div class="card" style="margin-bottom:16px;">
-      <div class="card-head">
-        <div>
-          <div class="card-title">${g.partner||'—'} · Project ${g.project}</div>
-          <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${n.toLocaleString()} records</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          ${partnerBtn}
-        </div>
-      </div>
-      <div class="card-body" style="padding:14px 20px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-          ${trkProgressBar('Planted',plantedN,n,'var(--green)',pct(plantedN))}
-          ${trkProgressBar('3-month eval',threeN,n,'var(--bright)',pct(threeN))}
-          ${trkProgressBar('6-month eval',sixN,n,'var(--blue)',pct(sixN))}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  panelEl.innerHTML=cards.length?cards.join(''):'<div class="card"><div class="card-body"><div class="state-box">Pick a partner from the left to see their projects.</div></div></div>';
+}
+
+function togglePartner(name){
+  if(trkExpandedPartners.has(name)){
+    trkExpandedPartners.delete(name);
+  }else{
+    trkExpandedPartners.add(name);
+  }
+  renderTracker();
 }
 
 function trkProgressBar(label,num,denom,color,pct){
@@ -1527,11 +1660,6 @@ function trkProgressBar(label,num,denom,color,pct){
   </div>`;
 }
 
-function setTrkFilter(partner){
-  trkPartnerFilter=partner;
-  renderTracker();
-}
-
 function copyPartnerLink(slug,project){
   const base=window.location.href.split('?')[0].replace('garden_towers.html','partner_tower_form.html');
   const url=`${base}?partner=${slug}${project?'&project='+project:''}`;
@@ -1540,6 +1668,300 @@ function copyPartnerLink(slug,project){
   }).catch(()=>{
     prompt('Copy this partner link:',url);
   });
+}
+
+// ---- Project detail view ----
+function openProjectDetail(partner,project){
+  trkActiveProjectKey=partner+'|'+project;
+  trkExpandedPartners.add(partner);
+  trkDetailPartner=partner;
+  trkDetailProject=project;
+  showPage('tracker-detail');
+  renderProjectDetail();
+}
+
+function renderProjectDetail(){
+  const towers=(DATA.towers||[]).filter(t=>t.partner===trkDetailPartner&&t.project_number===Number(trkDetailProject));
+  const titleEl=document.getElementById('detail-title');
+  const headTitle=document.getElementById('detail-head-title');
+  const headSub=document.getElementById('detail-head-sub');
+  const progEl=document.getElementById('detail-progress');
+  const tblWrap=document.getElementById('detail-table-wrap');
+  const countEl=document.getElementById('detail-count');
+  if(!tblWrap)return;
+
+  const partnerRec=DATA.partners.find(p=>p.name===trkDetailPartner);
+  const uses_ext=partnerRec?partnerRec.uses_extended_form:false;
+
+  // Header + progress
+  if(titleEl)titleEl.textContent=`${trkDetailPartner} · Project ${trkDetailProject}`;
+  if(headTitle)headTitle.textContent=`${trkDetailPartner} · Project ${trkDetailProject}`;
+  const n=towers.length;
+  const rangeStart=n?Math.min(...towers.map(t=>t.tower_number||Infinity)):0;
+  const rangeEnd=n?Math.max(...towers.map(t=>t.tower_number||0)):0;
+  if(headSub)headSub.textContent=n?`Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${n.toLocaleString()} records${uses_ext?' · extended form':''}`:'No towers in this project';
+
+  const plantedN=towers.filter(t=>t.date_planted).length;
+  const threeN=towers.filter(t=>t.three_month_evaluation).length;
+  const sixN=towers.filter(t=>t.six_month_evaluation).length;
+  const pct=v=>n?Math.round(v/n*100):0;
+  if(progEl)progEl.innerHTML=
+    trkProgressBar('Planted',plantedN,n,'var(--green)',pct(plantedN))+
+    trkProgressBar('3-month eval',threeN,n,'var(--bright)',pct(threeN))+
+    trkProgressBar('6-month eval',sixN,n,'var(--blue)',pct(sixN));
+
+  // Search filter
+  const q=(document.getElementById('detail-search')?.value||'').trim().toLowerCase();
+  let rows=towers;
+  if(q){
+    rows=rows.filter(t=>
+      String(t.tower_number||'').includes(q)||
+      (t.recipient_name||'').toLowerCase().includes(q)||
+      (t.tower_location||'').toLowerCase().includes(q)||
+      (t.notes_about_family||'').toLowerCase().includes(q)||
+      (t.communities||'').toLowerCase().includes(q)
+    );
+  }
+  rows=rows.slice().sort((a,b)=>(a.tower_number||0)-(b.tower_number||0));
+  if(countEl)countEl.textContent=`${rows.length.toLocaleString()} of ${n.toLocaleString()} towers`;
+
+  // Build the table
+  const baseCols=[
+    ['Tower #','tower_number','tc-num'],
+    ['Status','_status','tc-status-cell'],
+    ['Date planted','date_planted','date'],
+    ['Location','tower_location'],
+    ['Country','country'],
+    ['Person in charge','person_in_charge'],
+    ['Recipient','recipient_name'],
+    ['Family size','number_of_family_members'],
+    ['Vegetables','vegetables_planted','veg'],
+    ['Construction photos','tower_construction_photos','photos'],
+    ['Notes about family','notes_about_family','longtext'],
+    ['3-mo eval','three_month_evaluation'],
+    ['3-mo photos','three_month_photos','photos'],
+    ['6-mo eval','six_month_evaluation'],
+    ['6-mo photos','six_month_photos','photos'],
+    ['Challenges','significant_challenges','longtext'],
+    ['Family photos','family_photos','photos'],
+    ['Replanted','was_tower_replanted','bool'],
+  ];
+  const extCols=[
+    ['Community','communities'],
+    ['Children in home','number_of_children_in_home'],
+    ['Children in school','number_of_children_in_school'],
+    ['Monthly income','family_monthly_income'],
+    ['Family helped build','did_family_help_build','bool'],
+    ['Water source','water_source','longtext'],
+    ['Water trips/day','water_trips_per_day'],
+    ['Water distance','water_distance_from_home'],
+    ['Water used/week','water_used_per_week'],
+    ['Meals/week','meals_per_week_from_garden'],
+    ['Extra veg sold','extra_vegetables_sold','bool'],
+    ['$ earned/week','money_earned_per_week','money'],
+  ];
+  const cols=uses_ext?[...baseCols,...extCols]:baseCols;
+
+  const head='<tr>'+cols.map(c=>`<th>${c[0]}</th>`).join('')+'</tr>';
+  const body=rows.map(t=>{
+    const cells=cols.map(c=>{
+      const [label,field,fmt]=c;
+      return `<td>${renderDetailCell(t,field,fmt)}</td>`;
+    }).join('');
+    return `<tr onclick="showTowerInModal('${t.id}')">${cells}</tr>`;
+  }).join('');
+
+  tblWrap.innerHTML=`<table class="detail-table"><thead>${head}</thead><tbody>${body||'<tr><td colspan="'+cols.length+'" style="text-align:center;color:var(--text-faint);padding:40px;">No matching towers</td></tr>'}</tbody></table>`;
+}
+
+function renderDetailCell(t,field,fmt){
+  if(field==='_status'){
+    const s=trkTowerStatus(t);
+    const label={empty:'Not started',planted:'Planted',three_mo:'3-mo done',six_mo:'6-mo done'}[s];
+    return `<span class="tc-status st-${s}">${label}</span>`;
+  }
+  const v=t[field];
+  if(v==null||v==='')return '<span style="color:var(--text-faint);">—</span>';
+  if(fmt==='tc-num')return `<span class="tc-num">#${v}</span>`;
+  if(fmt==='date'){try{return new Date(v).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}catch(e){return esc(v);}}
+  if(fmt==='bool')return v===true?'✓ Yes':v===false?'✗ No':'—';
+  if(fmt==='money')return '$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(fmt==='veg'){
+    const arr=Array.isArray(v)?v:(v?[v]:[]);
+    if(!arr.length)return '<span style="color:var(--text-faint);">—</span>';
+    return `<div class="tc-veg">${arr.slice(0,4).map(x=>`<span class="chip">${esc(x)}</span>`).join('')}${arr.length>4?`<span style="font-size:10px;color:var(--text-faint);align-self:center;">+${arr.length-4}</span>`:''}</div>`;
+  }
+  if(fmt==='photos'){
+    const arr=Array.isArray(v)?v:[];
+    if(!arr.length)return '<span style="color:var(--text-faint);">—</span>';
+    return `<div class="tc-photos">${arr.slice(0,3).map(p=>`<img src="${esc(p.url||'')}" title="${esc(p.filename||'')}" loading="lazy" onerror="this.style.display='none'"/>`).join('')}${arr.length>3?`<span style="font-size:10px;color:var(--text-faint);align-self:center;margin-left:2px;">+${arr.length-3}</span>`:''}</div>`;
+  }
+  if(fmt==='longtext'){
+    const s=String(v);
+    return esc(s.length>80?s.slice(0,80)+'…':s);
+  }
+  return esc(String(v));
+}
+
+function showTowerInModal(id){
+  const t=DATA.towers.find(x=>x.id===id);
+  if(!t)return;
+  const partnerRec=DATA.partners.find(p=>p.name===t.partner);
+  const ext=partnerRec?partnerRec.uses_extended_form:false;
+
+  const row=(label,val,fmt)=>{
+    let display=val;
+    if(val==null||val==='')display='<span style="color:var(--text-faint);">—</span>';
+    else if(fmt==='bool')display=val===true?'✓ Yes':val===false?'✗ No':'—';
+    else if(fmt==='date'){try{display=new Date(val).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});}catch(e){display=esc(val);}}
+    else if(fmt==='money')display='$'+Number(val).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    else if(fmt==='veg'&&Array.isArray(val))display=val.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;">${val.map(x=>`<span class="badge badge-green">${esc(x)}</span>`).join('')}</div>`:'—';
+    else if(fmt==='photos'&&Array.isArray(val))display=val.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">${val.map(p=>`<a href="${esc(p.url||'')}" target="_blank"><img src="${esc(p.url||'')}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"/></a>`).join('')}</div>`:'—';
+    else display=esc(String(val));
+    return `<div style="display:grid;grid-template-columns:180px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);">${label}</div>
+      <div style="font-size:13px;">${display}</div>
+    </div>`;
+  };
+
+  const modal=document.getElementById('modal-content');
+  modal.innerHTML=`
+    <h2>Tower #${t.tower_number||'—'}</h2>
+    <p class="modal-sub">${esc(t.partner||'')} · Project ${t.project_number||''}</p>
+    <div style="margin-top:12px;">
+      ${row('Status',null,null).replace('—',`<span class="tc-status st-${trkTowerStatus(t)}">${({empty:'Not started',planted:'Planted',three_mo:'3-mo done',six_mo:'6-mo done'})[trkTowerStatus(t)]}</span>`)}
+      ${row('Date planted',t.date_planted,'date')}
+      ${row('Location',t.tower_location)}
+      ${row('Country',t.country)}
+      ${row('Person in charge',t.person_in_charge)}
+      ${row('Recipient',t.recipient_name)}
+      ${row('Family size',t.number_of_family_members)}
+      ${row('Vegetables planted',t.vegetables_planted,'veg')}
+      ${row('Construction photos',t.tower_construction_photos,'photos')}
+      ${row('Notes about family',t.notes_about_family)}
+      ${row('3-month evaluation',t.three_month_evaluation)}
+      ${row('3-month photos',t.three_month_photos,'photos')}
+      ${row('6-month evaluation',t.six_month_evaluation)}
+      ${row('6-month photos',t.six_month_photos,'photos')}
+      ${row('Challenges',t.significant_challenges)}
+      ${row('Family photos',t.family_photos,'photos')}
+      ${row('Replanted',t.was_tower_replanted,'bool')}
+      ${ext?`
+        <div style="margin-top:12px;padding-top:12px;border-top:2px solid var(--green);">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:6px;">Extended form fields</div>
+          ${row('Community',t.communities)}
+          ${row('Children in home',t.number_of_children_in_home)}
+          ${row('Children in school',t.number_of_children_in_school)}
+          ${row('Monthly income',t.family_monthly_income)}
+          ${row('Family helped build',t.did_family_help_build,'bool')}
+          ${row('Water source',t.water_source)}
+          ${row('Water trips/day',t.water_trips_per_day)}
+          ${row('Water distance',t.water_distance_from_home)}
+          ${row('Water used/week',t.water_used_per_week)}
+          ${row('Meals/week',t.meals_per_week_from_garden)}
+          ${row('Extra veg sold',t.extra_vegetables_sold,'bool')}
+          ${row('$ earned/week',t.money_earned_per_week,'money')}
+        </div>
+      `:''}
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function copyDetailPartnerLink(){
+  const partnerRec=DATA.partners.find(p=>p.name===trkDetailPartner);
+  if(!partnerRec)return showToast('Partner not found','error');
+  copyPartnerLink(partnerRec.slug,trkDetailProject);
+}
+
+function exportProjectCsv(){
+  const towers=(DATA.towers||[]).filter(t=>t.partner===trkDetailPartner&&t.project_number===Number(trkDetailProject));
+  const partnerRec=DATA.partners.find(p=>p.name===trkDetailPartner);
+  const ext=partnerRec?partnerRec.uses_extended_form:false;
+
+  const headers=['Tower #','Status','Date Planted','Location','Country','Person in Charge','Recipient','Family Size','Vegetables','Notes About Family','3-mo Eval','6-mo Eval','Challenges','Replanted'];
+  const extHeaders=['Community','Children in Home','Children in School','Monthly Income','Family Helped Build','Water Source','Water Trips/Day','Water Distance','Water Used/Week','Meals/Week','Extra Veg Sold','$ Earned/Week'];
+  const allHeaders=ext?[...headers,...extHeaders]:headers;
+  const escCsv=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+
+  const lines=[allHeaders.join(',')];
+  towers.sort((a,b)=>(a.tower_number||0)-(b.tower_number||0)).forEach(t=>{
+    const status=({empty:'Not started',planted:'Planted',three_mo:'3-mo done',six_mo:'6-mo done'})[trkTowerStatus(t)];
+    const base=[
+      t.tower_number||'',status,t.date_planted||'',t.tower_location||'',t.country||'',
+      t.person_in_charge||'',t.recipient_name||'',t.number_of_family_members||'',
+      (t.vegetables_planted||[]).join('; '),t.notes_about_family||'',
+      t.three_month_evaluation||'',t.six_month_evaluation||'',t.significant_challenges||'',
+      t.was_tower_replanted===true?'Yes':t.was_tower_replanted===false?'No':'',
+    ];
+    const extData=ext?[
+      t.communities||'',t.number_of_children_in_home||'',t.number_of_children_in_school||'',
+      t.family_monthly_income||'',
+      t.did_family_help_build===true?'Yes':t.did_family_help_build===false?'No':'',
+      t.water_source||'',t.water_trips_per_day||'',t.water_distance_from_home||'',
+      t.water_used_per_week||'',t.meals_per_week_from_garden||'',
+      t.extra_vegetables_sold===true?'Yes':t.extra_vegetables_sold===false?'No':'',
+      t.money_earned_per_week||'',
+    ]:[];
+    lines.push([...base,...extData].map(escCsv).join(','));
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${(partnerRec?.slug||'project')}_proj${trkDetailProject}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+function confirmDeleteProject(){
+  const towers=(DATA.towers||[]).filter(t=>t.partner===trkDetailPartner&&t.project_number===Number(trkDetailProject));
+  if(!towers.length)return showToast('Nothing to delete','error');
+  const plantedCount=towers.filter(t=>t.date_planted).length;
+
+  const modal=document.getElementById('modal-content');
+  modal.innerHTML=`
+    <h2 style="color:var(--red-text);">⚠ Delete project?</h2>
+    <p class="modal-sub">You're about to permanently delete <strong>${towers.length.toLocaleString()} tower records</strong> from <strong>${esc(trkDetailPartner)} · Project ${trkDetailProject}</strong>.</p>
+    ${plantedCount>0?`<div style="background:var(--red-light);color:var(--red-text);padding:12px;border-radius:8px;margin:12px 0;font-size:13px;"><strong>${plantedCount} of these towers have real data</strong> (date planted filled in). Deleting is not reversible.</div>`:'<div style="background:var(--amber-light);color:var(--amber-text);padding:12px;border-radius:8px;margin:12px 0;font-size:13px;">These towers are empty (no data entered yet). Safe to delete.</div>'}
+    <div class="form-row" style="margin-top:12px;">
+      <label class="form-label">Type <code>DELETE</code> to confirm</label>
+      <input type="text" class="form-input" id="del-confirm" autocomplete="off" placeholder="DELETE"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="del-btn" onclick="performDeleteProject()">Delete ${towers.length.toLocaleString()} towers</button>
+    </div>
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('del-confirm')?.focus(),50);
+}
+
+async function performDeleteProject(){
+  if(document.getElementById('del-confirm').value.trim()!=='DELETE'){
+    return showToast('Type DELETE to confirm','error');
+  }
+  const btn=document.getElementById('del-btn');
+  btn.disabled=true;btn.textContent='Deleting…';
+  try{
+    const partner=encodeURIComponent(trkDetailPartner);
+    const proj=Number(trkDetailProject);
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/gt_towers?partner=eq.${partner}&project_number=eq.${proj}`,{
+      method:'DELETE',
+      headers:{...HDR,'Prefer':'return=minimal'},
+    });
+    if(!r.ok){const t=await r.text();throw new Error('Delete failed: '+r.status+' '+t);}
+    showToast(`✓ Project deleted`,'success');
+    closeModal();
+    trkActiveProjectKey=null;
+    await loadAll();
+    showPage('tracker');
+  }catch(e){
+    console.error(e);
+    showToast('Delete failed: '+e.message,'error');
+    btn.disabled=false;btn.textContent='Try again';
+  }
 }
 
 // ---- Bulk-assign page ----
