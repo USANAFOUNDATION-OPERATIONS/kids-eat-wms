@@ -772,6 +772,18 @@
                   </div>
                 </div>
               </div>
+              <!-- Community row: only visible for 100 Humanitarians (extended-form partners) -->
+              <div class="grid-2" id="assign-community-row" style="display:none;">
+                <div class="form-row" style="grid-column:1/-1;">
+                  <label class="form-label">Community</label>
+                  <select class="form-input" id="assign-community">
+                    <option value="">— Pick a community —</option>
+                  </select>
+                  <div style="font-size:11px;color:var(--text-faint);margin-top:6px;">
+                    100 Humanitarians projects are tracked by community. All towers in this batch will be tagged with the community you pick. Leave blank if you'll fill it in later.
+                  </div>
+                </div>
+              </div>
               <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
                 <button class="btn" onclick="showPage('tracker')">Cancel</button>
                 <button class="btn btn-primary" id="assign-submit-btn" onclick="submitBulkAssign()">Create tower records</button>
@@ -2588,7 +2600,13 @@ function renderAssignPage(){
     const partners=(DATA.partners||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));
     sel.innerHTML='<option value="">Choose a partner…</option>'+
       partners.map(p=>`<option value="${p.id}" data-slug="${p.slug}" data-extended="${p.uses_extended_form}">${p.name}${p.uses_extended_form?' (extended form)':''}</option>`).join('');
+    // Wire partner change to toggle the Community row
+    if(!sel._communityWired){
+      sel._communityWired=true;
+      sel.addEventListener('change',updateAssignCommunityVisibility);
+    }
   }
+  updateAssignCommunityVisibility();
 
   // Wire up live preview
   ['assign-start','assign-end'].forEach(id=>{
@@ -2626,6 +2644,68 @@ function renderAssignPage(){
   }
 }
 
+function updateAssignCommunityVisibility(){
+  const sel=document.getElementById('assign-partner');
+  const row=document.getElementById('assign-community-row');
+  const commSel=document.getElementById('assign-community');
+  if(!sel||!row||!commSel)return;
+
+  // Look up which partner is selected and whether it's the 100 Humanitarians one.
+  // We tie this to the partner NAME being "100 Humanitarians" since that's the
+  // only one that uses community tracking right now.
+  const selectedId=sel.value;
+  const partner=(DATA.partners||[]).find(p=>String(p.id)===String(selectedId));
+  const isHundredH=partner && partner.name==='100 Humanitarians';
+
+  if(isHundredH){
+    row.style.display='';
+    // Populate / refresh the community dropdown from existing tower data
+    const communities=new Set();
+    (DATA.towers||[]).forEach(t=>{
+      if(t.partner==='100 Humanitarians'){
+        const c=(t.communities||'').trim();
+        if(c)communities.add(c);
+      }
+    });
+    const sorted=Array.from(communities).sort((a,b)=>a.localeCompare(b));
+    const currentVal=commSel.value;
+    commSel.innerHTML='<option value="">— Pick a community —</option>'+
+      sorted.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')+
+      '<option value="__new__">+ Add a new community…</option>';
+    // Restore previous choice if it's still available
+    if(currentVal && currentVal!=='__new__' && Array.from(commSel.options).some(o=>o.value===currentVal)){
+      commSel.value=currentVal;
+    }
+    // Wire the "add new" option
+    if(!commSel._newWired){
+      commSel._newWired=true;
+      commSel.addEventListener('change',handleCommunitySelectChange);
+    }
+  }else{
+    row.style.display='none';
+    commSel.value='';
+  }
+}
+
+function handleCommunitySelectChange(e){
+  const sel=e.target;
+  if(sel.value==='__new__'){
+    const name=prompt('Enter a new community name (e.g. Lugari, Siaya, Meru):');
+    if(name && name.trim()){
+      const clean=name.trim();
+      // Add it as a new option and select it
+      const opt=document.createElement('option');
+      opt.value=clean;
+      opt.textContent=clean;
+      // Insert before the "+ Add new" option (which is the last)
+      sel.insertBefore(opt,sel.options[sel.options.length-1]);
+      sel.value=clean;
+    }else{
+      sel.value='';
+    }
+  }
+}
+
 function updateAssignPreview(){
   const s=parseInt(document.getElementById('assign-start')?.value);
   const e=parseInt(document.getElementById('assign-end')?.value);
@@ -2655,6 +2735,10 @@ async function submitBulkAssign(){
   const start=parseInt(document.getElementById('assign-start').value);
   const end=parseInt(document.getElementById('assign-end').value);
   const country=document.getElementById('assign-country').value.trim()||null;
+  // Community only matters for 100 Humanitarians
+  const isHundredH=partnerName==='100 Humanitarians';
+  const communitySel=document.getElementById('assign-community');
+  const community=isHundredH?(communitySel?.value||'').trim():'';
 
   // Validation
   if(!partnerId){return showToast('Please choose a partner','error');}
@@ -2662,7 +2746,10 @@ async function submitBulkAssign(){
   if(!start||!end||end<start){return showToast('Please enter a valid tower number range','error');}
   const count=end-start+1;
   if(count>5000){return showToast('Range too large — max 5,000 at a time','error');}
-  if(!confirm(`Create ${count.toLocaleString()} empty tower records for ${partnerName}, project ${project}?\n\nExisting towers in this range will NOT be affected.`)){return;}
+  // Skip the placeholder option
+  const cleanCommunity=community&&community!=='__new__'?community:null;
+  const confirmMsg=`Create ${count.toLocaleString()} empty tower records for ${partnerName}, project ${project}${cleanCommunity?', community '+cleanCommunity:''}?\n\nExisting towers in this range will NOT be affected.`;
+  if(!confirm(confirmMsg)){return;}
 
   const btn=document.getElementById('assign-submit-btn');
   const origText=btn.textContent;
@@ -2672,12 +2759,14 @@ async function submitBulkAssign(){
     // Build the records
     const rows=[];
     for(let n=start;n<=end;n++){
-      rows.push({
+      const row={
         tower_number:n,
         project_number:project,
         partner:partnerName,
         country,
-      });
+      };
+      if(cleanCommunity)row.communities=cleanCommunity;
+      rows.push(row);
     }
 
     // Post in batches of 500. Use Prefer:resolution=ignore-duplicates so existing towers skip silently.
@@ -2701,13 +2790,14 @@ async function submitBulkAssign(){
     }
 
     const skipped=count-inserted;
-    showToast(`✓ Created ${inserted.toLocaleString()} new towers${skipped>0?` (${skipped.toLocaleString()} already existed, skipped)`:''}`,'success');
+    showToast(`✓ Created ${inserted.toLocaleString()} new towers${skipped>0?` (${skipped.toLocaleString()} already existed, skipped)`:''}${cleanCommunity?` for ${cleanCommunity}`:''}`,'success');
 
     // Reset the form
     document.getElementById('assign-project').value='';
     document.getElementById('assign-start').value='';
     document.getElementById('assign-end').value='';
     document.getElementById('assign-country').value='';
+    if(communitySel)communitySel.value='';
 
     // Reload data so the Projects view reflects the new towers
     await loadAll();
