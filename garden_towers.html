@@ -815,7 +815,15 @@
         <div class="topbar-title">World Map</div>
         <div class="topbar-right">
           <span id="worldmap-legend" style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:10px;">
-            <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:10px;background:var(--green);border:1px solid var(--green-dark);border-radius:2px;"></span> Has projects</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;">
+              <span style="display:inline-flex;gap:1px;">
+                <span style="display:inline-block;width:6px;height:10px;background:#2e7d4f;"></span>
+                <span style="display:inline-block;width:6px;height:10px;background:#d97706;"></span>
+                <span style="display:inline-block;width:6px;height:10px;background:#0891b2;"></span>
+                <span style="display:inline-block;width:6px;height:10px;background:#7c3aed;"></span>
+              </span>
+              Has projects
+            </span>
             <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:10px;background:#e5e7eb;border:1px solid #cbd5e1;border-radius:2px;"></span> No projects</span>
           </span>
         </div>
@@ -4012,6 +4020,37 @@ async function renderWorldMap(){
   bg.setAttribute('fill','#f0f8ff');
   svg.appendChild(bg);
 
+  // Color palette for countries — distinct hues, all on the warmer/inviting side.
+  // Each country gets a stable color based on alphabetical order of its name.
+  // ColorBrewer-inspired palette, colorblind-friendly.
+  const COUNTRY_PALETTE=[
+    {fill:'#2e7d4f',stroke:'#1e5532'},  // forest green
+    {fill:'#d97706',stroke:'#92400e'},  // amber
+    {fill:'#0891b2',stroke:'#155e75'},  // cyan
+    {fill:'#7c3aed',stroke:'#5b21b6'},  // purple
+    {fill:'#dc2626',stroke:'#991b1b'},  // red
+    {fill:'#0d9488',stroke:'#115e59'},  // teal
+    {fill:'#ea580c',stroke:'#9a3412'},  // orange
+    {fill:'#65a30d',stroke:'#365314'},  // lime
+    {fill:'#0369a1',stroke:'#0c4a6e'},  // blue
+    {fill:'#be185d',stroke:'#831843'},  // pink
+    {fill:'#a16207',stroke:'#713f12'},  // bronze
+    {fill:'#4f46e5',stroke:'#3730a3'},  // indigo
+    {fill:'#16a34a',stroke:'#14532d'},  // bright green
+    {fill:'#c026d3',stroke:'#86198f'},  // magenta
+    {fill:'#0284c7',stroke:'#075985'},  // sky
+  ];
+  // Sort countries that have data alphabetically by name, then assign colors
+  const dataCountries=Object.keys(byIso).sort((a,b)=>{
+    const na=byIso[a].name||'';
+    const nb=byIso[b].name||'';
+    return na.localeCompare(nb);
+  });
+  const isoToColor={};
+  dataCountries.forEach((iso,i)=>{
+    isoToColor[iso]=COUNTRY_PALETTE[i%COUNTRY_PALETTE.length];
+  });
+
   // Build each country path
   const g=document.createElementNS('http://www.w3.org/2000/svg','g');
   svg.appendChild(g);
@@ -4023,13 +4062,18 @@ async function renderWorldMap(){
     const iso=String(feat.id).padStart(3,'0');
     const countryData=byIso[iso];
     const hasData=!!countryData;
+    const colors=isoToColor[iso];
     const path=document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d',d);
     path.setAttribute('data-iso',iso);
     path.setAttribute('data-name',feat.properties?feat.properties.name||'':'');
-    path.setAttribute('fill',hasData?'var(--green)':'#e5e7eb');
-    path.setAttribute('stroke',hasData?'var(--green-dark)':'#cbd5e1');
-    path.setAttribute('stroke-width','0.5');
+    path.setAttribute('fill',hasData&&colors?colors.fill:'#e5e7eb');
+    path.setAttribute('stroke',hasData&&colors?colors.stroke:'#cbd5e1');
+    path.setAttribute('stroke-width',hasData?'0.7':'0.5');
+    if(hasData&&colors){
+      path.setAttribute('data-base-fill',colors.fill);
+      path.setAttribute('data-hover-fill',colors.stroke);
+    }
     path.style.cursor=hasData?'pointer':'default';
     path.style.transition='fill .15s,opacity .15s';
     if(hasData){
@@ -4047,7 +4091,8 @@ async function renderWorldMap(){
 function showWorldMapTooltip(e,iso,data,feat){
   const tip=document.getElementById('worldmap-tooltip');
   if(!tip)return;
-  e.target.setAttribute('fill','var(--green-dark)');
+  const hover=e.target.getAttribute('data-hover-fill');
+  if(hover)e.target.setAttribute('fill',hover);
   const name=feat.properties?.name||data.name;
   tip.innerHTML=`
     <div style="font-weight:700;font-size:14px;color:var(--green-dark);margin-bottom:6px;">${esc(name)}</div>
@@ -4082,7 +4127,8 @@ function hideWorldMapTooltip(e){
   const tip=document.getElementById('worldmap-tooltip');
   if(tip)tip.style.display='none';
   if(e&&e.target&&e.target.getAttribute('data-iso')){
-    e.target.setAttribute('fill','var(--green)');
+    const base=e.target.getAttribute('data-base-fill');
+    if(base)e.target.setAttribute('fill',base);
   }
 }
 
