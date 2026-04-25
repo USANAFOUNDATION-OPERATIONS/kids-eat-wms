@@ -267,6 +267,14 @@
   .logo-upload img{max-width:100%;max-height:120px;display:block;margin:0 auto;}
   .logo-upload-label{font-size:12px;color:var(--text-muted);margin-top:8px;}
 
+  /* Soil calculator */
+  .soil-tile{padding:18px 20px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+  .soil-tile:last-child{border-right:none;}
+  .soil-tile-label{font-size:10px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+  .soil-tile-value{font-size:24px;font-weight:700;color:var(--text);line-height:1;margin-bottom:2px;}
+  .soil-tile-unit{font-size:11px;color:var(--text-muted);font-weight:500;}
+  .soil-tile.primary .soil-tile-value{color:var(--green-dark);}
+
   /* Reports page */
   .report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-bottom:24px;}
   .report-grid.wide{grid-template-columns:1fr;}
@@ -380,6 +388,10 @@
       <svg viewBox="0 0 16 16" fill="none"><path d="M2 14V4M2 14h12M5 11V7M8 11V5M11 11V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <span>Reports</span>
     </div>
+    <div class="nav-item" data-page="soilcalc">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M3 13c0-3 2-5 5-5s5 2 5 5v1H3v-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="4" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 11h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>Soil Calculator</span>
+    </div>
   </div>
 
   <div class="main">
@@ -432,6 +444,13 @@
               <div class="home-action-body">
                 <div class="home-action-title">Inventory</div>
                 <div class="home-action-desc">Stock levels at the warehouse</div>
+              </div>
+            </div>
+            <div class="home-action-card" onclick="showPage('soilcalc');renderSoilCalc();">
+              <div class="home-action-icon" style="background:linear-gradient(135deg,#92400e,#5e2c07);">🌱</div>
+              <div class="home-action-body">
+                <div class="home-action-title">Soil Calculator</div>
+                <div class="home-action-desc">How much soil do you need for your towers?</div>
               </div>
             </div>
           </div>
@@ -868,6 +887,101 @@
       </div>
       <div class="content" id="reports-content">
         <!-- Reports rendered by renderReports() -->
+      </div>
+    </div>
+
+    <!-- SOIL CALCULATOR PAGE -->
+    <div class="page" id="page-soilcalc">
+      <div class="topbar">
+        <button class="hamburger" id="hamburger-btn-soil"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
+        <div class="topbar-title">Garden Tower Soil Calculator</div>
+      </div>
+      <div class="content" style="max-width:780px;margin:0 auto;padding:24px 24px 60px;">
+
+        <!-- Input card -->
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-head">
+            <div class="card-title">How much soil do you need?</div>
+          </div>
+          <div class="card-body" style="padding:20px 24px;">
+            <div class="form-row" style="margin-bottom:16px;">
+              <label class="form-label">Number of garden towers</label>
+              <input type="number" class="form-input" id="soil-tower-count" value="1" min="1" step="1" style="font-size:18px;font-weight:600;padding:12px;" oninput="renderSoilCalc()"/>
+              <div style="font-size:11px;color:var(--text-faint);margin-top:6px;">Each tower needs about 20 cubic feet (0.566 cubic meters) of soil.</div>
+            </div>
+
+            <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Cost estimate (optional)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div class="form-row">
+                  <label class="form-label">Currency</label>
+                  <select class="form-input" id="soil-currency" oninput="renderSoilCalc()">
+                    <option value="$">USD ($)</option>
+                    <option value="€">EUR (€)</option>
+                    <option value="£">GBP (£)</option>
+                    <option value="KSh ">KES (KSh)</option>
+                    <option value="USh ">UGX (USh)</option>
+                    <option value="Q ">GTQ (Q)</option>
+                    <option value="CFA ">XOF/CFA</option>
+                    <option value="C$ ">CAD (C$)</option>
+                    <option value="RWF ">RWF</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Cost per cubic foot</label>
+                  <input type="number" class="form-input" id="soil-cost-cuft" placeholder="e.g. 5.00" min="0" step="0.01" oninput="renderSoilCalc()"/>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Or per cubic meter</label>
+                  <input type="number" class="form-input" id="soil-cost-cum" placeholder="e.g. 175.00" min="0" step="0.01" oninput="renderSoilCalc('cum')"/>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--text-faint);margin-top:6px;">Enter the cost in whichever unit your supplier quotes — the other auto-fills.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results: Volume -->
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-head">
+            <div class="card-title">📦 Volume needed</div>
+            <div style="font-size:11px;color:var(--text-faint);" id="soil-volume-summary">—</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="soil-volume-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"></div>
+          </div>
+        </div>
+
+        <!-- Results: Weight -->
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-head">
+            <div class="card-title">⚖️ Weight</div>
+            <div style="font-size:11px;color:var(--text-faint);">Standard potting mix · ~700 kg/m³</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="soil-weight-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"></div>
+          </div>
+        </div>
+
+        <!-- Results: Cost (only shown if cost entered) -->
+        <div class="card" id="soil-cost-card" style="margin-bottom:14px;display:none;">
+          <div class="card-head">
+            <div class="card-title">💵 Estimated cost</div>
+          </div>
+          <div class="card-body" style="padding:24px;text-align:center;">
+            <div id="soil-cost-total" style="font-size:36px;font-weight:700;color:var(--green-dark);line-height:1;margin-bottom:8px;">—</div>
+            <div style="font-size:13px;color:var(--text-muted);" id="soil-cost-detail">—</div>
+          </div>
+        </div>
+
+        <!-- Reference / notes -->
+        <div style="background:var(--bg);border-radius:10px;padding:14px 18px;font-size:12px;color:var(--text-muted);line-height:1.6;margin-top:18px;">
+          <div style="font-weight:700;color:var(--text);margin-bottom:6px;">📚 Quick reference</div>
+          1 garden tower holds <strong>20 cubic feet</strong> (0.566 m³ / 0.741 yd³ / 566.3 L) of soil.<br>
+          Weight is approximate — actual values depend on moisture content and soil composition.<br>
+          Cost estimate uses the rate you provide and may vary by supplier and region.
+        </div>
+
       </div>
     </div>
 
@@ -1354,6 +1468,7 @@ function renderAll(){
   renderReports();
   renderHome();
   renderWorldMap();
+  renderSoilCalc();
   if(trkDetailPartner!=null)renderProjectDetail();
   // Refresh community page if it's open
   if(document.getElementById('page-tracker-communities')?.classList.contains('active'))renderCommunitiesPage();
@@ -2065,6 +2180,9 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
     if(item.dataset.page==='home'){item.addEventListener('click',()=>{showPage('home');renderHome();
       if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
     });return;}
+    if(item.dataset.page==='soilcalc'){item.addEventListener('click',()=>{showPage('soilcalc');renderSoilCalc();
+      if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
+    });return;}
     if(item.dataset.page==='tracker'){item.addEventListener('click',()=>{trkSelectedPartner=null;showPage('tracker');renderTracker();
       if(window.innerWidth<=768){document.getElementById('main-sidebar')?.classList.remove('mobile-open');document.getElementById('sidebar-overlay')?.classList.remove('open');}
     });return;}
@@ -2079,7 +2197,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
 
 // Hamburger
 document.addEventListener('DOMContentLoaded',()=>{
-  ['hamburger-btn0','hamburger-btn','hamburger-btn2','hamburger-btn3','hamburger-btn4','hamburger-btn5','hamburger-btn6','hamburger-btn7','hamburger-btn8'].forEach(id=>{
+  ['hamburger-btn0','hamburger-btn','hamburger-btn2','hamburger-btn3','hamburger-btn4','hamburger-btn5','hamburger-btn6','hamburger-btn7','hamburger-btn8','hamburger-btn-soil'].forEach(id=>{
     const btn=document.getElementById(id);
     if(btn)btn.addEventListener('click',()=>{
       document.getElementById('main-sidebar')?.classList.toggle('mobile-open');
@@ -2105,6 +2223,103 @@ function trkTowerStatus(t){
   if(t.three_month_evaluation)return 'three_mo';
   if(t.date_planted)return 'planted';
   return 'empty';
+}
+
+// ---- Soil Calculator ----
+// Each tower needs 20 cubic feet of soil. All math derives from that constant.
+const SOIL_CUFT_PER_TOWER = 20;
+const SOIL_DENSITY_KG_PER_M3 = 700;  // standard potting mix
+// Conversion factors
+const CUFT_TO_M3 = 0.0283168;
+const CUFT_TO_YD3 = 1/27;
+const CUFT_TO_LITERS = 28.3168;
+const CUFT_TO_GALLONS_US = 7.48052;
+const KG_TO_LBS = 2.20462;
+
+function renderSoilCalc(syncSource){
+  // Sync between the two cost inputs (cuft <-> cum)
+  const cuftEl = document.getElementById('soil-cost-cuft');
+  const cumEl = document.getElementById('soil-cost-cum');
+  if(cuftEl && cumEl){
+    if(syncSource === 'cum' && cumEl.value){
+      const perM3 = parseFloat(cumEl.value);
+      if(!isNaN(perM3)) cuftEl.value = (perM3 * CUFT_TO_M3).toFixed(2);
+    }else if(syncSource !== 'cum' && cuftEl.value){
+      const perCuft = parseFloat(cuftEl.value);
+      if(!isNaN(perCuft)) cumEl.value = (perCuft / CUFT_TO_M3).toFixed(2);
+    }
+  }
+
+  const towers = parseInt(document.getElementById('soil-tower-count')?.value) || 0;
+  const totalCuft = towers * SOIL_CUFT_PER_TOWER;
+  const totalM3 = totalCuft * CUFT_TO_M3;
+  const totalYd3 = totalCuft * CUFT_TO_YD3;
+  const totalLiters = totalCuft * CUFT_TO_LITERS;
+  const totalGallons = totalCuft * CUFT_TO_GALLONS_US;
+  const totalKg = totalM3 * SOIL_DENSITY_KG_PER_M3;
+  const totalTons = totalKg / 1000;
+  const totalLbs = totalKg * KG_TO_LBS;
+  const totalUSTons = totalLbs / 2000;
+
+  const fmt = (n, dec=1) => {
+    if(!isFinite(n)) return '—';
+    if(n === 0) return '0';
+    if(n >= 1000) return n.toLocaleString(undefined,{maximumFractionDigits:0});
+    if(n >= 100) return n.toLocaleString(undefined,{maximumFractionDigits:0});
+    if(n >= 10) return n.toLocaleString(undefined,{maximumFractionDigits:1});
+    return n.toLocaleString(undefined,{maximumFractionDigits:dec});
+  };
+
+  const vSumEl = document.getElementById('soil-volume-summary');
+  if(vSumEl){
+    vSumEl.textContent = towers > 0
+      ? `For ${towers.toLocaleString()} tower${towers===1?'':'s'} · ${fmt(totalCuft,0)} ft³ total`
+      : 'Enter a tower count above';
+  }
+
+  const vGrid = document.getElementById('soil-volume-grid');
+  if(vGrid){
+    vGrid.innerHTML = `
+      <div class="soil-tile primary"><div class="soil-tile-label">Cubic feet</div><div class="soil-tile-value">${fmt(totalCuft,0)}</div><div class="soil-tile-unit">ft³</div></div>
+      <div class="soil-tile"><div class="soil-tile-label">Cubic meters</div><div class="soil-tile-value">${fmt(totalM3,2)}</div><div class="soil-tile-unit">m³</div></div>
+      <div class="soil-tile"><div class="soil-tile-label">Cubic yards</div><div class="soil-tile-value">${fmt(totalYd3,2)}</div><div class="soil-tile-unit">yd³</div></div>
+      <div class="soil-tile"><div class="soil-tile-label">Liters</div><div class="soil-tile-value">${fmt(totalLiters,1)}</div><div class="soil-tile-unit">L</div></div>
+      <div class="soil-tile"><div class="soil-tile-label">US gallons</div><div class="soil-tile-value">${fmt(totalGallons,0)}</div><div class="soil-tile-unit">gal</div></div>
+    `;
+  }
+
+  const wGrid = document.getElementById('soil-weight-grid');
+  if(wGrid){
+    wGrid.innerHTML = `
+      <div class="soil-tile primary"><div class="soil-tile-label">Kilograms</div><div class="soil-tile-value">${fmt(totalKg,0)}</div><div class="soil-tile-unit">kg</div></div>
+      <div class="soil-tile"><div class="soil-tile-label">Metric tons</div><div class="soil-tile-value">${fmt(totalTons,2)}</div><div class="soil-tile-unit">t (1,000 kg)</div></div>
+      <div class="soil-tile"><div class="soil-tile-label">Pounds</div><div class="soil-tile-value">${fmt(totalLbs,0)}</div><div class="soil-tile-unit">lbs</div></div>
+      <div class="soil-tile"><div class="soil-tile-label">US tons</div><div class="soil-tile-value">${fmt(totalUSTons,2)}</div><div class="soil-tile-unit">tn (2,000 lbs)</div></div>
+    `;
+  }
+
+  const costCard = document.getElementById('soil-cost-card');
+  const costTotalEl = document.getElementById('soil-cost-total');
+  const costDetailEl = document.getElementById('soil-cost-detail');
+  const currency = document.getElementById('soil-currency')?.value || '$';
+  const perCuft = parseFloat(cuftEl?.value);
+  if(costCard){
+    if(!isNaN(perCuft) && perCuft > 0 && towers > 0){
+      const totalCost = totalCuft * perCuft;
+      costCard.style.display = '';
+      const formatCurrency = (n) => {
+        const compact = ['$','€','£','C$ '].includes(currency);
+        return compact
+          ? currency + n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})
+          : currency + n.toLocaleString(undefined,{maximumFractionDigits:0});
+      };
+      costTotalEl.textContent = formatCurrency(totalCost);
+      const perTower = totalCost / towers;
+      costDetailEl.innerHTML = `${formatCurrency(perCuft)}/ft³ · ${formatCurrency(perTower)} per tower · ${towers.toLocaleString()} tower${towers===1?'':'s'}`;
+    }else{
+      costCard.style.display = 'none';
+    }
+  }
 }
 
 function renderHome(){
