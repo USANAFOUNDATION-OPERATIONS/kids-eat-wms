@@ -1269,6 +1269,29 @@ async function sbGet(table,params=''){
   if(!r.ok)throw new Error('Supabase error: '+r.status);
   return r.json();
 }
+
+// Like sbGet, but paginates through ALL matching rows (handles >1000-row tables).
+// Supabase/PostgREST caps responses at 1000 rows by default — this loops until done.
+async function sbGetAll(table,params=''){
+  const pageSize=1000;
+  let offset=0;
+  const all=[];
+  while(true){
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`,{
+      headers:{...HDR,'Range-Unit':'items','Range':`${offset}-${offset+pageSize-1}`,'Prefer':'count=exact'},
+    });
+    if(!r.ok)throw new Error('Supabase error: '+r.status);
+    const page=await r.json();
+    if(!Array.isArray(page))return page;  // edge: not an array
+    all.push(...page);
+    // If we got fewer than pageSize back, we're done
+    if(page.length<pageSize)break;
+    offset+=pageSize;
+    // Safety stop: don't loop forever
+    if(offset>200000)break;
+  }
+  return all;
+}
 async function sbPost(table,body,prefer='return=representation'){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{...HDR,'Prefer':prefer},body:JSON.stringify(body)});
   if(!r.ok){const t=await r.text();throw new Error('Supabase error: '+r.status+' '+t);}
@@ -1294,7 +1317,7 @@ async function loadAll(){
       sbGet('gt_shipments','select=*&order=created_at.desc'),
       sbGet('gt_inventory','select=*&order=location_id'),
       sbGet('gt_inventory_log','select=*&order=created_at.desc&limit=100'),
-      sbGet('gt_towers','select=*&order=project_number.asc,tower_number.asc'),
+      sbGetAll('gt_towers','select=*&order=project_number.asc,tower_number.asc'),
       sbGet('gt_partners','select=*&order=name.asc'),
       sbGet('gt_tower_options','select=*&order=display_order.asc'),
     ]);
