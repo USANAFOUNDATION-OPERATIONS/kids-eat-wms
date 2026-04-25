@@ -1520,7 +1520,7 @@ function viewShipment(id){
   const s=DATA.shipments.find(x=>x.id===id);
   if(!s)return;
   const items=JSON.parse(s.items_json||'[]');
-  const itemRows=items.map(i=>`<tr><td>${i.name}</td><td style="text-align:center;">${i.qty}</td><td style="text-align:right;">$${i.value.toFixed(2)}</td></tr>`).join('');
+  const itemRows=items.map(i=>`<tr><td>${esc(i.name)}</td><td style="text-align:center;">${i.qty}</td><td style="text-align:right;">$${(i.value||0).toFixed(2)}</td></tr>`).join('');
   const date=s.date_requested?new Date(s.date_requested+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'—';
 
   document.getElementById('modal-content').innerHTML=`
@@ -1528,30 +1528,30 @@ function viewShipment(id){
     <p class="modal-sub">${date} · ${s.ship_type||'US Only'} · <strong style="color:${s.urgency==='Urgent'?'var(--red-text)':'inherit'}">${s.urgency||'—'}</strong></p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
       <div><div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">From</div>
-        <div>${s.requestor_name||'—'}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${s.organization||''}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${s.requestor_email||''}</div>
+        <div>${esc(s.requestor_name||'—')}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${esc(s.organization||'')}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${esc(s.requestor_email||'')}</div>
       </div>
       <div><div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">To</div>
-        <div>${s.recipient_name||'—'}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${s.recipient_email||''}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${s.recipient_phone||''}</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">${(s.ship_to_address||'').replace(/\n/g,'<br/>')}</div>
+        <div>${esc(s.recipient_name||'—')}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${esc(s.recipient_email||'')}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${esc(s.recipient_phone||'')}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">${esc(s.ship_to_address||'').replace(/\n/g,'<br/>')}</div>
       </div>
     </div>
     <div style="margin-bottom:16px;">
       <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Items</div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr style="background:var(--bg);"><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;">Item</th><th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;">Qty</th><th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;">Value</th></tr></thead>
-        <tbody>${itemRows}</tbody>
+        <tbody>${itemRows||'<tr><td colspan="3" style="padding:8px 12px;color:var(--text-faint);">No items</td></tr>'}</tbody>
         <tfoot><tr style="font-weight:700;"><td style="padding:8px 12px;">Total declared value</td><td></td><td style="padding:8px 12px;text-align:right;">$${(s.total_value||0).toFixed(2)}</td></tr></tfoot>
       </table>
     </div>
     <div style="margin-bottom:16px;">
       <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Shipping method</div>
-      <div>${s.shipping_method||'—'}</div>
+      <div>${esc(s.shipping_method||'—')}</div>
     </div>
-    ${s.notes?`<div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Notes</div><div style="font-size:13px;">${s.notes}</div></div>`:''}
+    ${s.notes?`<div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Notes</div><div style="font-size:13px;white-space:pre-wrap;">${esc(s.notes)}</div></div>`:''}
     <div style="margin-bottom:16px;">
       <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;">Status</div>
       <select class="form-input" id="status-select" style="max-width:200px;">
@@ -1563,7 +1563,7 @@ function viewShipment(id){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
       <div>
         <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Tracking number</div>
-        <input type="text" class="form-input" id="tracking-input" value="${s.tracking_number||''}" placeholder="Enter when shipped"/>
+        <input type="text" class="form-input" id="tracking-input" value="${esc(s.tracking_number||'')}" placeholder="Enter when shipped"/>
       </div>
       <div>
         <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Shipping cost ($)</div>
@@ -1571,11 +1571,281 @@ function viewShipment(id){
       </div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-danger" onclick="confirmDeleteShipment('${s.id}')" style="margin-right:auto;">🗑 Delete</button>
       <button class="btn" onclick="closeModal()">Close</button>
+      <button class="btn" onclick="editShipment('${s.id}')">✎ Edit details</button>
       <button class="btn btn-primary" onclick="generateDoc('${s.id}')">📄 Print shipping doc</button>
       <button class="btn btn-primary" onclick="saveShipmentUpdate('${s.id}')">Save changes</button>
     </div>`;
   document.getElementById('modal-bg').classList.add('open');
+}
+
+// ---- Full edit mode for a shipment ----
+function editShipment(id){
+  const s=DATA.shipments.find(x=>x.id===id);
+  if(!s)return;
+  const items=JSON.parse(s.items_json||'[]');
+
+  // Render an editable item row
+  const renderItemRow=(item,idx)=>`
+    <tr data-item-idx="${idx}">
+      <td style="padding:6px 4px;"><input type="text" class="form-input edit-item-name" value="${esc(item.name||'')}" placeholder="Item name" style="font-size:13px;padding:6px 8px;"/></td>
+      <td style="padding:6px 4px;width:80px;"><input type="number" class="form-input edit-item-qty" value="${item.qty||0}" min="0" style="font-size:13px;padding:6px 8px;text-align:center;"/></td>
+      <td style="padding:6px 4px;width:110px;"><input type="number" class="form-input edit-item-value" value="${item.value||0}" min="0" step="0.01" style="font-size:13px;padding:6px 8px;text-align:right;"/></td>
+      <td style="padding:6px 4px;width:32px;"><button class="btn btn-sm" onclick="removeEditItemRow(${idx})" style="padding:4px 8px;color:var(--red-text);" title="Remove">✕</button></td>
+    </tr>
+  `;
+
+  document.getElementById('modal-content').innerHTML=`
+    <h2>Edit shipment #${s.shipment_number}</h2>
+    <p class="modal-sub">All fields are editable. Click Save when done.</p>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div class="form-row">
+        <label class="form-label">Shipment number</label>
+        <input type="number" class="form-input" id="edit-ship-num" value="${s.shipment_number||''}"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Date requested</label>
+        <input type="date" class="form-input" id="edit-date" value="${s.date_requested||''}"/>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 6px;">Requestor</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div class="form-row">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" id="edit-req-name" value="${esc(s.requestor_name||'')}"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Organization</label>
+        <input type="text" class="form-input" id="edit-org" value="${esc(s.organization||'')}"/>
+      </div>
+      <div class="form-row" style="grid-column:1/-1;">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="edit-req-email" value="${esc(s.requestor_email||'')}"/>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 6px;">Recipient</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div class="form-row">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" id="edit-rec-name" value="${esc(s.recipient_name||'')}"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Phone</label>
+        <input type="text" class="form-input" id="edit-rec-phone" value="${esc(s.recipient_phone||'')}"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="edit-rec-email" value="${esc(s.recipient_email||'')}"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Address</label>
+        <textarea class="form-input" id="edit-address" rows="2">${esc(s.ship_to_address||'')}</textarea>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 6px;">Shipping</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div class="form-row">
+        <label class="form-label">Type</label>
+        <select class="form-input" id="edit-ship-type">
+          <option ${s.ship_type==='US Only'?'selected':''}>US Only</option>
+          <option ${s.ship_type==='International'?'selected':''}>International</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Urgency</label>
+        <select class="form-input" id="edit-urgency">
+          <option ${s.urgency==='Urgent'?'selected':''}>Urgent</option>
+          <option ${(!s.urgency||s.urgency==='A week is fine')?'selected':''}>A week is fine</option>
+          <option ${s.urgency==='Whenever'?'selected':''}>Whenever</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="edit-status">
+          <option ${(!s.status||s.status==='Pending')?'selected':''}>Pending</option>
+          <option ${s.status==='Shipped'?'selected':''}>Shipped</option>
+          <option ${s.status==='Cancelled'?'selected':''}>Cancelled</option>
+        </select>
+      </div>
+      <div class="form-row" style="grid-column:1/-1;">
+        <label class="form-label">Shipping method</label>
+        <input type="text" class="form-input" id="edit-method" value="${esc(s.shipping_method||'')}" placeholder="e.g. UPS Ground, USPS Priority, FedEx Express"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Tracking number</label>
+        <input type="text" class="form-input" id="edit-tracking" value="${esc(s.tracking_number||'')}"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Shipping cost ($)</label>
+        <input type="number" class="form-input" id="edit-cost" value="${s.shipping_cost||''}" step="0.01" min="0"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Harmonized code</label>
+        <input type="text" class="form-input" id="edit-harmonized" value="${esc(s.harmonized_code||'')}" placeholder="(international only)"/>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 6px;display:flex;justify-content:space-between;align-items:center;">
+      <span>Items</span>
+      <button class="btn btn-sm" onclick="addEditItemRow()" style="text-transform:none;letter-spacing:0;">+ Add item</button>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px;">
+      <thead><tr style="background:var(--bg);">
+        <th style="padding:6px 8px;text-align:left;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;">Item</th>
+        <th style="padding:6px 8px;text-align:center;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;">Qty</th>
+        <th style="padding:6px 8px;text-align:right;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;">Value ($)</th>
+        <th></th>
+      </tr></thead>
+      <tbody id="edit-items-body">${items.map((it,i)=>renderItemRow(it,i)).join('')}</tbody>
+    </table>
+
+    <div class="form-row" style="margin-bottom:14px;">
+      <label class="form-label">Notes</label>
+      <textarea class="form-input" id="edit-notes" rows="3">${esc(s.notes||'')}</textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="viewShipment('${s.id}')">Cancel</button>
+      <button class="btn btn-primary" id="edit-save-btn" onclick="saveFullShipmentEdit('${s.id}')">Save all changes</button>
+    </div>
+  `;
+}
+
+// Helpers for the edit-items table
+function addEditItemRow(){
+  const body=document.getElementById('edit-items-body');
+  if(!body)return;
+  const idx=Date.now();
+  const tr=document.createElement('tr');
+  tr.setAttribute('data-item-idx',idx);
+  tr.innerHTML=`
+    <td style="padding:6px 4px;"><input type="text" class="form-input edit-item-name" value="" placeholder="Item name" style="font-size:13px;padding:6px 8px;"/></td>
+    <td style="padding:6px 4px;width:80px;"><input type="number" class="form-input edit-item-qty" value="1" min="0" style="font-size:13px;padding:6px 8px;text-align:center;"/></td>
+    <td style="padding:6px 4px;width:110px;"><input type="number" class="form-input edit-item-value" value="0" min="0" step="0.01" style="font-size:13px;padding:6px 8px;text-align:right;"/></td>
+    <td style="padding:6px 4px;width:32px;"><button class="btn btn-sm" onclick="this.closest('tr').remove()" style="padding:4px 8px;color:var(--red-text);">✕</button></td>
+  `;
+  body.appendChild(tr);
+  tr.querySelector('.edit-item-name').focus();
+}
+
+function removeEditItemRow(idx){
+  const row=document.querySelector(`tr[data-item-idx="${idx}"]`);
+  if(row)row.remove();
+}
+
+async function saveFullShipmentEdit(id){
+  const get=el=>document.getElementById(el)?.value;
+  const trim=v=>v?v.trim():'';
+
+  // Gather items from the editable table
+  const items=[];
+  let totalValue=0;
+  document.querySelectorAll('#edit-items-body tr').forEach(tr=>{
+    const name=trim(tr.querySelector('.edit-item-name')?.value);
+    const qty=parseInt(tr.querySelector('.edit-item-qty')?.value)||0;
+    const value=parseFloat(tr.querySelector('.edit-item-value')?.value)||0;
+    if(name||qty>0||value>0){
+      items.push({name,qty,value});
+      totalValue+=value;
+    }
+  });
+
+  const updates={
+    shipment_number:parseInt(get('edit-ship-num'))||null,
+    date_requested:get('edit-date')||null,
+    requestor_name:trim(get('edit-req-name')),
+    organization:trim(get('edit-org')),
+    requestor_email:trim(get('edit-req-email')),
+    recipient_name:trim(get('edit-rec-name')),
+    recipient_phone:trim(get('edit-rec-phone')),
+    recipient_email:trim(get('edit-rec-email')),
+    ship_to_address:trim(get('edit-address')),
+    ship_type:get('edit-ship-type'),
+    urgency:get('edit-urgency'),
+    status:get('edit-status'),
+    shipping_method:trim(get('edit-method')),
+    tracking_number:trim(get('edit-tracking')),
+    shipping_cost:parseFloat(get('edit-cost'))||null,
+    harmonized_code:trim(get('edit-harmonized')),
+    notes:trim(get('edit-notes')),
+    items_json:JSON.stringify(items),
+    items_summary:items.map(i=>i.qty+'x '+i.name).join(', '),
+    total_value:totalValue,
+  };
+
+  if(!updates.shipment_number){return showToast('Shipment number is required','error');}
+  if(!updates.recipient_name){return showToast('Recipient name is required','error');}
+
+  const btn=document.getElementById('edit-save-btn');
+  const orig=btn.textContent;
+  btn.disabled=true;btn.textContent='Saving…';
+
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/gt_shipments?id=eq.${id}`,{
+      method:'PATCH',
+      headers:{...HDR,'Prefer':'return=representation'},
+      body:JSON.stringify(updates)
+    });
+    if(!r.ok){const t=await r.text();throw new Error('Save failed: '+r.status+' '+t);}
+    // Update the in-memory copy too
+    const s=DATA.shipments.find(x=>x.id===id);
+    if(s)Object.assign(s,updates);
+    showToast('✓ Shipment updated','success');
+    closeModal();
+    await loadAll();
+  }catch(e){
+    console.error(e);
+    showToast('Save failed: '+e.message,'error');
+    btn.disabled=false;btn.textContent=orig;
+  }
+}
+
+function confirmDeleteShipment(id){
+  const s=DATA.shipments.find(x=>x.id===id);
+  if(!s)return;
+  document.getElementById('modal-content').innerHTML=`
+    <h2 style="color:var(--red-text);">⚠ Delete shipment?</h2>
+    <p class="modal-sub">You're about to permanently delete <strong>Shipment #${s.shipment_number||'—'}</strong> to <strong>${esc(s.recipient_name||'—')}</strong>.</p>
+    <div style="background:var(--red-light);color:var(--red-text);padding:12px;border-radius:8px;margin:12px 0;font-size:13px;">
+      This cannot be undone. The shipment record will be removed from the database entirely.
+    </div>
+    <div class="form-row" style="margin-top:12px;">
+      <label class="form-label">Type <code>DELETE</code> to confirm</label>
+      <input type="text" class="form-input" id="del-ship-confirm" autocomplete="off" placeholder="DELETE"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="viewShipment('${id}')">Cancel</button>
+      <button class="btn btn-danger" id="del-ship-btn" onclick="performDeleteShipment('${id}')">Delete shipment</button>
+    </div>
+  `;
+  setTimeout(()=>document.getElementById('del-ship-confirm')?.focus(),50);
+}
+
+async function performDeleteShipment(id){
+  if(document.getElementById('del-ship-confirm').value.trim()!=='DELETE'){
+    return showToast('Type DELETE to confirm','error');
+  }
+  const btn=document.getElementById('del-ship-btn');
+  btn.disabled=true;btn.textContent='Deleting…';
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/gt_shipments?id=eq.${id}`,{
+      method:'DELETE',
+      headers:{...HDR,'Prefer':'return=minimal'},
+    });
+    if(!r.ok){const t=await r.text();throw new Error('Delete failed: '+r.status+' '+t);}
+    showToast('✓ Shipment deleted','success');
+    closeModal();
+    await loadAll();
+  }catch(e){
+    console.error(e);
+    showToast('Delete failed: '+e.message,'error');
+    btn.disabled=false;btn.textContent='Try again';
+  }
 }
 
 async function saveShipmentUpdate(id){
