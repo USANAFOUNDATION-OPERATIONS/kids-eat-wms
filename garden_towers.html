@@ -242,6 +242,24 @@
   @keyframes homeFadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
   @media(max-width:640px){.home-title{font-size:22px;}.home-hero{padding:30px 18px 40px;}}
 
+  /* Community cards grid (100 Humanitarians-style breakdown) */
+  .community-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+  .community-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.04);cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;display:flex;flex-direction:column;gap:12px;position:relative;}
+  .community-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:var(--bright);}
+  .community-card-name{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .community-card-meta{font-size:11px;color:var(--text-muted);font-weight:500;}
+  .community-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding-top:12px;border-top:1px solid var(--border);}
+  /* "All communities" variant: dark green, full-width like All Projects */
+  .all-communities-card{background:linear-gradient(135deg,var(--green-dark),var(--green));color:#fff;border-color:var(--green-dark);grid-column:1/-1;}
+  .all-communities-card:hover{border-color:#003325;box-shadow:0 8px 24px rgba(0,105,83,0.35);}
+  .all-communities-card .community-card-name{color:#fff;}
+  .all-communities-card .community-card-meta{color:rgba(255,255,255,0.85);}
+  .all-communities-card .community-card-stats{border-top-color:rgba(255,255,255,0.25);}
+  .all-communities-card .community-card-stats > div > div:first-child{color:rgba(255,255,255,0.8) !important;}
+  .all-communities-card .community-card-stats > div > div:nth-child(2) > span:first-child{color:#fff !important;}
+  .all-communities-card .community-card-stats > div > div:nth-child(2) > span:last-child{color:rgba(255,255,255,0.75) !important;}
+  .all-communities-card .community-card-stats > div > div:last-child{background:rgba(255,255,255,0.18) !important;}
+
   /* Logo upload dropzone inside edit-partner modal */
   .logo-upload{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
   .logo-upload:hover{border-color:var(--green);background:var(--bg);}
@@ -641,7 +659,7 @@
         <div class="topbar-right">
           <button class="btn btn-sm" onclick="exportProjectCsv()">⬇ Export CSV</button>
           <button class="btn btn-sm btn-danger" onclick="confirmDeleteProject()" id="detail-delete-btn" title="Delete all towers in this project">🗑 Delete project</button>
-          <button class="btn btn-sm" onclick="showPage('tracker')">← Back</button>
+          <button class="btn btn-sm" onclick="backFromDetail()">← Back</button>
         </div>
       </div>
       <div class="content" style="padding:16px 24px 40px;">
@@ -672,6 +690,34 @@
             <!-- table gets rendered here -->
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- TRACKER: COMMUNITIES (only shown for 100 Humanitarians-style partners) -->
+    <div class="page" id="page-tracker-communities">
+      <div class="topbar">
+        <button class="hamburger" id="hamburger-btn9"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="11" x2="19" y2="11"/><line x1="3" y1="16" x2="19" y2="16"/></svg></button>
+        <div class="topbar-title" id="communities-title">Communities</div>
+        <div class="topbar-right">
+          <button class="btn btn-sm" onclick="backToPartnerFromCommunities()">← Back</button>
+        </div>
+      </div>
+      <div class="content" style="padding:16px 24px 40px;">
+        <!-- Project header card -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head">
+            <div>
+              <div class="card-title" id="communities-head-title">—</div>
+              <div style="font-size:11px;color:var(--text-faint);margin-top:2px;" id="communities-head-sub">—</div>
+            </div>
+            <button class="btn btn-sm" onclick="copyCommunitiesPartnerLink()" id="communities-link-btn" style="background:var(--moss);color:var(--green-dark);border-color:var(--bright);">🔗 Copy partner link</button>
+          </div>
+          <div class="card-body" style="padding:14px 20px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;" id="communities-progress"></div>
+          </div>
+        </div>
+        <!-- Community cards grid -->
+        <div id="communities-grid"></div>
       </div>
     </div>
 
@@ -1204,6 +1250,7 @@ let currentShipmentId=null;
 let trkSelectedPartner=null;
 let trkDetailPartner=null;
 let trkDetailProject=null;
+let trkDetailCommunity=null;  // null=ignore community filter, '__all_communities__'=show all in project, or a specific community name
 
 async function sbGet(table,params=''){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`,{headers:HDR});
@@ -1265,6 +1312,8 @@ function renderAll(){
   renderHome();
   renderWorldMap();
   if(trkDetailPartner!=null)renderProjectDetail();
+  // Refresh community page if it's open
+  if(document.getElementById('page-tracker-communities')?.classList.contains('active'))renderCommunitiesPage();
 }
 
 // Small HTML escape helper used across tracker render
@@ -2022,17 +2071,176 @@ function openAllProjects(){
 
 // ---- Project detail view ----
 function openProjectDetail(partner,project){
+  // Special case: 100 Humanitarians is broken into communities.
+  // Click a project → community cards screen, NOT the data table.
+  if(partner==='100 Humanitarians'){
+    openCommunitiesPage(partner,project);
+    return;
+  }
   trkDetailPartner=partner;
   trkDetailProject=project;
+  trkDetailCommunity=null;
   showPage('tracker-detail');
   renderProjectDetail();
 }
 
+// ---- Communities page (for 100 Humanitarians) ----
+function openCommunitiesPage(partner,project){
+  trkDetailPartner=partner;
+  trkDetailProject=project;
+  trkDetailCommunity=null;
+  showPage('tracker-communities');
+  renderCommunitiesPage();
+}
+
+function renderCommunitiesPage(){
+  const towers=(DATA.towers||[]).filter(t=>t.partner===trkDetailPartner&&t.project_number===Number(trkDetailProject));
+  const partnerRec=DATA.partners.find(p=>p.name===trkDetailPartner);
+  const slug=partnerRec?partnerRec.slug:'';
+
+  const titleEl=document.getElementById('communities-title');
+  const headTitle=document.getElementById('communities-head-title');
+  const headSub=document.getElementById('communities-head-sub');
+  const progEl=document.getElementById('communities-progress');
+  const gridEl=document.getElementById('communities-grid');
+  const linkBtn=document.getElementById('communities-link-btn');
+  if(!gridEl)return;
+
+  // Header + project-level progress
+  if(titleEl)titleEl.textContent=`${trkDetailPartner} · Project ${trkDetailProject}`;
+  if(headTitle)headTitle.textContent=`${trkDetailPartner} · Project ${trkDetailProject}`;
+  const n=towers.length;
+  const rangeStart=n?Math.min(...towers.map(t=>t.tower_number||Infinity)):0;
+  const rangeEnd=n?Math.max(...towers.map(t=>t.tower_number||0)):0;
+  const communitiesSet=new Set(towers.map(t=>(t.communities||'').trim()).filter(Boolean));
+  if(headSub)headSub.textContent=n?`Tower #s ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${n.toLocaleString()} towers · ${communitiesSet.size} communit${communitiesSet.size===1?'y':'ies'}`:'No towers yet';
+
+  const plantedN=towers.filter(t=>t.date_planted).length;
+  const threeN=towers.filter(t=>t.three_month_evaluation).length;
+  const sixN=towers.filter(t=>t.six_month_evaluation).length;
+  const pct=v=>n?Math.round(v/n*100):0;
+  if(progEl)progEl.innerHTML=
+    trkProgressBar('Planted',plantedN,n,'var(--green)',pct(plantedN))+
+    trkProgressBar('3-month eval',threeN,n,'var(--bright)',pct(threeN))+
+    trkProgressBar('6-month eval',sixN,n,'var(--blue)',pct(sixN));
+
+  if(linkBtn){
+    linkBtn.style.display=slug?'':'none';
+  }
+
+  // Group towers by community
+  const byComm={};
+  // Towers with no community get bucketed into "Unassigned" so they're still visible
+  towers.forEach(t=>{
+    const c=(t.communities||'').trim()||'(Unassigned)';
+    if(!byComm[c])byComm[c]={name:c,towers:[]};
+    byComm[c].towers.push(t);
+  });
+
+  if(!Object.keys(byComm).length){
+    gridEl.innerHTML='<div class="card"><div class="card-body"><div class="state-box">No towers in this project yet. Once partners start filling in tower data with their community, the community cards will appear here.</div></div></div>';
+    return;
+  }
+
+  // Sort: real communities alphabetically, then "(Unassigned)" last
+  const commNames=Object.keys(byComm).sort((a,b)=>{
+    if(a==='(Unassigned)')return 1;
+    if(b==='(Unassigned)')return -1;
+    return a.localeCompare(b);
+  });
+
+  // Build "All communities" header card
+  const allCard=`<div class="community-card all-communities-card" onclick="openAllCommunitiesView()">
+    <div>
+      <div class="community-card-name" style="font-size:17px;">🌍 All Communities</div>
+      <div class="community-card-meta">Combined view of every community in this project</div>
+    </div>
+    <div class="community-card-stats">
+      ${trkProgressBar('Planted',plantedN,n,'#fff',pct(plantedN))}
+      ${trkProgressBar('3-month eval',threeN,n,'#fff',pct(threeN))}
+      ${trkProgressBar('6-month eval',sixN,n,'#fff',pct(sixN))}
+    </div>
+  </div>`;
+
+  // Build a card per community
+  const cards=commNames.map(name=>{
+    const c=byComm[name];
+    const cn=c.towers.length;
+    const cPlanted=c.towers.filter(t=>t.date_planted).length;
+    const cThree=c.towers.filter(t=>t.three_month_evaluation).length;
+    const cSix=c.towers.filter(t=>t.six_month_evaluation).length;
+    const cPct=v=>cn?Math.round(v/cn*100):0;
+    const isUnassigned=name==='(Unassigned)';
+    return `<div class="community-card" onclick="openCommunityDetail(${JSON.stringify(name).replace(/"/g,'&quot;')})">
+      <div>
+        <div class="community-card-name">${isUnassigned?'❓ ':'📍 '}${esc(name)}</div>
+        <div class="community-card-meta">${cn.toLocaleString()} tower${cn===1?'':'s'}${isUnassigned?' · community not yet entered':''}</div>
+      </div>
+      <div class="community-card-stats">
+        ${trkProgressBar('Planted',cPlanted,cn,'var(--green)',cPct(cPlanted))}
+        ${trkProgressBar('3-month eval',cThree,cn,'var(--bright)',cPct(cThree))}
+        ${trkProgressBar('6-month eval',cSix,cn,'var(--blue)',cPct(cSix))}
+      </div>
+    </div>`;
+  }).join('');
+
+  gridEl.innerHTML='<div class="community-grid">'+allCard+cards+'</div>';
+}
+
+function openCommunityDetail(community){
+  trkDetailCommunity=community;
+  showPage('tracker-detail');
+  renderProjectDetail();
+}
+
+function openAllCommunitiesView(){
+  trkDetailCommunity='__all_communities__';
+  showPage('tracker-detail');
+  renderProjectDetail();
+}
+
+function backToPartnerFromCommunities(){
+  // Returns to the partner drill-in page (the project list view)
+  trkSelectedPartner=trkDetailPartner;
+  showPage('tracker');
+  renderTracker();
+}
+
+function backFromDetail(){
+  // If we came from the communities screen (100 Humanitarians flow),
+  // go back to that screen so an area director stays in their lane.
+  if(trkDetailPartner==='100 Humanitarians' && trkDetailCommunity!=null){
+    trkDetailCommunity=null;
+    showPage('tracker-communities');
+    renderCommunitiesPage();
+    return;
+  }
+  // Otherwise normal back-to-tracker
+  showPage('tracker');
+}
+
+function copyCommunitiesPartnerLink(){
+  const partnerRec=DATA.partners.find(p=>p.name===trkDetailPartner);
+  if(!partnerRec)return showToast('Partner not found','error');
+  copyPartnerLink(partnerRec.slug,trkDetailProject);
+}
+
 function renderProjectDetail(){
   const allMode=(trkDetailPartner==='__all__');
-  const towers=allMode
+  let towers=allMode
     ? (DATA.towers||[])
     : (DATA.towers||[]).filter(t=>t.partner===trkDetailPartner&&t.project_number===Number(trkDetailProject));
+
+  // Community filter (used by 100 Humanitarians flow)
+  const commMode=trkDetailCommunity&&trkDetailCommunity!=='__all_communities__';
+  if(commMode){
+    if(trkDetailCommunity==='(Unassigned)'){
+      towers=towers.filter(t=>!(t.communities||'').trim());
+    }else{
+      towers=towers.filter(t=>(t.communities||'').trim()===trkDetailCommunity);
+    }
+  }
+
   const titleEl=document.getElementById('detail-title');
   const headTitle=document.getElementById('detail-head-title');
   const headSub=document.getElementById('detail-head-sub');
@@ -2053,7 +2261,16 @@ function renderProjectDetail(){
     : (partnerRec?partnerRec.uses_extended_form:false);
 
   // Header + progress
-  const titleStr=allMode?'All Projects':`${trkDetailPartner} · Project ${trkDetailProject}`;
+  let titleStr;
+  if(allMode){
+    titleStr='All Projects';
+  }else if(commMode){
+    titleStr=`${trkDetailPartner} · Project ${trkDetailProject} · ${trkDetailCommunity}`;
+  }else if(trkDetailCommunity==='__all_communities__'){
+    titleStr=`${trkDetailPartner} · Project ${trkDetailProject} · All communities`;
+  }else{
+    titleStr=`${trkDetailPartner} · Project ${trkDetailProject}`;
+  }
   const subStr=allMode
     ? `${towers.length.toLocaleString()} towers across ${new Set(towers.map(t=>t.partner)).size} partners, ${new Set(towers.map(t=>t.project_number).filter(Boolean)).size} projects`
     : (towers.length?`Tower #s ${Math.min(...towers.map(t=>t.tower_number||Infinity)).toLocaleString()}–${Math.max(...towers.map(t=>t.tower_number||0)).toLocaleString()} · ${towers.length.toLocaleString()} records${uses_ext?' · extended form':''}`:'No towers in this project');
