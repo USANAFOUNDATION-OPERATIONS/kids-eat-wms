@@ -2354,12 +2354,10 @@ function renderHome(){
   const planted=towers.filter(t=>t.date_planted).length;
   const partners=new Set(towers.map(t=>t.partner).filter(Boolean)).size;
   const countries=new Set(towers.map(t=>(t.country||'').trim()).filter(Boolean)).size;
-  const families=towers.filter(t=>t.recipient_name).length;
   const people=towers.reduce((s,t)=>s+(Number(t.number_of_family_members)||0),0);
   el.innerHTML=`
     <div class="home-stat"><div class="home-stat-value">${towers.length.toLocaleString()}</div><div class="home-stat-label">Towers</div></div>
     <div class="home-stat"><div class="home-stat-value">${planted.toLocaleString()}</div><div class="home-stat-label">Planted</div></div>
-    <div class="home-stat"><div class="home-stat-value">${families.toLocaleString()}</div><div class="home-stat-label">Families</div></div>
     <div class="home-stat"><div class="home-stat-value">${people.toLocaleString()}</div><div class="home-stat-label">People impacted</div></div>
     <div class="home-stat"><div class="home-stat-value">${countries}</div><div class="home-stat-label">Countries</div></div>
     <div class="home-stat"><div class="home-stat-value">${partners}</div><div class="home-stat-label">Partners</div></div>
