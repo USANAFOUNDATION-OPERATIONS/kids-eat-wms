@@ -13,62 +13,77 @@
     --amber:#f59e0b;--amber-light:#fef3c7;--amber-text:#92400e;
     --red:#dc2626;--red-light:#fee2e2;--red-text:#991b1b;
     --blue:#0774cc;--blue-light:#eff6ff;
-    --bg:#f2f7f4;--surface:#ffffff;--border:rgba(0,105,83,0.15);
+    /* Page background — slightly cool tinted wash, mirrors the CRM but in green family */
+    --bg:#f0f6f3;--surface:#ffffff;--border:rgba(0,105,83,0.13);
     --text:#1a2e2a;--text-muted:#4a7a6a;--text-faint:#8ab8a8;
-    --radius:12px;
-    --shadow-sm:0 1px 3px rgba(0,0,0,0.06);
-    --shadow:0 4px 12px rgba(0,0,0,0.08);
+    --radius:14px;
+    /* Almost-flat shadow style, matching CRM's hairline-border-only feel */
+    --shadow-sm:0 1px 2px rgba(0,40,30,0.04);
+    --shadow:0 2px 8px rgba(0,40,30,0.06);
   }
-  body{font-family:"DM Sans",sans-serif;background:#eef5f1;color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  /* Inter font — same as the donor CRM, instant family resemblance */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Caveat:wght@500;600&display=swap');
+  body{font-family:"Inter","DM Sans",system-ui,-apple-system,sans-serif;background:#eef5f1;color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;}
+  .app-shell{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+  .app-shell .app{flex:1;min-height:0;}
   .app{display:flex;height:100vh;overflow:hidden;}
 
   /* Sidebar */
   .sidebar{width:220px;min-width:220px;background:#eef5f1;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
   .sidebar-logo{padding:10px 16px 10px;border-bottom:1px solid var(--border);}
-  .sidebar-logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;box-shadow:0 3px 8px rgba(0,105,83,0.3);}
+  .sidebar-logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,105,83,0.22);}
   .sidebar-logo-icon img{width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1);}
-  .sidebar-org{font-size:11px;color:var(--text-muted);font-weight:500;letter-spacing:.03em;text-transform:uppercase;}
+  .sidebar-org{font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
   .sidebar-name{font-size:14px;font-weight:700;color:var(--text);}
-  .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);padding:16px 16px 6px;}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-radius:8px;transition:all .15s;}
+  .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text-faint);padding:18px 16px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:1px 8px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-radius:8px;transition:all .15s;}
   .nav-item:hover{background:var(--bg);color:var(--text);}
   .nav-item.active{background:#c6e5b9;color:var(--green-dark);font-weight:600;}
   .nav-item svg{width:15px;height:15px;flex-shrink:0;}
   .nav-badge{margin-left:auto;background:var(--amber);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;}
-  .sidebar-back{margin:12px 8px 0;padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);cursor:pointer;border-radius:8px;border:1px solid var(--border);transition:all .15s;}
+  .sidebar-back{margin:12px 8px 0;padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);cursor:pointer;border-radius:8px;border:1px solid var(--border);transition:all .15s;}
   .sidebar-back:hover{background:var(--bg);color:var(--text);}
 
   /* Main */
-  .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;background:#f4f9f6;}
+  .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;background:var(--bg);}
   .page{display:none;}.page.active{display:block;}
   .topbar{padding:16px 24px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
-  .topbar-title{font-size:17px;font-weight:600;}
+  .topbar-title{font-size:17px;font-weight:600;letter-spacing:-0.01em;}
   .topbar-right{display:flex;align-items:center;gap:8px;}
   .content{padding:24px;}
+
+  /* Goal banner — handwritten flourish across the top, mirrors CRM */
+  .goal-banner{background:linear-gradient(90deg,rgba(232,245,242,0.6),rgba(198,229,185,0.4));border-bottom:1px solid var(--border);padding:6px 24px;display:flex;align-items:center;gap:8px;font-family:'Caveat',cursive;font-size:18px;color:var(--green-dark);font-weight:500;}
+  .goal-banner-icon{flex-shrink:0;color:var(--green);}
 
   /* Buttons */
   .btn{padding:7px 16px;font-size:13px;font-weight:500;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--surface);color:var(--text);transition:all .15s;font-family:inherit;}
   .btn:hover{background:var(--bg);}
-  .btn-primary{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 2px 6px rgba(0,105,83,0.25);}
+  .btn-primary{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 1px 3px rgba(0,105,83,0.18);}
   .btn-primary:hover{background:var(--green-dark);border-color:var(--green-dark);transform:translateY(-1px);}
   .btn-sm{padding:5px 12px;font-size:12px;}
   .btn-danger{background:var(--red-light);color:var(--red-text);border-color:var(--red);}
 
-  /* Cards */
+  /* Cards — tighter, almost flat, hairline borders only */
   .card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);}
   .card-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-  .card-title{font-size:14px;font-weight:600;}
+  .card-title{font-size:14px;font-weight:600;letter-spacing:-0.005em;}
   .card-body{padding:20px;}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
 
-  /* Metrics */
+  /* Metrics — CRM-style with indicator dot, tiny uppercase label, large bold number */
   .metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;}
-  .metric{background:var(--surface);border-radius:var(--radius);padding:18px 20px;border:1px solid var(--border);box-shadow:var(--shadow-sm);}
-  .metric-label{font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
-  .metric-value{font-size:28px;font-weight:700;line-height:1;}
+  .metric{background:var(--surface);border-radius:var(--radius);padding:16px 20px;border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+  .metric-label{font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;}
+  .metric-label::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);}
+  .metric-label.amber::before{background:var(--amber);}
+  .metric-label.red::before{background:var(--red);}
+  .metric-label.blue::before{background:var(--blue);}
+  .metric-label.bright::before{background:var(--bright);}
+  .metric-value{font-size:30px;font-weight:700;line-height:1;letter-spacing:-0.02em;}
   .metric-value.green{color:var(--green);}
   .metric-value.amber{color:var(--amber-text);}
-  .metric-foot{font-size:11px;color:var(--text-faint);margin-top:6px;}
+  .metric-foot{font-size:11px;color:var(--text-faint);margin-top:8px;}
 
   /* Table */
   .table-wrap{overflow-x:auto;}
@@ -337,6 +352,15 @@
 
 <!-- Print area -->
 <div id="print-area" class="print-only"></div>
+
+<!-- App with goal-banner ribbon spanning the whole top, then sidebar+main below -->
+<div class="app-shell no-print">
+  <div class="goal-banner">
+    <svg class="goal-banner-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M8 1L9.5 5.5L14 6.5L10.5 9.5L11.5 14L8 11.5L4.5 14L5.5 9.5L2 6.5L6.5 5.5L8 1Z" fill="currentColor" opacity="0.75"/>
+    </svg>
+    <span>Cultivating hope, one tower at a time. Together we are growing food security worldwide.</span>
+  </div>
 
 <!-- App -->
 <div class="app no-print">
@@ -987,6 +1011,7 @@
 
   </div>
 </div>
+</div><!-- /.app-shell -->
 
     <!-- Modal for shipment details -->
 <div class="modal-bg no-print" id="modal-bg">

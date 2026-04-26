@@ -11,12 +11,22 @@
     --amber:#EF9F27;--amber-light:#FAEEDA;--amber-text:#854F0B;
     --red:#E24B4A;--red-light:#FCEBEB;--red-text:#A32D2D;
     --blue:#378ADD;--blue-light:#E6F1FB;
-    --bg:#f0fafa;--surface:#FFFFFF;--border:rgba(0,0,0,0.09);
-    --text:#1A1A1A;--text-muted:#6B6B6B;--text-faint:#9B9B9B;
-    --radius:10px;
+    /* Page background — slightly cool tinted wash, mirrors the CRM but in teal family */
+    --bg:#eef9f9;--surface:#FFFFFF;--border:rgba(42,157,154,0.13);
+    --text:#1A1A1A;--text-muted:#5d8989;--text-faint:#9bbcbc;
+    --radius:14px;
+    --shadow-sm:0 1px 2px rgba(0,40,40,0.04);
+    --shadow:0 2px 8px rgba(0,40,40,0.06);
   }
+  /* Inter font — same as donor CRM and Garden Towers, instant family resemblance */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Caveat:wght@500;600&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+  body{font-family:"Inter",system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;}
+  .app-shell{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+  .app-shell .app{flex:1;min-height:0;}
+  /* Goal banner — handwritten flourish across the top, mirrors CRM signature */
+  .goal-banner{background:linear-gradient(90deg,rgba(232,250,250,0.75),rgba(94,204,201,0.18));border-bottom:1px solid var(--border);padding:6px 24px;display:flex;align-items:center;gap:8px;font-family:'Caveat',cursive;font-size:18px;color:var(--green-dark);font-weight:500;}
+  .goal-banner-icon{flex-shrink:0;color:var(--green);}
   .app{display:flex;height:100vh;overflow:hidden;}
   .sidebar{width:220px;min-width:220px;background:#f5fdfd;border-right:1px solid rgba(94,204,201,0.2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
   .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
@@ -42,14 +52,18 @@
   .content{padding:24px;flex:1;}
   .page{display:none;}.page.active{display:block;}
   .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
-  .metric{background:var(--surface);border-radius:var(--radius);padding:18px 20px;border:1px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;}
+  .metric{background:var(--surface);border-radius:var(--radius);padding:16px 20px;border:1px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;}
   .metric:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
-  .metric-label{font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
-  .metric-value{font-size:28px;font-weight:700;line-height:1;letter-spacing:-.02em;}
+  .metric-label{font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;}
+  .metric-label::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green-dark);}
+  .metric-label.amber::before{background:var(--amber);}
+  .metric-label.red::before{background:var(--red);}
+  .metric-label.blue::before{background:var(--blue);}
+  .metric-value{font-size:30px;font-weight:700;line-height:1;letter-spacing:-.02em;}
   .metric-value.green{color:var(--green-dark);}
   .metric-value.amber{color:var(--amber-text);}
   .metric-value.red{color:var(--red-text);}
-  .metric-foot{font-size:11px;color:var(--text-faint);margin-top:6px;}
+  .metric-foot{font-size:11px;color:var(--text-faint);margin-top:8px;}
   .card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s;}
   .card-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
   .card-title{font-size:14px;font-weight:600;}
@@ -227,6 +241,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
+<!-- App with goal-banner ribbon spanning the whole top -->
+<div class="app-shell">
+  <div class="goal-banner">
+    <svg class="goal-banner-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M8 1L9.5 5.5L14 6.5L10.5 9.5L11.5 14L8 11.5L4.5 14L5.5 9.5L2 6.5L6.5 5.5L8 1Z" fill="currentColor" opacity="0.75"/>
+    </svg>
+    <span>No child should ever go hungry. Together we are putting food in every backpack.</span>
+  </div>
 <div class="app">
   <nav class="sidebar">
     <div class="logo" style="text-align:center;padding:18px 16px 14px;">
@@ -1043,6 +1065,7 @@
 
   </div>
 </div>
+</div><!-- /.app-shell -->
 
 <!-- MODALS -->
 <div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
