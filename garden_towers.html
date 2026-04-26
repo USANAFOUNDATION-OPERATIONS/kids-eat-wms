@@ -274,6 +274,22 @@
   .all-communities-card .community-card-stats > div > div:nth-child(2) > span:first-child{color:#fff !important;}
   .all-communities-card .community-card-stats > div > div:nth-child(2) > span:last-child{color:rgba(255,255,255,0.75) !important;}
   .all-communities-card .community-card-stats > div > div:last-child{background:rgba(255,255,255,0.18) !important;}
+  /* Head row pattern: name on left + Open button on right */
+  .all-communities-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
+  /* Per-community card head row (name + link button) */
+  .community-card-head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  /* Inline list of community-specific share links inside the All Communities card */
+  .community-link-list-wrap{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.25);}
+  .community-link-list-title{font-size:11px;font-weight:600;color:rgba(255,255,255,0.95);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .community-link-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;}
+  .community-link-row{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:background .15s;}
+  .community-link-row:hover{background:rgba(255,255,255,0.18);}
+  .community-link-info{display:flex;align-items:center;gap:8px;min-width:0;}
+  .community-link-icon{font-size:14px;flex-shrink:0;}
+  .community-link-name{font-size:13px;font-weight:600;color:#fff;line-height:1.2;}
+  .community-link-meta{font-size:10px;color:rgba(255,255,255,0.7);line-height:1.2;margin-top:2px;}
+  .community-link-btn{background:#fff !important;color:var(--green-dark) !important;border-color:#fff !important;font-size:11px !important;padding:4px 10px !important;font-weight:600;flex-shrink:0;white-space:nowrap;}
+  .community-link-btn:hover{background:var(--moss) !important;}
 
   /* Logo upload dropzone inside edit-partner modal */
   .logo-upload{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
@@ -2601,11 +2617,14 @@ function trkProgressBar(label,num,denom,color,pct){
   </div>`;
 }
 
-function copyPartnerLink(slug,project){
+function copyPartnerLink(slug,project,community){
   const base=window.location.href.split('?')[0].replace('garden_towers.html','partner_tower_form.html');
-  const url=`${base}?partner=${slug}${project?'&project='+project:''}`;
+  let url=`${base}?partner=${slug}`;
+  if(project)url+='&project='+project;
+  if(community)url+='&community='+encodeURIComponent(community);
   navigator.clipboard.writeText(url).then(()=>{
-    showToast('✓ Partner link copied: '+url,'success');
+    const tag=community?` (${community})`:'';
+    showToast('✓ Partner link copied'+tag,'success');
   }).catch(()=>{
     prompt('Copy this partner link:',url);
   });
@@ -2700,17 +2719,47 @@ function renderCommunitiesPage(){
     return a.localeCompare(b);
   });
 
-  // Build "All communities" header card
-  const allCard=`<div class="community-card all-communities-card" onclick="openAllCommunitiesView()">
-    <div>
-      <div class="community-card-name" style="font-size:17px;">🌍 All Communities</div>
-      <div class="community-card-meta">Combined view of every community in this project</div>
+  // Build per-community link list (used inside the All Communities card)
+  const communityLinkList=commNames
+    .filter(name=>name!=='(Unassigned)')
+    .map(name=>{
+      const c=byComm[name];
+      const cn=c.towers.length;
+      const escName=JSON.stringify(name).replace(/"/g,'&quot;');
+      return `<div class="community-link-row">
+        <div class="community-link-info">
+          <span class="community-link-icon">📍</span>
+          <div>
+            <div class="community-link-name">${esc(name)}</div>
+            <div class="community-link-meta">${cn.toLocaleString()} tower${cn===1?'':'s'}</div>
+          </div>
+        </div>
+        <button class="btn btn-sm community-link-btn" onclick="event.stopPropagation();copyCommunityLink(${escName})" title="Copy ${esc(name)} link">
+          🔗 Copy link
+        </button>
+      </div>`;
+    }).join('');
+
+  // Build "All communities" card — exec view with full list of community links
+  const allCard=`<div class="community-card all-communities-card">
+    <div class="all-communities-head" onclick="openAllCommunitiesView()" style="cursor:pointer;">
+      <div>
+        <div class="community-card-name" style="font-size:17px;">🌍 All Communities</div>
+        <div class="community-card-meta">Combined view of every community in this project</div>
+      </div>
+      <button class="btn btn-sm" onclick="event.stopPropagation();openAllCommunitiesView()" style="background:rgba(255,255,255,0.2);color:#fff;border-color:rgba(255,255,255,0.4);font-weight:600;white-space:nowrap;">
+        Open combined view →
+      </button>
     </div>
     <div class="community-card-stats">
       ${trkProgressBar('Planted',plantedN,n,'#fff',pct(plantedN))}
       ${trkProgressBar('3-month eval',threeN,n,'#fff',pct(threeN))}
       ${trkProgressBar('6-month eval',sixN,n,'#fff',pct(sixN))}
     </div>
+    ${communityLinkList?`<div class="community-link-list-wrap">
+      <div class="community-link-list-title">📤 Community-specific links to share with area directors</div>
+      <div class="community-link-list">${communityLinkList}</div>
+    </div>`:''}
   </div>`;
 
   // Build a card per community
@@ -2722,10 +2771,14 @@ function renderCommunitiesPage(){
     const cSix=c.towers.filter(t=>t.six_month_evaluation).length;
     const cPct=v=>cn?Math.round(v/cn*100):0;
     const isUnassigned=name==='(Unassigned)';
-    return `<div class="community-card" onclick="openCommunityDetail(${JSON.stringify(name).replace(/"/g,'&quot;')})">
-      <div>
-        <div class="community-card-name">${isUnassigned?'❓ ':'📍 '}${esc(name)}</div>
-        <div class="community-card-meta">${cn.toLocaleString()} tower${cn===1?'':'s'}${isUnassigned?' · community not yet entered':''}</div>
+    const escName=JSON.stringify(name).replace(/"/g,'&quot;');
+    return `<div class="community-card" onclick="openCommunityDetail(${escName})">
+      <div class="community-card-head-row">
+        <div>
+          <div class="community-card-name">${isUnassigned?'❓ ':'📍 '}${esc(name)}</div>
+          <div class="community-card-meta">${cn.toLocaleString()} tower${cn===1?'':'s'}${isUnassigned?' · community not yet entered':''}</div>
+        </div>
+        ${isUnassigned?'':`<button class="btn btn-sm" onclick="event.stopPropagation();copyCommunityLink(${escName})" style="white-space:nowrap;background:var(--moss);color:var(--green-dark);border-color:var(--bright);font-size:11px;padding:4px 10px;" title="Copy ${esc(name)} link">🔗 Link</button>`}
       </div>
       <div class="community-card-stats">
         ${trkProgressBar('Planted',cPlanted,cn,'var(--green)',cPct(cPlanted))}
@@ -2736,6 +2789,14 @@ function renderCommunitiesPage(){
   }).join('');
 
   gridEl.innerHTML='<div class="community-grid">'+allCard+cards+'</div>';
+}
+
+// Copies a per-community partner link (works only for 100 Humanitarians flow,
+// where trkDetailPartner is the partner and trkDetailProject is the project).
+function copyCommunityLink(community){
+  const partnerRec=DATA.partners.find(p=>p.name===trkDetailPartner);
+  if(!partnerRec)return showToast('Partner not found','error');
+  copyPartnerLink(partnerRec.slug,trkDetailProject,community);
 }
 
 function openCommunityDetail(community){

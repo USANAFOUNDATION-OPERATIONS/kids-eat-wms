@@ -335,7 +335,19 @@ async function init(){
     const qp=encodeURIComponent(PARTNER.name);
     TOWERS=await sbGet(`gt_towers?select=*&partner=eq.${qp}&order=project_number.asc,tower_number.asc`);
 
-    $('partner-welcome').textContent=`${PARTNER.name} · ${TOWERS.length.toLocaleString()} towers across ${new Set(TOWERS.map(t=>t.project_number)).size} project(s)`;
+    // If ?community=X is in URL, restrict to just that community
+    const commParam=qs('community');
+    if(commParam){
+      const wanted=commParam.trim().toLowerCase();
+      TOWERS=TOWERS.filter(t=>(t.communities||'').trim().toLowerCase()===wanted);
+      // Note: we keep the original commParam for display so the casing matches what was passed
+      window._communityFilter=commParam;
+    }
+
+    const projects=new Set(TOWERS.map(t=>t.project_number));
+    const projectCount=projects.size;
+    const commLabel=window._communityFilter?` &middot; ${window._communityFilter} community`:'';
+    $('partner-welcome').innerHTML=`${PARTNER.name}${commLabel} &middot; ${TOWERS.length.toLocaleString()} towers across ${projectCount} project(s)`;
 
     // If ?project=N is in URL, jump straight to tower list
     const projParam=parseInt(qs('project'));
@@ -406,7 +418,8 @@ function openProject(n){
 // ---- Tower list ----
 function showTowerList(){
   $('btn-back').style.display='flex';
-  $('hdr-title').innerHTML=`Project ${currentProject}<div class="hdr-sub">${PARTNER.name}</div>`;
+  const commLabel=window._communityFilter?` &middot; <span style="color:var(--green);">${window._communityFilter}</span>`:'';
+  $('hdr-title').innerHTML=`Project ${currentProject}<div class="hdr-sub">${PARTNER.name}${commLabel}</div>`;
   renderTowerList();
   showScreen('towers');
 }
