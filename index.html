@@ -2076,7 +2076,17 @@ function renderRouteView(){
       </div>
     </div>`;
 
-    if(summaryEl) summaryEl.innerHTML=adminBar+dayPicker+`<div style="display:flex;gap:12px;margin-bottom:4px;">
+    // Date banner so logger knows exactly which day they're updating
+    const deliveryDate=getDisplayedDeliveryDate();
+    const dateBanner=`<div style="background:linear-gradient(90deg,rgba(94,204,201,0.18),rgba(94,204,201,0.06));border:1px solid var(--green);border-radius:var(--radius);padding:12px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:18px;">📅</span>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--green-dark);text-transform:uppercase;letter-spacing:.06em;">Delivery date</div>
+        <div style="font-size:15px;font-weight:700;color:var(--green-dark);">${deliveryDate}</div>
+      </div>
+    </div>`;
+
+    if(summaryEl) summaryEl.innerHTML=adminBar+dayPicker+dateBanner+`<div style="display:flex;gap:12px;margin-bottom:4px;">
       <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Stops today</div><div class="metric-value">${yearRound.length}</div></div>
       <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Completed</div><div class="metric-value green">${done.length}</div></div>
       <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Expected bags</div><div class="metric-value">${totalExpected.toLocaleString()}</div></div>
@@ -2140,7 +2150,17 @@ function renderRouteView(){
     return s+perDelivery;
   },0);
   const totalDelivered=agencies.reduce((s,n)=>{const key=currentWeek+'_'+currentDay+'_'+n;return s+(routeDeliveries[key]||0);},0);
-  if(summaryEl) summaryEl.innerHTML=adminBar+`<div style="display:flex;gap:12px;margin-bottom:4px;">
+  // Date banner so logger knows exactly which day they're updating
+  const deliveryDate=getDisplayedDeliveryDate();
+  const dateBanner=`<div style="background:linear-gradient(90deg,rgba(94,204,201,0.18),rgba(94,204,201,0.06));border:1px solid var(--green);border-radius:var(--radius);padding:12px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+    <span style="font-size:18px;">📅</span>
+    <div>
+      <div style="font-size:10px;font-weight:600;color:var(--green-dark);text-transform:uppercase;letter-spacing:.06em;">Delivery date</div>
+      <div style="font-size:15px;font-weight:700;color:var(--green-dark);">${deliveryDate}</div>
+    </div>
+  </div>`;
+
+  if(summaryEl) summaryEl.innerHTML=adminBar+dateBanner+`<div style="display:flex;gap:12px;margin-bottom:4px;">
     <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Stops today</div><div class="metric-value">${agencies.length}</div></div>
     <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Completed</div><div class="metric-value green">${done.length}</div></div>
     <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Expected bags</div><div class="metric-value">${totalExpected.toLocaleString()}</div></div>
@@ -2449,6 +2469,25 @@ function getMondayOfCurrentWeek(){
   const mm=String(d.getMonth()+1).padStart(2,'0');
   const dd=String(d.getDate()).padStart(2,'0');
   return `${yyyy}-${mm}-${dd}`;
+}
+
+// Returns a display-friendly date for the day currently being viewed in the schedule.
+// Combines the Monday of this week + offset for currentDay/sumDay.
+// E.g. "Monday, April 27, 2026" or "Tuesday, April 28, 2026".
+function getDisplayedDeliveryDate(){
+  const monday=getMondayOfCurrentWeek();
+  const [yyyy,mm,dd]=monday.split('-').map(Number);
+  const baseDate=new Date(yyyy,mm-1,dd);  // local midnight
+  // Determine which weekday is being viewed
+  let dayName=currentDay||'Monday';
+  if(isInSummerMode()){
+    dayName=SEASON_SETTINGS.summer_delivery_day||'Monday';
+  }
+  const dayOffsets={Monday:0,Tuesday:1,Wednesday:2,Thursday:3,Friday:4};
+  const offset=dayOffsets[dayName]||0;
+  const target=new Date(baseDate);
+  target.setDate(baseDate.getDate()+offset);
+  return target.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 }
 
 function openSendNotifications(){
