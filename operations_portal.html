@@ -75,6 +75,39 @@
   .card-gt:hover{border-color:rgba(0,105,83,0.4);}
   .card-gt:hover::before{opacity:1;}
 
+  /* Daily Command Center — slim horizontal card spanning both columns below the main cards */
+  .card-daily{
+    grid-column:1 / -1;
+    flex-direction:row;align-items:center;text-align:left;
+    gap:18px;padding:18px 28px;
+    border-color:rgba(92,91,229,0.3);
+    background:linear-gradient(135deg,#fff 0%,#f7f7fc 100%);
+  }
+  .card-daily::before{background:linear-gradient(135deg,rgba(92,91,229,0.05),rgba(56,55,199,0.04));}
+  .card-daily:hover{border-color:rgba(92,91,229,0.6);}
+  .card-daily:hover::before{opacity:1;}
+  .card-daily-icon{
+    width:48px;height:48px;border-radius:12px;flex-shrink:0;
+    background:linear-gradient(135deg,#5C5BE5,#3837C7);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;color:#fff;
+    box-shadow:0 4px 14px rgba(92,91,229,0.25);
+  }
+  .card-daily-body{flex:1;min-width:0;}
+  .card-daily-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#5c5d77;margin-bottom:3px;}
+  .card-daily-title{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:600;color:#3837C7;line-height:1.3;}
+  .card-daily-desc{font-size:12px;color:#5c5d77;margin-top:2px;}
+  .card-daily-arrow{
+    display:flex;align-items:center;gap:6px;
+    font-size:13px;font-weight:600;color:#3837C7;
+    flex-shrink:0;
+  }
+
+  @media (max-width:560px){
+    .card-daily{flex-wrap:wrap;}
+    .card-daily-arrow{margin-left:auto;}
+  }
+
   /* Logo area - white background, centered */
   .card-logo-wrap{
     position:relative;z-index:1;
@@ -170,6 +203,20 @@
       <div class="card-arrow">
         Open system
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </a>
+
+    <!-- Daily Command Center — slim card spanning both columns -->
+    <a href="https://usanafoundation-operations.github.io/kids-eat-wms/daily.html" class="card card-daily">
+      <div class="card-daily-icon">⭐</div>
+      <div class="card-daily-body">
+        <div class="card-daily-label">Internal · Stephen + warehouse manager</div>
+        <div class="card-daily-title">Daily Command Center</div>
+        <div class="card-daily-desc">Notifications, today's deliveries, tasks, and team notes</div>
+      </div>
+      <div class="card-daily-arrow">
+        Open
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
     </a>
   </div>
