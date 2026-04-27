@@ -192,6 +192,30 @@
     /* Week/day buttons */
     #route-week-btns, #route-day-btns{flex-wrap:wrap;}
 
+    /* ============================================================ */
+    /* SCHEDULE — phone-first view: "Today's deliveries" focused     */
+    /* ============================================================ */
+    /* Hide the week selector buttons on phone — auto-detection picks the right week */
+    #page-schedule .week-btns-wrap{display:none!important;}
+    /* Show the "Today's deliveries" header (hidden by default on desktop) */
+    #page-schedule .phone-only-flex{display:flex!important;}
+    /* Hide the day picker bar by default on phone — user taps "Other day" to reveal */
+    #page-schedule #day-picker-bar{display:none!important;}
+    #page-schedule #day-picker-bar.phone-show{display:flex!important;padding:10px 16px!important;}
+    /* When day picker is shown on phone, make the action buttons wrap to a new row */
+    #page-schedule .route-action-btns{margin-left:0!important;width:100%;justify-content:flex-end;}
+    /* Stack route cards vertically on phone for fast tapping */
+    .route-card{flex-direction:column;align-items:stretch!important;gap:10px!important;padding:14px 16px!important;}
+    .route-card > div:first-child{width:100%;}
+    .route-card > div:last-child{width:100%;display:flex;align-items:center;gap:8px;}
+    .route-input{flex:1;width:auto!important;height:42px;font-size:18px!important;padding:8px 12px!important;}
+    .route-done-btn{height:42px;padding:8px 16px!important;font-size:14px!important;flex-shrink:0;}
+    /* Tighter metric cards on phone */
+    #page-schedule .metric{padding:10px 12px!important;}
+    #page-schedule .metric .metric-label{font-size:9px!important;margin-bottom:4px!important;}
+    #page-schedule .metric .metric-value{font-size:18px!important;}
+    #page-schedule #route-summary > div[style*="display:flex"]{gap:6px!important;}
+
     /* Hide less critical columns on mobile */
     .hide-mobile{display:none!important;}
 
@@ -219,6 +243,8 @@
   .route-done-btn.undone{background:var(--bg);border-color:var(--border);color:var(--text-muted);}
   .cart-swap-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:var(--blue-light);color:#0C447C;padding:2px 8px;border-radius:20px;margin-left:8px;}
   .week-btn.btn-primary{background:var(--green);color:#fff;border-color:var(--green);}
+  /* Phone-only "Today's deliveries" header — hidden on desktop, shown on phone */
+  .phone-only-flex{display:none;}
   /* Home / landing page */
   .home-content{padding:0;background:linear-gradient(180deg,#eef9f9 0%,#d9f2f1 40%,#eef9f9 100%);min-height:calc(100vh - 60px);display:flex;align-items:flex-start;justify-content:center;}
   .home-hero{max-width:920px;width:100%;padding:48px 40px 60px;text-align:center;}
@@ -858,7 +884,7 @@
     <div class="page" id="page-schedule">
       <div class="topbar">
         <div class="topbar-title">Delivery schedule</div>
-        <div class="topbar-right" style="gap:6px;flex-wrap:wrap;">
+        <div class="topbar-right week-btns-wrap" style="gap:6px;flex-wrap:wrap;">
           <span style="font-size:12px;color:var(--text-muted);margin-right:2px;">Current week:</span>
           <button id="week-btn-1" class="btn btn-sm week-btn btn-primary" onclick="setCurrentWeek(1)">Week 1</button>
           <button id="week-btn-2" class="btn btn-sm week-btn" onclick="setCurrentWeek(2)">Week 2</button>
@@ -881,11 +907,23 @@
 
       <!-- THIS WEEK'S ROUTES VIEW -->
       <div id="sched-routes-view">
-        <div style="padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;gap:8px;align-items:center;">
+        <!-- Phone-only "Today is..." header — replaces day-picker until user taps "Other day" -->
+        <div id="phone-today-header" class="phone-only-flex" style="padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface);align-items:center;justify-content:space-between;gap:8px;">
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Today's deliveries</div>
+            <div id="phone-today-day" style="font-size:18px;font-weight:700;color:var(--green-dark);line-height:1.2;margin-top:2px;">—</div>
+          </div>
+          <button class="btn btn-sm" onclick="togglePhoneDayPicker()" id="phone-day-toggle"
+            style="font-size:11px;padding:5px 10px;background:var(--bg);border-color:var(--border);color:var(--text-muted);">
+            📅 Other day
+          </button>
+        </div>
+
+        <div id="day-picker-bar" style="padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <button id="day-btn-Monday" class="btn btn-sm day-btn btn-primary" onclick="setDeliveryDay('Monday')">Monday</button>
           <button id="day-btn-Tuesday" class="btn btn-sm day-btn" onclick="setDeliveryDay('Tuesday')">Tuesday</button>
           <button id="day-btn-Wednesday" class="btn btn-sm day-btn" onclick="setDeliveryDay('Wednesday')">Wednesday</button>
-          <div style="margin-left:auto;display:flex;gap:8px;">
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;" class="route-action-btns">
             <button class="btn btn-sm" onclick="openSendNotifications()"
               style="background:var(--blue-light);color:#0C447C;border-color:var(--blue);font-weight:600;">
               ✉ Send notifications
@@ -1197,6 +1235,17 @@ function renderAll(){
   currentWeek=detectedWeek;
   document.querySelectorAll('.week-btn').forEach(b=>b.classList.remove('btn-primary'));
   document.getElementById('week-btn-'+detectedWeek)?.classList.add('btn-primary');
+  // On phone, also auto-pick today's weekday (Mon if Mon, Tue if Tue, etc.)
+  // so the schedule opens straight to today's deliveries.
+  if(isPhoneViewport()){
+    const todayDay=getCurrentWeekdayName();
+    currentDay=todayDay;
+    document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('btn-primary'));
+    document.getElementById('day-btn-'+todayDay)?.classList.add('btn-primary');
+    // Set the phone header label
+    const todayLabel=document.getElementById('phone-today-day');
+    if(todayLabel)todayLabel.textContent=todayDay;
+  }
   renderRouteView();
   renderHome();
 }
@@ -1821,8 +1870,46 @@ function setDeliveryDay(day){
   currentDay=day;
   document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('btn-primary'));
   document.getElementById('day-btn-'+day)?.classList.add('btn-primary');
+  // Update the phone-only "Today's deliveries" header
+  const todayLabel=document.getElementById('phone-today-day');
+  if(todayLabel){
+    const isToday=day===getCurrentWeekdayName();
+    todayLabel.textContent=day+(isToday?'':'  ·  not today');
+  }
   renderRouteView();
 }
+
+// Returns the current weekday name (Monday, Tuesday, etc.) in the user's local time.
+// Falls back to 'Monday' on weekends (since no deliveries happen Sat/Sun).
+function getCurrentWeekdayName(){
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const today=days[new Date().getDay()];
+  // We only deliver Mon/Tue/Wed in school year — pick the closest delivery day
+  if(today==='Thursday'||today==='Friday'||today==='Saturday'||today==='Sunday')return 'Monday';
+  return today;
+}
+
+// Phone day picker show/hide toggle
+let phoneDayPickerOpen=false;
+function togglePhoneDayPicker(){
+  phoneDayPickerOpen=!phoneDayPickerOpen;
+  const bar=document.getElementById('day-picker-bar');
+  const btn=document.getElementById('phone-day-toggle');
+  if(!bar)return;
+  if(phoneDayPickerOpen){
+    bar.classList.add('phone-show');
+    if(btn)btn.textContent='✕ Close';
+  }else{
+    bar.classList.remove('phone-show');
+    if(btn)btn.textContent='📅 Other day';
+  }
+}
+
+// Detect "is this a phone" based on viewport width — used in init only.
+function isPhoneViewport(){
+  return window.innerWidth<=768;
+}
+
 function setSchedTab(tab){
   schedTab=tab;
   document.getElementById('sched-routes-view').style.display=tab==='routes'?'block':'none';
