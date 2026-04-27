@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Daily — USANA Foundation Operations</title>
+<style>
+  :root{
+    --primary:#5C5BE5;--primary-dark:#3837C7;--primary-light:#eeeefb;
+    --green:#2a9d9a;--green-dark:#1a6b69;--green-light:#e8fafa;
+    --amber:#EF9F27;--amber-light:#FAEEDA;--amber-text:#854F0B;
+    --red:#E24B4A;--red-light:#FCEBEB;--red-text:#A32D2D;
+    --bg:#f4f5fb;--surface:#ffffff;--border:rgba(60,70,140,0.12);
+    --text:#1a1a2e;--text-muted:#5c5d77;--text-faint:#9b9cb5;
+    --radius:14px;
+    --shadow-sm:0 1px 2px rgba(40,40,80,0.04);
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Caveat:wght@500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Inter",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;min-height:100vh;}
+
+  .page-shell{max-width:720px;margin:0 auto;padding:0 16px 60px;}
+
+  /* Header — sticky on scroll */
+  .top-banner{background:linear-gradient(90deg,rgba(92,91,229,0.12),rgba(92,91,229,0.04));border-bottom:1px solid var(--border);padding:6px 16px;font-family:'Caveat',cursive;font-size:18px;color:var(--primary-dark);font-weight:500;text-align:center;}
+  .header{padding:24px 0 18px;}
+  .header-greeting{font-size:24px;font-weight:700;letter-spacing:-0.015em;color:var(--text);margin-bottom:4px;}
+  .header-date{font-size:13px;color:var(--text-muted);font-weight:500;}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);text-decoration:none;margin-bottom:14px;padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;transition:all .15s;}
+  .back-link:hover{background:var(--bg);color:var(--text);}
+
+  /* Sections */
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-sm);}
+  .section-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .section-title{font-size:13px;font-weight:700;letter-spacing:0.02em;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .section-count{background:var(--primary-light);color:var(--primary-dark);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;}
+  .section-count.amber{background:var(--amber-light);color:var(--amber-text);}
+  .section-count.green{background:var(--green-light);color:var(--green-dark);}
+  .section-count.red{background:var(--red-light);color:var(--red-text);}
+  .section-body{padding:8px 0;}
+  .empty{padding:18px;text-align:center;font-size:12px;color:var(--text-faint);font-style:italic;}
+
+  /* Notification rows */
+  .notif{display:flex;align-items:center;gap:12px;padding:12px 18px;text-decoration:none;color:inherit;border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer;}
+  .notif:last-child{border-bottom:none;}
+  .notif:hover{background:var(--bg);}
+  .notif-icon{width:36px;height:36px;flex-shrink:0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+  .notif-icon.amber{background:var(--amber-light);}
+  .notif-icon.red{background:var(--red-light);}
+  .notif-icon.green{background:var(--green-light);}
+  .notif-icon.blue{background:var(--primary-light);}
+  .notif-body{flex:1;min-width:0;}
+  .notif-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;}
+  .notif-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+  .notif-arrow{font-size:14px;color:var(--text-faint);}
+
+  /* Today's deliveries summary card */
+  .deliv-card{padding:16px 18px;display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;}
+  .deliv-card:hover{background:var(--bg);}
+  .deliv-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#5eccc9,#2a9d9a);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;flex-shrink:0;}
+  .deliv-body{flex:1;min-width:0;}
+  .deliv-title{font-size:14px;font-weight:600;color:var(--text);}
+  .deliv-stats{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  .deliv-arrow{font-size:14px;color:var(--text-faint);}
+
+  /* Tasks */
+  .task-row{display:flex;align-items:flex-start;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border);}
+  .task-row:last-child{border-bottom:none;}
+  .task-check{width:22px;height:22px;border:1.5px solid var(--text-faint);border-radius:6px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;background:var(--surface);transition:all .15s;margin-top:1px;}
+  .task-check.done{background:var(--primary);border-color:var(--primary);}
+  .task-text{flex:1;font-size:14px;line-height:1.4;color:var(--text);word-break:break-word;}
+  .task-text.done{text-decoration:line-through;color:var(--text-faint);}
+  .task-delete{font-size:14px;color:var(--text-faint);cursor:pointer;padding:4px 8px;background:none;border:none;border-radius:6px;transition:all .15s;flex-shrink:0;}
+  .task-delete:hover{color:var(--red);background:var(--red-light);}
+  .task-meta{font-size:10px;color:var(--text-faint);margin-top:3px;}
+
+  /* Add forms */
+  .add-row{display:flex;gap:8px;padding:10px 18px;border-top:1px solid var(--border);background:var(--bg);}
+  .add-input{flex:1;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;outline:none;background:#fff;transition:border-color .15s;}
+  .add-input:focus{border-color:var(--primary);}
+  .add-btn{padding:10px 16px;font-size:13px;font-weight:600;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .add-btn:hover{background:var(--primary-dark);}
+  .add-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+  /* Notes */
+  .note-row{padding:12px 18px;border-bottom:1px solid var(--border);position:relative;}
+  .note-row:last-child{border-bottom:none;}
+  .note-body{font-size:14px;color:var(--text);line-height:1.5;white-space:pre-wrap;word-break:break-word;padding-right:30px;}
+  .note-meta{font-size:10px;color:var(--text-faint);margin-top:6px;}
+  .note-delete{position:absolute;top:10px;right:14px;font-size:14px;color:var(--text-faint);cursor:pointer;background:none;border:none;padding:4px 8px;border-radius:6px;transition:all .15s;}
+  .note-delete:hover{color:var(--red);background:var(--red-light);}
+  .note-textarea{resize:vertical;min-height:42px;}
+
+  /* Toggle row for showing/hiding completed tasks */
+  .toggle-completed{padding:9px 18px;font-size:11px;color:var(--text-muted);cursor:pointer;text-align:center;border-top:1px solid var(--border);background:#fafafe;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;}
+  .toggle-completed:hover{color:var(--primary);}
+
+  /* Toast */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(40px);background:var(--text);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:500;box-shadow:0 6px 20px rgba(0,0,0,0.2);opacity:0;transition:all .25s;z-index:1000;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:768px){
+    .page-shell{padding:0 12px 40px;}
+    .header{padding:18px 0 14px;}
+    .header-greeting{font-size:20px;}
+    .add-row{flex-direction:column;}
+    .add-btn{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<div class="top-banner">
+  ⭐ Daily command center — what needs your attention right now
+</div>
+
+<div class="page-shell">
+
+  <a href="operations_portal.html" class="back-link">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Back to portal
+  </a>
+
+  <div class="header">
+    <div class="header-greeting" id="greeting">Good morning</div>
+    <div class="header-date" id="todays-date">—</div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">🔔 NOTIFICATIONS <span class="section-count" id="notif-count">0</span></div>
+      <button class="add-btn" style="padding:5px 10px;font-size:11px;background:var(--bg);color:var(--text-muted);border:1px solid var(--border);" onclick="loadNotifications()">↻ Refresh</button>
+    </div>
+    <div class="section-body" id="notif-list">
+      <div class="empty">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Today's Deliveries -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">📅 TODAY'S DELIVERIES</div>
+    </div>
+    <div class="section-body" id="deliveries-summary">
+      <div class="empty">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Tasks -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">✓ TASKS <span class="section-count green" id="task-count">0</span></div>
+    </div>
+    <div class="section-body" id="task-list">
+      <div class="empty">Loading…</div>
+    </div>
+    <div class="add-row">
+      <input type="text" class="add-input" id="new-task-input" placeholder="Add a task..." onkeypress="if(event.key==='Enter')addTask()" maxlength="500"/>
+      <button class="add-btn" onclick="addTask()">+ Add</button>
+    </div>
+    <div class="toggle-completed" id="toggle-completed-row" onclick="toggleCompletedView()" style="display:none;">
+      <span id="toggle-completed-text">Show completed</span>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">📝 NOTES <span class="section-count amber" id="note-count">0</span></div>
+      <span style="font-size:10px;color:var(--text-faint);">Last 3 days</span>
+    </div>
+    <div class="section-body" id="note-list">
+      <div class="empty">Loading…</div>
+    </div>
+    <div class="add-row" style="flex-direction:column;align-items:stretch;">
+      <textarea class="add-input note-textarea" id="new-note-input" placeholder="Add a note... (Sarah called out, follow up with school X, etc)" maxlength="1000"></textarea>
+      <button class="add-btn" onclick="addNote()" style="margin-top:8px;">+ Add note</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://mroyqkvrzrcmnfgvylkl.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yb3lxa3ZyenJjbW5mZ3Z5bGtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNDkwNjAsImV4cCI6MjA5MTkyNTA2MH0.sG0fRMSFHvrlr3dDHowAUjdtaZZbWWhlFbiEoIYOj0s';
+const HDR={
+  'Content-Type':'application/json',
+  'apikey':SUPABASE_KEY,
+  'Authorization':'Bearer '+SUPABASE_KEY,
+};
+
+async function sbGet(table,params=''){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`,{headers:HDR});
+  if(!r.ok)throw new Error('Fetch '+table+' failed: '+r.status);
+  return r.json();
+}
+async function sbPost(table,body,prefer='return=minimal'){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{
+    method:'POST',headers:{...HDR,'Prefer':prefer},body:JSON.stringify(body)
+  });
+  if(!r.ok)throw new Error(await r.text());
+  return prefer.includes('representation')?r.json():null;
+}
+async function sbPatch(table,filter,body){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`,{
+    method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify(body)
+  });
+  if(!r.ok)throw new Error(await r.text());
+}
+async function sbDelete(table,filter){
+  await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`,{method:'DELETE',headers:HDR});
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ---- Header / greeting ----
+function setHeader(){
+  const now=new Date();
+  const h=now.getHours();
+  let greet='Good evening';
+  if(h<12)greet='Good morning';
+  else if(h<17)greet='Good afternoon';
+  document.getElementById('greeting').textContent=greet;
+  document.getElementById('todays-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+
+// ---- Notifications (computed live from existing data) ----
+async function loadNotifications(){
+  const list=document.getElementById('notif-list');
+  list.innerHTML='<div class="empty">Loading…</div>';
+  const items=[];
+
+  try{
+    // Garden Tower shipments — pending and prepared statuses
+    const shipments=await sbGet('gt_shipments','select=id,shipment_number,status,urgency,recipient_name,tracking_number,shipping_cost');
+    const pending=shipments.filter(s=>s.status==='Pending'||!s.status);
+    const prepared=shipments.filter(s=>s.status==='Prepared');
+    const urgentPending=pending.filter(s=>s.urgency==='Urgent');
+    const preparedNoTracking=prepared.filter(s=>!s.tracking_number||!s.shipping_cost);
+
+    if(urgentPending.length){
+      items.push({
+        icon:'🚨',iconClass:'red',
+        title:`${urgentPending.length} URGENT shipment${urgentPending.length===1?'':'s'} pending`,
+        sub:'Garden Towers · need to be prepped',
+        link:'garden_towers.html#shipping-pending'
+      });
+    }
+    const nonUrgentPending=pending.filter(s=>s.urgency!=='Urgent');
+    if(nonUrgentPending.length){
+      items.push({
+        icon:'📦',iconClass:'amber',
+        title:`${nonUrgentPending.length} shipment${nonUrgentPending.length===1?'':'s'} awaiting prep`,
+        sub:'Garden Towers · pull sacks/rolls when ready',
+        link:'garden_towers.html#shipping-pending'
+      });
+    }
+    if(preparedNoTracking.length){
+      items.push({
+        icon:'🏷️',iconClass:'blue',
+        title:`${preparedNoTracking.length} prepared shipment${preparedNoTracking.length===1?'':'s'} need tracking + cost`,
+        sub:'Garden Towers · packed but not yet shipped',
+        link:'garden_towers.html#shipping-prepared'
+      });
+    }
+  }catch(e){console.error('GT shipments fetch failed:',e);}
+
+  try{
+    // Kids Eat change requests — open ones
+    const changes=await sbGet('delivery_change_requests','select=id,request_status,school_name&request_status=neq.Resolved&request_status=neq.Cancelled');
+    if(changes.length){
+      items.push({
+        icon:'📨',iconClass:'amber',
+        title:`${changes.length} open change request${changes.length===1?'':'s'}`,
+        sub:'Kids Eat · review and respond',
+        link:'index.html#change-requests'
+      });
+    }
+  }catch(e){
+    // Table might not exist or be filterable — skip silently
+    console.log('Change requests check skipped:',e.message);
+  }
+
+  // Render
+  if(!items.length){
+    list.innerHTML='<div class="empty">🎉 All caught up — no pending notifications</div>';
+    document.getElementById('notif-count').textContent='0';
+    return;
+  }
+  list.innerHTML=items.map(n=>`
+    <a class="notif" href="${n.link}">
+      <div class="notif-icon ${n.iconClass}">${n.icon}</div>
+      <div class="notif-body">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-sub">${n.sub}</div>
+      </div>
+      <div class="notif-arrow">→</div>
+    </a>
+  `).join('');
+  document.getElementById('notif-count').textContent=items.length;
+  // Color the count based on urgency
+  const cnt=document.getElementById('notif-count');
+  cnt.className='section-count'+(items.some(i=>i.iconClass==='red')?' red':items.some(i=>i.iconClass==='amber')?' amber':'');
+}
+
+// ---- Today's deliveries summary ----
+async function loadTodaysDeliveries(){
+  const el=document.getElementById('deliveries-summary');
+  try{
+    // Pull settings to know what week we're in
+    const settings=await sbGet('kids_eat_settings','select=*&limit=1');
+    const refDate=settings[0]?.week1_reference_date||'2026-04-20';
+    const seasonEnd=settings[0]?.season_end_date;
+    const seasonStart=settings[0]?.season_start_date;
+
+    // Are we in summer break?
+    const today=new Date();today.setHours(0,0,0,0);
+    const sEnd=seasonEnd?new Date(seasonEnd+'T00:00:00'):null;
+    const sStart=seasonStart?new Date(seasonStart+'T00:00:00'):null;
+    const inSummer=sEnd && today>sEnd && (!sStart || today<sStart || sStart<=sEnd);
+
+    if(inSummer){
+      el.innerHTML=`<a href="index.html" class="deliv-card">
+        <div class="deliv-icon" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);">☀️</div>
+        <div class="deliv-body">
+          <div class="deliv-title">Summer break</div>
+          <div class="deliv-stats">Year-round agencies only · tap to view</div>
+        </div>
+        <div class="deliv-arrow">→</div>
+      </a>`;
+      return;
+    }
+
+    // Calculate which week (1-4) we're in
+    const ref=new Date(refDate+'T00:00:00');
+    const day=today.getDay();
+    const diff=day===0?-6:1-day;
+    const monday=new Date(today);
+    monday.setDate(today.getDate()+diff);
+    const weeksSinceRef=Math.round((monday-ref)/(7*24*60*60*1000));
+    const weekNum=((weeksSinceRef%4)+4)%4+1;
+
+    // What weekday are we showing?
+    const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    let dayName=days[today.getDay()];
+    if(['Thursday','Friday','Saturday','Sunday'].includes(dayName))dayName='Monday';
+
+    // ROUTE_DATA mirrored from index.html so we can show today's stops without needing to load the full app
+    const ROUTE_DATA={1:{Monday:['Horizon','Longview','Parkside','Hillcrest Jr','Ascent Academy'],Tuesday:['Oquirrh','Westvale','Copper Canyon','Columbia','Mountain Shadows'],Wednesday:['Silver Hills','Taylorsville Elementary','Eisenhower Jr.','Stansbury Elementary','Farnsworth']},2:{Monday:['McMillan','Liberty','Hillcrest High','Union Middle','Grant'],Tuesday:['Heartland','Majestic','Westvale','Terra Linda','Oquirrh'],Wednesday:['Beacon Heights','Highland High','Stansbury Elementary','Pacific Heritage Academy','Dos Mundos Academy']},3:{Monday:['Parkside','Murray High','Riverview Jr','Horizon'],Tuesday:['Oquirrh','Westvale','Copper Canyon','Columbia'],Wednesday:['Silver Hills','Taylorsville Elementary','Eisenhower Jr.','Stansbury Elementary','Farnsworth']},4:{Monday:['Union Middle','Midvale Middle School','Childrens Justice Center','Grant'],Tuesday:['Heartland','Majestic','Westvale','Terra Linda','Oquirrh'],Wednesday:['Pacific Heritage Academy','Highland High','Stansbury Elementary','Dos Mundos Academy']}};
+    const todayStops=ROUTE_DATA[weekNum]?.[dayName]||[];
+
+    // Pull active agencies to filter inactive + sum bag counts
+    const agencies=await sbGet('agencies','select=name,is_active,weekly_bag_count,bags_per_delivery,delivery_frequency');
+    const norm=s=>(s||'').toLowerCase().trim();
+    const activeStops=todayStops.filter(name=>{
+      const a=agencies.find(ag=>norm(ag.name)===norm(name));
+      return !(a && a.is_active===false);
+    });
+    const totalBags=activeStops.reduce((s,name)=>{
+      const a=agencies.find(ag=>norm(ag.name)===norm(name));
+      if(!a)return s;
+      const freq=a.delivery_frequency||'Weekly';
+      const weekly=a.weekly_bag_count||0;
+      const perDelivery=a.bags_per_delivery||(freq==='Biweekly'?weekly*2:freq==='Monthly'?weekly*4:weekly);
+      return s+perDelivery;
+    },0);
+
+    // Pull this Monday's already-logged delivery count
+    const mondayStr=monday.getFullYear()+'-'+String(monday.getMonth()+1).padStart(2,'0')+'-'+String(monday.getDate()).padStart(2,'0');
+    const sched=await sbGet('delivery_schedule',`select=agency_name,bags_delivered,delivery_status&week_start_date=eq.${mondayStr}`);
+    const logged=sched.length;
+    const totalLogged=sched.reduce((s,r)=>s+(r.bags_delivered||0),0);
+
+    el.innerHTML=`<a href="index.html#schedule" class="deliv-card">
+      <div class="deliv-icon">📅</div>
+      <div class="deliv-body">
+        <div class="deliv-title">${dayName}, Week ${weekNum} · ${activeStops.length} stops</div>
+        <div class="deliv-stats">${totalBags.toLocaleString()} bags expected · ${logged} logged so far (${totalLogged.toLocaleString()} bags)</div>
+      </div>
+      <div class="deliv-arrow">→</div>
+    </a>`;
+  }catch(e){
+    console.error('Deliveries summary failed:',e);
+    el.innerHTML=`<a href="index.html" class="deliv-card">
+      <div class="deliv-icon">📅</div>
+      <div class="deliv-body">
+        <div class="deliv-title">Open delivery schedule</div>
+        <div class="deliv-stats">Tap to view today's deliveries</div>
+      </div>
+      <div class="deliv-arrow">→</div>
+    </a>`;
+  }
+}
+
+// ---- Tasks ----
+let TASKS=[];
+let showCompleted=false;
+
+async function loadTasks(){
+  try{
+    TASKS=await sbGet('daily_tasks','select=*&order=created_at.desc&limit=200');
+  }catch(e){
+    console.error('Tasks load failed:',e);TASKS=[];
+  }
+  renderTasks();
+}
+
+function renderTasks(){
+  const list=document.getElementById('task-list');
+  const open=TASKS.filter(t=>!t.completed);
+  const done=TASKS.filter(t=>t.completed);
+  document.getElementById('task-count').textContent=open.length;
+
+  // Toggle row visibility
+  const toggleRow=document.getElementById('toggle-completed-row');
+  if(done.length){
+    toggleRow.style.display='block';
+    document.getElementById('toggle-completed-text').textContent=showCompleted
+      ? `Hide ${done.length} completed`
+      : `Show ${done.length} completed`;
+  }else{
+    toggleRow.style.display='none';
+  }
+
+  const visible=showCompleted?[...open,...done]:open;
+  if(!visible.length){
+    list.innerHTML='<div class="empty">No tasks — add one below 👇</div>';
+    return;
+  }
+
+  list.innerHTML=visible.map(t=>{
+    const created=new Date(t.created_at);
+    const meta=t.completed
+      ? `Completed ${formatRelative(t.completed_at)}`
+      : `Added ${formatRelative(t.created_at)}`;
+    return `<div class="task-row">
+      <div class="task-check ${t.completed?'done':''}" onclick="toggleTask('${t.id}',${!t.completed})">${t.completed?'✓':''}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="task-text ${t.completed?'done':''}">${escapeHtml(t.title)}</div>
+        <div class="task-meta">${meta}</div>
+      </div>
+      <button class="task-delete" onclick="deleteTask('${t.id}')" title="Delete task">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function toggleCompletedView(){
+  showCompleted=!showCompleted;
+  renderTasks();
+}
+
+async function addTask(){
+  const input=document.getElementById('new-task-input');
+  const title=(input.value||'').trim();
+  if(!title)return;
+  try{
+    await sbPost('daily_tasks',{title});
+    input.value='';
+    await loadTasks();
+    showToast('✓ Task added');
+  }catch(e){showToast('Could not add: '+e.message);}
+}
+
+async function toggleTask(id,newCompleted){
+  try{
+    const patch={completed:newCompleted,completed_at:newCompleted?new Date().toISOString():null};
+    await sbPatch('daily_tasks','id=eq.'+id,patch);
+    const t=TASKS.find(x=>x.id===id);
+    if(t){t.completed=newCompleted;t.completed_at=patch.completed_at;}
+    renderTasks();
+  }catch(e){showToast('Could not update: '+e.message);}
+}
+
+async function deleteTask(id){
+  if(!confirm('Delete this task?'))return;
+  try{
+    await sbDelete('daily_tasks','id=eq.'+id);
+    TASKS=TASKS.filter(t=>t.id!==id);
+    renderTasks();
+    showToast('Task deleted');
+  }catch(e){showToast('Could not delete: '+e.message);}
+}
+
+// ---- Notes ----
+let NOTES=[];
+
+async function loadNotes(){
+  try{
+    // Auto-cleanup: delete anything older than 3 days BEFORE loading
+    const threeDaysAgo=new Date(Date.now()-3*24*60*60*1000).toISOString();
+    try{
+      await sbDelete('daily_notes','created_at=lt.'+threeDaysAgo);
+    }catch(e){console.log('Auto-cleanup skipped:',e.message);}
+    // Now fetch what's left
+    NOTES=await sbGet('daily_notes','select=*&order=created_at.desc&limit=100');
+  }catch(e){console.error('Notes load failed:',e);NOTES=[];}
+  renderNotes();
+}
+
+function renderNotes(){
+  const list=document.getElementById('note-list');
+  document.getElementById('note-count').textContent=NOTES.length;
+  if(!NOTES.length){
+    list.innerHTML='<div class="empty">No notes yet — leave one for the team 📝</div>';
+    return;
+  }
+  list.innerHTML=NOTES.map(n=>`<div class="note-row">
+    <button class="note-delete" onclick="deleteNote('${n.id}')" title="Delete">🗑</button>
+    <div class="note-body">${escapeHtml(n.body)}</div>
+    <div class="note-meta">${formatRelative(n.created_at)}</div>
+  </div>`).join('');
+}
+
+async function addNote(){
+  const input=document.getElementById('new-note-input');
+  const body=(input.value||'').trim();
+  if(!body)return;
+  try{
+    await sbPost('daily_notes',{body});
+    input.value='';
+    await loadNotes();
+    showToast('✓ Note added');
+  }catch(e){showToast('Could not add: '+e.message);}
+}
+
+async function deleteNote(id){
+  if(!confirm('Delete this note?'))return;
+  try{
+    await sbDelete('daily_notes','id=eq.'+id);
+    NOTES=NOTES.filter(n=>n.id!==id);
+    renderNotes();
+    showToast('Note deleted');
+  }catch(e){showToast('Could not delete: '+e.message);}
+}
+
+// ---- Helpers ----
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function formatRelative(iso){
+  if(!iso)return '';
+  const d=new Date(iso);
+  const diffMs=Date.now()-d.getTime();
+  const minutes=Math.floor(diffMs/60000);
+  if(minutes<1)return 'just now';
+  if(minutes<60)return minutes+'m ago';
+  const hours=Math.floor(minutes/60);
+  if(hours<24)return hours+'h ago';
+  const days=Math.floor(hours/24);
+  if(days<7)return days+'d ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+// ---- Init ----
+async function init(){
+  setHeader();
+  await Promise.all([
+    loadNotifications(),
+    loadTodaysDeliveries(),
+    loadTasks(),
+    loadNotes()
+  ]);
+  // Refresh notifications every 60 seconds while page is open
+  setInterval(loadNotifications,60000);
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+
+</body>
+</html>
