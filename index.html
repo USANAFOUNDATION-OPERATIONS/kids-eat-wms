@@ -204,17 +204,23 @@
     #page-schedule #day-picker-bar.phone-show{display:flex!important;padding:10px 16px!important;}
     /* When day picker is shown on phone, make the action buttons wrap to a new row */
     #page-schedule .route-action-btns{margin-left:0!important;width:100%;justify-content:flex-end;}
-    /* Stack route cards vertically on phone for fast tapping */
-    .route-card{flex-direction:column;align-items:stretch!important;gap:10px!important;padding:14px 16px!important;}
-    .route-card > div:first-child{width:100%;}
-    .route-card > div:last-child{width:100%;display:flex;align-items:center;gap:8px;}
-    .route-input{flex:1;width:auto!important;height:42px;font-size:18px!important;padding:8px 12px!important;}
-    .route-done-btn{height:42px;padding:8px 16px!important;font-size:14px!important;flex-shrink:0;}
-    /* Tighter metric cards on phone */
+    /* Hide admin bar (Set Week 1 / Summer mode / Pause for summer) on phone — desktop only */
+    #page-schedule .desktop-only-flex{display:none!important;}
+    /* Schedule content gets less side padding on phone */
+    #page-schedule .content{padding:12px 12px 24px!important;}
+    /* Metrics — 2x2 grid instead of horizontal row */
+    #page-schedule #route-summary > div[style*="display:flex"]{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin-bottom:12px!important;}
     #page-schedule .metric{padding:10px 12px!important;}
     #page-schedule .metric .metric-label{font-size:9px!important;margin-bottom:4px!important;}
-    #page-schedule .metric .metric-value{font-size:18px!important;}
-    #page-schedule #route-summary > div[style*="display:flex"]{gap:6px!important;}
+    #page-schedule .metric .metric-value{font-size:20px!important;}
+    /* Route cards — agency name on top, then full-width input + Mark/Skipped on row 2 */
+    .route-card{flex-direction:column;align-items:stretch!important;gap:10px!important;padding:14px 14px!important;}
+    .route-card > div:first-child{width:100%;}
+    .route-card > div:last-child{width:100%;display:flex!important;align-items:center;gap:8px!important;flex-wrap:nowrap!important;}
+    .route-input{flex:1;width:auto!important;min-width:0;height:44px;font-size:18px!important;padding:8px 12px!important;}
+    .route-done-btn{height:44px;padding:8px 14px!important;font-size:13px!important;flex-shrink:0;white-space:nowrap;}
+    /* Skipped button — keep tight so all 3 fit */
+    .route-card .btn-sm{height:44px;padding:8px 10px!important;font-size:12px!important;flex-shrink:0;white-space:nowrap;}
 
     /* Hide less critical columns on mobile */
     .hide-mobile{display:none!important;}
@@ -1941,7 +1947,8 @@ function renderRouteView(){
     : 'background:#fff8e1;color:var(--amber-text);border-color:var(--amber);';
 
   // Admin button bar — visible in all modes
-  const adminBar=`<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  // Admin button bar — visible in all modes on DESKTOP only (hidden on phone for fat-finger safety)
+  const adminBar=`<div class="desktop-only-flex" style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
     <button class="btn btn-sm" onclick="toggleSummerMode()" style="${summerToggleStyle}font-size:11px;padding:5px 12px;font-weight:600;" title="Switch the schedule between school-year and summer modes.">${summerToggleLabel}</button>
     <button class="btn btn-sm" onclick="setThisWeekAsWeek1()" style="background:var(--green-light);color:var(--green-dark);border-color:var(--green);font-size:11px;padding:5px 12px;" title="Mark this Monday as the start of a new 4-week rotation. Use at the start of each school year.">📌 Set this week as Week 1</button>
     <button class="btn btn-sm" onclick="pauseForSummer()" style="background:var(--amber-light);color:var(--amber-text);border-color:var(--amber);font-size:11px;padding:5px 12px;" title="Pause deliveries for summer break. The schedule will hide until you set a new Week 1 in the fall.">⏸ Pause for summer</button>
