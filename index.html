@@ -1164,6 +1164,43 @@ async function sbDelete(table,filter){
   await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`,{method:'DELETE',headers:HDR});
 }
 
+// Upload a file to the receipt-attachments storage bucket.
+// Returns {url, name} or null if no file or upload failed.
+async function uploadReceiptAttachment(fileInputEl){
+  if(!fileInputEl)return null;
+  const file=fileInputEl.files?.[0];
+  if(!file)return null;
+  // Build a unique path: receipts/YYYY-MM-DD/timestamp_filename
+  const safe=file.name.replace(/[^a-z0-9.\-_]/gi,'_').toLowerCase();
+  const path='receipts/'+new Date().toISOString().slice(0,10)+'/'+Date.now()+'_'+safe;
+  const url=`${SUPABASE_URL}/storage/v1/object/receipt-attachments/${path}`;
+  try{
+    const r=await fetch(url,{
+      method:'POST',
+      headers:{
+        'apikey':SUPABASE_KEY,
+        'Authorization':'Bearer '+SUPABASE_KEY,
+        'Content-Type':file.type||'application/octet-stream',
+        'x-upsert':'false'
+      },
+      body:file
+    });
+    if(!r.ok){
+      const t=await r.text();
+      console.error('Upload failed:',r.status,t);
+      showToast('File upload failed: '+r.status,'error');
+      return null;
+    }
+    // Build the public URL
+    const publicUrl=`${SUPABASE_URL}/storage/v1/object/public/receipt-attachments/${path}`;
+    return {url:publicUrl,name:file.name};
+  }catch(e){
+    console.error('Upload error:',e);
+    showToast('File upload error: '+e.message,'error');
+    return null;
+  }
+}
+
 // ---- Init ----
 async function init(){
   try{
@@ -1721,11 +1758,18 @@ function renderReceiving(){
         total_amount:0,
         total_qty:0,
         items:[],
-        first_idx:idx
+        first_idx:idx,
+        attachment_url:r.attachment_url||null,
+        attachment_name:r.attachment_name||null
       };
     }
     invoiceMap[key].items.push({...r,_idx:idx});
     invoiceMap[key].total_qty+=(r.quantity_received||0);
+    // Capture attachment from any line that has it (all lines in same invoice share it)
+    if(r.attachment_url && !invoiceMap[key].attachment_url){
+      invoiceMap[key].attachment_url=r.attachment_url;
+      invoiceMap[key].attachment_name=r.attachment_name;
+    }
     // Collect all unique notes from line items
     if(r.notes&&!invoiceMap[key].notes.includes(r.notes)){
       invoiceMap[key].notes.push(r.notes);
@@ -1739,6 +1783,9 @@ function renderReceiving(){
 
   let invoices=Object.entries(invoiceMap).filter(([k,inv])=>inv.items.length>0).sort((a,b)=>(a[1].date||'').localeCompare(b[1].date||''));
   if(recvFilter!=='all') invoices=invoices.filter(([k,inv])=>inv.type===recvFilter);
+
+  // Cache the invoice map globally so editReceipt can look up items by key
+  window._receiptInvoiceMap=invoiceMap;
 
   const typeBadge=(type)=>{
     if(type==='usana') return '<span class="usana-badge">USANA Shakes</span>';
@@ -1769,7 +1816,8 @@ function renderReceiving(){
         <td style="font-family:'Courier New',Courier,monospace;">${inv.invoice_number?'<span class="badge badge-blue">#'+inv.invoice_number+'</span>':'—'}</td>
         <td style="font-family:'Courier New',Courier,monospace;font-weight:600;">${inv.type==='usana'?'<span style="color:var(--green-dark);">Donated — '+fmtQty+' units ($'+Number(inv.total_amount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' value)</span>':fmtAmt}</td>
         <td style="font-family:'Courier New',Courier,monospace;color:var(--text-muted);">${inv.items.length} line item${inv.items.length!==1?'s':''}</td>
-        <td>${inv.lot_number?'<span class="badge badge-blue">Lot #'+inv.lot_number+'</span>'+(inv.notes.length?' <span style="font-size:12px;color:var(--text-muted);">'+inv.notes.join(' · ')+'</span>':''):inv.notes.length?'<span style="font-size:12px;color:var(--text-muted);">'+inv.notes.join(' · ')+'</span>':'—'}</td>
+        <td>${inv.lot_number?'<span class="badge badge-blue">Lot #'+inv.lot_number+'</span>'+(inv.notes.length?' <span style="font-size:12px;color:var(--text-muted);">'+inv.notes.join(' · ')+'</span>':''):inv.notes.length?'<span style="font-size:12px;color:var(--text-muted);">'+inv.notes.join(' · ')+'</span>':'—'}${inv.attachment_url?' <a href="'+inv.attachment_url+'" target="_blank" rel="noopener" onclick="event.stopPropagation();" style="display:inline-block;margin-left:6px;font-size:11px;color:var(--blue);text-decoration:none;background:var(--blue-light);padding:2px 8px;border-radius:10px;font-weight:600;" title="'+(inv.attachment_name||'Attachment')+'">📎 File</a>':''}
+          <button class="btn btn-sm" onclick="event.stopPropagation();editReceipt('${key}')" style="margin-left:6px;font-size:10px;padding:2px 8px;color:var(--text-muted);" title="Edit this receipt">✎ Edit</button></td>
         <td style="text-align:right;"><span id="arrow-${expandId}" style="font-size:16px;color:var(--text-muted);">▸</span></td>
       </tr>
       <tr id="${expandId}" style="display:none;">
@@ -1873,6 +1921,53 @@ let currentDay='Monday';
 let schedTab='routes';
 let routeDeliveries={};
 
+// Rebuild routeDeliveries from DATA.schedule for the current week's Monday.
+// This way, after navigating away and back, already-logged deliveries
+// stay marked as done and don't reappear as "not yet delivered".
+function syncRouteDeliveriesFromSchedule(){
+  routeDeliveries={};
+  const monday=getMondayOfCurrentWeek();
+  (DATA.schedule||[]).forEach(s=>{
+    if(s.week_start_date!==monday)return;
+    if(!s.agency_name)return;
+    const wn=s.week_number==='summer'?'summer':String(s.week_number||currentWeek);
+    // We don't know which weekday it was logged for, so build keys for all 3 weekdays
+    // — only the one matching the current view will display anyway.
+    ['Monday','Tuesday','Wednesday'].forEach(d=>{
+      const key=wn+'_'+d+'_'+s.agency_name;
+      // Only set if not already set so we don't double-count the same record across days
+      if(routeDeliveries[key]===undefined){
+        // But ONLY for the day this agency is actually scheduled on — otherwise
+        // we'd mark an agency as delivered on every day of the week.
+        const scheduledDay=findScheduledDay(s.agency_name,wn);
+        if(scheduledDay && scheduledDay===d){
+          routeDeliveries[key]=s.bags_delivered||0;
+        }else if(!scheduledDay){
+          // Extra delivery — record under all days so undo works regardless
+          routeDeliveries[key]=s.bags_delivered||0;
+        }
+      }
+    });
+    // Summer mode also uses a different key shape
+    if(wn==='summer'){
+      const sumDay=SEASON_SETTINGS.summer_delivery_day||'Monday';
+      routeDeliveries['summer_'+sumDay+'_'+s.agency_name]=s.bags_delivered||0;
+    }
+  });
+}
+
+// Returns the weekday name an agency is scheduled for in a given week,
+// or null if not in the rotation. Used by syncRouteDeliveriesFromSchedule.
+function findScheduledDay(agencyName,weekNum){
+  const wk=ROUTE_DATA[weekNum];
+  if(!wk)return null;
+  for(const day of ['Monday','Tuesday','Wednesday']){
+    const list=wk[day]||[];
+    if(list.some(n=>n===agencyName||normalizeAgencyName(n)===agencyName))return day;
+  }
+  return null;
+}
+
 function setCurrentWeek(w){
   currentWeek=w;
   document.querySelectorAll('.week-btn').forEach(b=>b.classList.remove('btn-primary'));
@@ -1935,6 +2030,9 @@ function setSchedTab(tab){
 }
 
 function renderRouteView(){
+  // Always pull persisted state from DATA.schedule before rendering so that
+  // already-logged deliveries don't reappear as "not yet delivered" after navigation.
+  syncRouteDeliveriesFromSchedule();
   const summaryEl=document.getElementById('route-summary');
   const cardsEl=document.getElementById('route-cards');
   if(!cardsEl)return;
@@ -1946,9 +2044,10 @@ function renderRouteView(){
     ? 'background:var(--green-light);color:var(--green-dark);border-color:var(--green);'
     : 'background:#fff8e1;color:var(--amber-text);border-color:var(--amber);';
 
-  // Admin button bar — visible in all modes
-  // Admin button bar — visible in all modes on DESKTOP only (hidden on phone for fat-finger safety)
-  const adminBar=`<div class="desktop-only-flex" style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  // Admin button bar — visible in all modes on DESKTOP only.
+  // On phone we DON'T even render the HTML, so there's no chance of
+  // accidental fat-finger taps on Set Week 1 / Summer mode / Pause buttons.
+  const adminBar=isPhoneViewport()?'':`<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
     <button class="btn btn-sm" onclick="toggleSummerMode()" style="${summerToggleStyle}font-size:11px;padding:5px 12px;font-weight:600;" title="Switch the schedule between school-year and summer modes.">${summerToggleLabel}</button>
     <button class="btn btn-sm" onclick="setThisWeekAsWeek1()" style="background:var(--green-light);color:var(--green-dark);border-color:var(--green);font-size:11px;padding:5px 12px;" title="Mark this Monday as the start of a new 4-week rotation. Use at the start of each school year.">📌 Set this week as Week 1</button>
     <button class="btn btn-sm" onclick="pauseForSummer()" style="background:var(--amber-light);color:var(--amber-text);border-color:var(--amber);font-size:11px;padding:5px 12px;" title="Pause deliveries for summer break. The schedule will hide until you set a new Week 1 in the fall.">⏸ Pause for summer</button>
@@ -2015,7 +2114,17 @@ function renderRouteView(){
   // ============================================================
   // SCHOOL-YEAR MODE — full Mon/Tue/Wed weekly rotation
   // ============================================================
-  const agencies=ROUTE_DATA[currentWeek]?.[currentDay]||[];
+  // Filter out any agency that's been marked inactive in the agencies table.
+  // ROUTE_DATA is name-keyed so we look each name up in DATA.agencies and
+  // exclude any that aren't is_active.
+  const allRouteAgencies=ROUTE_DATA[currentWeek]?.[currentDay]||[];
+  const agencies=allRouteAgencies.filter(name=>{
+    const a=DATA.agencies.find(ag=>ag.name===name||ag.name===normalizeAgencyName(name));
+    // If the agency record exists and is explicitly inactive, exclude it.
+    // If we don't have a record (legacy name only in ROUTE_DATA), include it.
+    if(a && a.is_active===false)return false;
+    return true;
+  });
   const done=agencies.filter(n=>routeDeliveries[currentWeek+'_'+currentDay+'_'+n]!==undefined);
   const totalExpected=agencies.reduce((s,n)=>{const a=DATA.agencies.find(ag=>ag.name===n||ag.name===normalizeAgencyName(n));return s+(a?.weekly_bag_count||0);},0);
   const totalDelivered=agencies.reduce((s,n)=>{const key=currentWeek+'_'+currentDay+'_'+n;return s+(routeDeliveries[key]||0);},0);
@@ -2050,49 +2159,65 @@ function renderRouteView(){
   cardsEl.innerHTML=cards;
 }
 
+// Idempotent helper used by all delivery loggers.
+// Deletes any existing row for (week_start_date, agency_name, week_number)
+// then inserts the new one. This prevents duplicate entries in delivery history
+// when a user re-logs the same agency (e.g. clicked Skipped after Mark delivered).
+async function upsertScheduleRow(rec){
+  if(!dbReady)return;
+  // Delete any existing rows that match this agency+monday+week
+  const filterParts=[
+    'week_start_date=eq.'+encodeURIComponent(rec.week_start_date),
+    'agency_name=eq.'+encodeURIComponent(rec.agency_name),
+    'week_number=eq.'+encodeURIComponent(rec.week_number||'')
+  ];
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/delivery_schedule?${filterParts.join('&')}`,{
+      method:'DELETE',
+      headers:{...HDR,'Prefer':'return=minimal'}
+    });
+  }catch(e){console.error('Pre-insert cleanup failed:',e);}
+  // Insert the fresh row
+  await sbPost('delivery_schedule',rec,'return=minimal');
+  // Update in-memory copy: drop any matching, then unshift
+  if(Array.isArray(DATA.schedule)){
+    DATA.schedule=DATA.schedule.filter(s=>!(
+      s.week_start_date===rec.week_start_date &&
+      s.agency_name===rec.agency_name &&
+      String(s.week_number||'')===String(rec.week_number||'')
+    ));
+    DATA.schedule.unshift({...rec});
+  }
+}
+
 // Summer-mode delivery loggers (year-round agencies on a single day)
 async function logSummerDelivery(idx,agencyName,key){
   const input=document.getElementById('route-input-summer-'+idx);
   const bags=parseInt(input?.value)||0;
   routeDeliveries[key]=bags;
-  if(dbReady){
-    try{
-      await sbPost('delivery_schedule',{
-        week_start_date:getMondayOfCurrentWeek(),
-        agency_name:agencyName,
-        week_number:'summer',
-        bags_delivered:bags,
-        expected_bags:DATA.agencies.find(a=>a.name===agencyName)?.weekly_bag_count||0,
-        delivery_status:bags>0?'Delivered':'Skipped',
-        meals_delivered:bags*7
-      },'return=minimal');
-      DATA.schedule.unshift({
-        agency_name:agencyName,
-        week_start_date:getMondayOfCurrentWeek(),
-        bags_delivered:bags,
-        delivery_status:bags>0?'Delivered':'Skipped',
-        meals_delivered:bags*7
-      });
-    }catch(e){console.error(e);}
-  }
+  await upsertScheduleRow({
+    week_start_date:getMondayOfCurrentWeek(),
+    agency_name:agencyName,
+    week_number:'summer',
+    bags_delivered:bags,
+    expected_bags:DATA.agencies.find(a=>a.name===agencyName)?.weekly_bag_count||0,
+    delivery_status:bags>0?'Delivered':'Skipped',
+    meals_delivered:bags*7
+  });
   renderRouteView();
   showToast('✓ '+agencyName+' logged ('+bags+' bags)','success');
 }
 
 async function logSummerSkipped(agencyName,key){
   routeDeliveries[key]=0;
-  if(dbReady){
-    try{
-      await sbPost('delivery_schedule',{
-        week_start_date:getMondayOfCurrentWeek(),
-        agency_name:agencyName,
-        week_number:'summer',
-        bags_delivered:0,
-        delivery_status:'Skipped',
-        meals_delivered:0
-      },'return=minimal');
-    }catch(e){console.error(e);}
-  }
+  await upsertScheduleRow({
+    week_start_date:getMondayOfCurrentWeek(),
+    agency_name:agencyName,
+    week_number:'summer',
+    bags_delivered:0,
+    delivery_status:'Skipped',
+    meals_delivered:0
+  });
   renderRouteView();
   showToast(agencyName+' marked as skipped','info');
 }
@@ -2101,24 +2226,59 @@ async function logRouteDelivery(idx,agencyName,key){
   const input=document.getElementById('route-input-'+idx);
   const bags=parseInt(input?.value)||0;
   routeDeliveries[key]=bags;
-  if(dbReady){
-    try{
-      await sbPost('delivery_schedule',{week_start_date:getMondayOfCurrentWeek(),agency_name:agencyName,week_number:String(currentWeek),bags_delivered:bags,expected_bags:DATA.agencies.find(a=>a.name===agencyName)?.weekly_bag_count||0,delivery_status:bags>0?'Delivered':'Skipped',meals_delivered:bags*7},'return=minimal');
-      DATA.schedule.unshift({agency_name:agencyName,week_start_date:getMondayOfCurrentWeek(),bags_delivered:bags,delivery_status:bags>0?'Delivered':'Skipped',meals_delivered:bags*7});
-    }catch(e){console.error(e);}
-  }
+  await upsertScheduleRow({
+    week_start_date:getMondayOfCurrentWeek(),
+    agency_name:agencyName,
+    week_number:String(currentWeek),
+    bags_delivered:bags,
+    expected_bags:DATA.agencies.find(a=>a.name===agencyName)?.weekly_bag_count||0,
+    delivery_status:bags>0?'Delivered':'Skipped',
+    meals_delivered:bags*7
+  });
   renderRouteView();
   showToast('✓ '+agencyName+' logged ('+bags+' bags)','success');
 }
 
 async function logSkipped(agencyName,key){
   routeDeliveries[key]=0;
-  if(dbReady){try{await sbPost('delivery_schedule',{week_start_date:getMondayOfCurrentWeek(),agency_name:agencyName,week_number:String(currentWeek),bags_delivered:0,delivery_status:'Skipped',meals_delivered:0},'return=minimal');}catch(e){console.error(e);}}
+  await upsertScheduleRow({
+    week_start_date:getMondayOfCurrentWeek(),
+    agency_name:agencyName,
+    week_number:String(currentWeek),
+    bags_delivered:0,
+    delivery_status:'Skipped',
+    meals_delivered:0
+  });
   renderRouteView();
   showToast(agencyName+' marked as skipped','info');
 }
 
-function undoDelivery(agencyName,key){delete routeDeliveries[key];renderRouteView();showToast('Delivery for '+agencyName+' removed','info');}
+// Undo: remove the in-memory state AND delete any persisted row so
+// the next visit doesn't show the agency as still-delivered.
+async function undoDelivery(agencyName,key){
+  delete routeDeliveries[key];
+  if(dbReady){
+    const monday=getMondayOfCurrentWeek();
+    // Build a filter that matches any week_number (school or summer)
+    const filterParts=[
+      'week_start_date=eq.'+encodeURIComponent(monday),
+      'agency_name=eq.'+encodeURIComponent(agencyName)
+    ];
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/delivery_schedule?${filterParts.join('&')}`,{
+        method:'DELETE',
+        headers:{...HDR,'Prefer':'return=minimal'}
+      });
+    }catch(e){console.error('Undo failed:',e);}
+    if(Array.isArray(DATA.schedule)){
+      DATA.schedule=DATA.schedule.filter(s=>!(
+        s.week_start_date===monday && s.agency_name===agencyName
+      ));
+    }
+  }
+  renderRouteView();
+  showToast('Delivery for '+agencyName+' removed','info');
+}
 
 // Season + week rotation settings, loaded from kids_eat_settings table on init.
 // If the table is empty/unreachable, falls back to a hardcoded April 20, 2026 = Week 1.
@@ -2411,6 +2571,7 @@ function openReceivingModal(type){
         <div id="usana-preview-value" style="font-size:18px;font-weight:700;color:var(--green-dark);"></div>
         <div style="font-size:11px;color:var(--green-dark);margin-top:2px;">For tax and donation reporting purposes only</div>
       </div>
+      <div class="form-row" style="margin-top:12px;"><label class="form-label">Invoice / receipt file (attach)</label><input type="file" class="form-input" id="m-file" accept=".pdf,image/*"/></div>
       <div class="form-row"><label class="form-label">Notes (optional)</label><input type="text" class="form-input" id="m-notes" placeholder="Optional notes"/></div>
       <div class="modal-footer">
         <button class="btn" data-action="closeModal">Cancel</button>
@@ -2476,6 +2637,10 @@ async function saveVendorReceipt(){
   const invoiceNum=document.getElementById('m-invoice-num')?.value||null;
   const notes=document.getElementById('m-notes')?.value||null;
   if(!date){showToast('Please enter a date','error');return;}
+
+  // Upload attachment first (if any) so we can link all line items to the same file
+  const attach=await uploadReceiptAttachment(document.getElementById('m-file'));
+
   let savedCount=0;
   const products=DATA.inventory.filter(i=>{
     const n=(i.name||i.product_name||'').toLowerCase();
@@ -2490,7 +2655,13 @@ async function saveVendorReceipt(){
     const invoiceAmt=savedCount===0&&price?(qty*price):null;
     try{
       if(dbReady){
-        await sbPost('receipts',{date_received:date,product_name:n,quantity_received:qty,unit_price:price||null,invoice_amount:invoiceAmt,notes:notes||null,is_usana:false,invoice_number:invoiceNum},'return=minimal');
+        await sbPost('receipts',{
+          date_received:date,product_name:n,quantity_received:qty,
+          unit_price:price||null,invoice_amount:invoiceAmt,
+          notes:notes||null,is_usana:false,invoice_number:invoiceNum,
+          attachment_url:attach?.url||null,
+          attachment_name:attach?.name||null
+        },'return=minimal');
       }
       const inv=DATA.inventory.find(i=>(i.name||i.product_name||'')===n);
       if(inv)inv.current_inventory=(inv.current_inventory||0)+qty;
@@ -2512,8 +2683,19 @@ async function saveUsanaReceipt(){
   const notes=document.getElementById('m-notes')?.value||null;
   const invoiceNum=document.getElementById('m-invoice-num')?.value||null;
   if(!date||!qty){showToast('Please enter date and quantity','error');return;}
+
+  // Upload attachment first (if any)
+  const attach=await uploadReceiptAttachment(document.getElementById('m-file'));
+
   const donationValue=parseFloat((qty*unitCost).toFixed(2));
-  const rec={date_received:date,product_name:product,quantity_received:qty,unit_price:unitCost||null,invoice_amount:donationValue,lot_number:lot,notes:notes||null,is_usana:true,invoice_number:invoiceNum};
+  const rec={
+    date_received:date,product_name:product,quantity_received:qty,
+    unit_price:unitCost||null,invoice_amount:donationValue,
+    lot_number:lot,notes:notes||null,is_usana:true,
+    invoice_number:invoiceNum,
+    attachment_url:attach?.url||null,
+    attachment_name:attach?.name||null
+  };
   try{
     if(dbReady){await sbPost('receipts',rec,'return=minimal');}
     const inv=DATA.inventory.find(i=>(i.name||i.product_name||'').toLowerCase().includes('shake'));
@@ -2522,6 +2704,178 @@ async function saveUsanaReceipt(){
     await loadAll();closeModal();
   }catch(e){showToast('Error: '+e.message,'error');}
 }
+
+// ---- Edit an existing receipt (any type) ----
+function editReceipt(key){
+  const map=window._receiptInvoiceMap||{};
+  const inv=map[key];
+  if(!inv){showToast('Receipt not found','error');return;}
+
+  if(inv.type==='usana'){
+    // USANA shake receipts have a single line item
+    const item=inv.items[0];
+    document.getElementById('modal-content').innerHTML=`
+      <h2>Edit USANA shakes receipt</h2>
+      <p class="modal-sub">Update any field below. Inventory adjustments will recalculate from the new quantity.</p>
+      <div class="form-row"><label class="form-label">Date received</label><input type="date" class="form-input" id="m-date" value="${item.date_received||''}"/></div>
+      <div class="form-row"><label class="form-label">Invoice / reference number</label><input type="text" class="form-input" id="m-invoice-num" value="${item.invoice_number||''}"/></div>
+      <div class="form-row"><label class="form-label">Lot number</label><input type="text" class="form-input" id="m-lot" value="${item.lot_number||''}"/></div>
+      <div class="form-row"><label class="form-label">Product</label>
+        <select class="form-input" id="m-shake-product">
+          <option value="Vanilla Shakes" ${(item.product_name==='Vanilla Shakes')?'selected':''}>Vanilla Shakes</option>
+          <option value="Chocolate Shakes" ${(item.product_name==='Chocolate Shakes')?'selected':''}>Chocolate Shakes</option>
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">Quantity received</label><input type="number" class="form-input" id="m-qty" value="${item.quantity_received||0}" min="0"/></div>
+      <div class="form-row"><label class="form-label">Standard cost per unit</label><input type="number" class="form-input" id="m-cost" value="${item.unit_price||1.36}" min="0" step="0.01"/></div>
+      <div class="form-row"><label class="form-label">Notes</label><input type="text" class="form-input" id="m-notes" value="${item.notes||''}"/></div>
+      <div class="form-row" style="margin-top:12px;"><label class="form-label">Replace attachment ${inv.attachment_url?`(current: <a href="${inv.attachment_url}" target="_blank" style="color:var(--blue);">${inv.attachment_name||'View file'}</a>)`:'(no current attachment)'}</label><input type="file" class="form-input" id="m-file" accept=".pdf,image/*"/></div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="deleteReceiptInvoice('${key}')" style="margin-right:auto;">🗑 Delete</button>
+        <button class="btn" data-action="closeModal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditedReceipt('${key}','usana')">Save changes</button>
+      </div>`;
+    document.getElementById('modal-bg').classList.add('open');
+    return;
+  }
+
+  // Food invoices and bag orders — multi-line items
+  const lineRows=inv.items.map((item,idx)=>{
+    const safeIdx=idx;
+    return `<tr data-item-id="${item.id||''}" data-line-idx="${safeIdx}">
+      <td style="padding:6px 4px;font-size:12px;">${item.product_name||''}</td>
+      <td style="padding:6px 4px;width:90px;"><input type="number" class="form-input edit-line-qty" value="${item.quantity_received||0}" min="0" style="font-size:13px;padding:6px 8px;text-align:center;"/></td>
+      <td style="padding:6px 4px;width:100px;"><input type="number" class="form-input edit-line-price" value="${item.unit_price||''}" min="0" step="0.01" placeholder="—" style="font-size:13px;padding:6px 8px;text-align:right;"/></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('modal-content').innerHTML=`
+    <h2>Edit ${inv.type==='bags'?'bag order':'food invoice'}</h2>
+    <p class="modal-sub">Update line items, attach a different file, or fix invoice details. Saving will overwrite existing records.</p>
+    <div class="form-row"><label class="form-label">Date received</label><input type="date" class="form-input" id="m-date" value="${inv.date||''}"/></div>
+    <div class="form-row"><label class="form-label">Invoice number</label><input type="text" class="form-input" id="m-invoice-num" value="${inv.invoice_number||''}"/></div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;">
+      <thead><tr style="background:var(--bg);">
+        <th style="padding:6px 8px;text-align:left;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;">Product</th>
+        <th style="padding:6px 8px;text-align:center;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;">Qty</th>
+        <th style="padding:6px 8px;text-align:right;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;">Unit $</th>
+      </tr></thead>
+      <tbody id="edit-receipt-lines">${lineRows}</tbody>
+    </table>
+    <div class="form-row"><label class="form-label">Notes</label><input type="text" class="form-input" id="m-notes" value="${(inv.notes||[]).join(' · ')}"/></div>
+    <div class="form-row" style="margin-top:12px;"><label class="form-label">Replace attachment ${inv.attachment_url?`(current: <a href="${inv.attachment_url}" target="_blank" style="color:var(--blue);">${inv.attachment_name||'View file'}</a>)`:'(no current attachment)'}</label><input type="file" class="form-input" id="m-file" accept=".pdf,image/*"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="deleteReceiptInvoice('${key}')" style="margin-right:auto;">🗑 Delete</button>
+      <button class="btn" data-action="closeModal">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditedReceipt('${key}','${inv.type}')">Save changes</button>
+    </div>`;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+async function saveEditedReceipt(key,type){
+  const map=window._receiptInvoiceMap||{};
+  const inv=map[key];
+  if(!inv){showToast('Receipt not found','error');return;}
+
+  const newDate=document.getElementById('m-date')?.value;
+  const newInvoiceNum=document.getElementById('m-invoice-num')?.value||null;
+  const newNotes=document.getElementById('m-notes')?.value||null;
+
+  // Upload new file if user provided one (otherwise keep existing)
+  const newAttach=await uploadReceiptAttachment(document.getElementById('m-file'));
+  const finalAttachUrl=newAttach?.url||inv.attachment_url||null;
+  const finalAttachName=newAttach?.name||inv.attachment_name||null;
+
+  if(type==='usana'){
+    const item=inv.items[0];
+    const newQty=parseInt(document.getElementById('m-qty')?.value)||0;
+    const newCost=parseFloat(document.getElementById('m-cost')?.value)||0;
+    const newLot=document.getElementById('m-lot')?.value||null;
+    const newProduct=document.getElementById('m-shake-product')?.value||'Vanilla Shakes';
+    const donationValue=parseFloat((newQty*newCost).toFixed(2));
+    const oldQty=item.quantity_received||0;
+    const qtyDelta=newQty-oldQty;
+
+    if(dbReady){
+      try{
+        await fetch(`${SUPABASE_URL}/rest/v1/receipts?id=eq.${item.id}`,{
+          method:'PATCH',
+          headers:{...HDR,'Prefer':'return=minimal'},
+          body:JSON.stringify({
+            date_received:newDate,product_name:newProduct,quantity_received:newQty,
+            unit_price:newCost||null,invoice_amount:donationValue,
+            lot_number:newLot,notes:newNotes,invoice_number:newInvoiceNum,
+            attachment_url:finalAttachUrl,attachment_name:finalAttachName
+          })
+        });
+      }catch(e){showToast('Save failed: '+e.message,'error');return;}
+    }
+    // Adjust inventory by the qty delta
+    const invItem=DATA.inventory.find(i=>(i.name||i.product_name||'').toLowerCase().includes('shake'));
+    if(invItem)invItem.current_inventory=(invItem.current_inventory||0)+qtyDelta;
+    showToast('✓ Receipt updated','success');
+    await loadAll();closeModal();
+    return;
+  }
+
+  // Food / bag orders — update each line item
+  const rows=document.querySelectorAll('#edit-receipt-lines tr');
+  for(const tr of rows){
+    const itemId=tr.dataset.itemId;
+    const lineIdx=parseInt(tr.dataset.lineIdx);
+    const origItem=inv.items[lineIdx];
+    if(!origItem)continue;
+    const newQty=parseInt(tr.querySelector('.edit-line-qty')?.value)||0;
+    const newPrice=parseFloat(tr.querySelector('.edit-line-price')?.value)||null;
+    const oldQty=origItem.quantity_received||0;
+    const qtyDelta=newQty-oldQty;
+
+    if(itemId && dbReady){
+      try{
+        await fetch(`${SUPABASE_URL}/rest/v1/receipts?id=eq.${itemId}`,{
+          method:'PATCH',
+          headers:{...HDR,'Prefer':'return=minimal'},
+          body:JSON.stringify({
+            date_received:newDate,quantity_received:newQty,
+            unit_price:newPrice,
+            invoice_amount:newPrice?(newPrice*newQty):null,
+            notes:newNotes,invoice_number:newInvoiceNum,
+            attachment_url:finalAttachUrl,attachment_name:finalAttachName
+          })
+        });
+      }catch(e){console.error('Update line failed:',e);}
+    }
+    // Inventory adjust
+    const invItem=DATA.inventory.find(i=>(i.name||i.product_name||'')===origItem.product_name);
+    if(invItem)invItem.current_inventory=(invItem.current_inventory||0)+qtyDelta;
+  }
+  showToast('✓ Receipt updated','success');
+  await loadAll();closeModal();
+}
+
+async function deleteReceiptInvoice(key){
+  const map=window._receiptInvoiceMap||{};
+  const inv=map[key];
+  if(!inv){showToast('Receipt not found','error');return;}
+  if(!confirm('Delete this receipt and all its line items?\n\nThis will also reverse the inventory additions. Cannot be undone.'))return;
+
+  for(const item of inv.items){
+    if(item.id && dbReady){
+      try{
+        await fetch(`${SUPABASE_URL}/rest/v1/receipts?id=eq.${item.id}`,{
+          method:'DELETE',
+          headers:{...HDR,'Prefer':'return=minimal'}
+        });
+      }catch(e){console.error('Delete failed:',e);}
+    }
+    // Reverse inventory addition
+    const invItem=DATA.inventory.find(i=>(i.name||i.product_name||'')===item.product_name);
+    if(invItem)invItem.current_inventory=(invItem.current_inventory||0)-(item.quantity_received||0);
+  }
+  showToast('✓ Receipt deleted','success');
+  await loadAll();closeModal();
+}
+
 
 // ---- Bags Packed Modal ----
 function openPackModal(){
