@@ -641,7 +641,7 @@ function renderPhotoGrid(field,photos){
   </div>`).join('');
   return `<div class="photo-grid" data-field="${field}">
     ${items}
-    <label class="photo-slot photo-slot-empty" onclick="this.querySelector('input').click()">
+    <label class="photo-slot photo-slot-empty">
       <span>+ Add<br>photo</span>
       <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="addPhoto(event,'${field}')">
     </label>
