@@ -510,7 +510,8 @@
       <div class="content">
         <div class="metrics" id="ship-metrics">
           <div class="metric"><div class="metric-label">Total shipments</div><div class="metric-value green" id="m-total">—</div><div class="metric-foot">All time</div></div>
-          <div class="metric"><div class="metric-label">Pending</div><div class="metric-value amber" id="m-pending">—</div><div class="metric-foot">Awaiting shipment</div></div>
+          <div class="metric"><div class="metric-label">Pending</div><div class="metric-value amber" id="m-pending">—</div><div class="metric-foot">Awaiting prep</div></div>
+          <div class="metric"><div class="metric-label blue">Prepared</div><div class="metric-value" id="m-prepared" style="color:var(--blue);">—</div><div class="metric-foot">Ready to ship</div></div>
           <div class="metric"><div class="metric-label">Shipped</div><div class="metric-value" id="m-shipped">—</div><div class="metric-foot">Completed</div></div>
           <div class="metric"><div class="metric-label">International</div><div class="metric-value" id="m-intl">—</div><div class="metric-foot">vs US only</div></div>
           <div class="metric"><div class="metric-label">Total shipping cost</div><div class="metric-value green" id="m-cost">—</div><div class="metric-foot">All shipments</div></div>
@@ -521,6 +522,7 @@
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <button class="btn btn-sm active-filter" id="filter-all" onclick="filterShipments('all')">All</button>
               <button class="btn btn-sm" id="filter-pending" onclick="filterShipments('pending')">Pending</button>
+              <button class="btn btn-sm" id="filter-prepared" onclick="filterShipments('prepared')">Prepared</button>
               <button class="btn btn-sm" id="filter-shipped" onclick="filterShipments('shipped')">Shipped</button>
             </div>
           </div>
@@ -1522,12 +1524,14 @@ function renderMetrics(){
   const s=DATA.shipments;
   const total=s.length;
   const pending=s.filter(x=>x.status==='Pending'||!x.status).length;
+  const prepared=s.filter(x=>x.status==='Prepared').length;
   const shipped=s.filter(x=>x.status==='Shipped').length;
   const intl=s.filter(x=>x.ship_type==='International').length;
   const el=id=>document.getElementById(id);
   const totalCost=s.reduce((sum,x)=>sum+(x.shipping_cost||0),0);
   if(el('m-total'))el('m-total').textContent=total;
   if(el('m-pending'))el('m-pending').textContent=pending;
+  if(el('m-prepared'))el('m-prepared').textContent=prepared;
   if(el('m-shipped'))el('m-shipped').textContent=shipped;
   if(el('m-intl'))el('m-intl').textContent=intl;
   if(el('m-cost'))el('m-cost').textContent='$'+totalCost.toFixed(2);
@@ -1541,7 +1545,7 @@ function updateBadge(){
 
 function filterShipments(f){
   shipFilter=f;
-  ['all','pending','shipped'].forEach(id=>{
+  ['all','pending','prepared','shipped'].forEach(id=>{
     const btn=document.getElementById('filter-'+id);
     if(btn)btn.style.background=id===f?'var(--green)':''
     if(btn)btn.style.color=id===f?'#fff':''
@@ -1555,6 +1559,7 @@ function renderShipmentsTable(){
   if(!tbl)return;
   let list=DATA.shipments;
   if(shipFilter==='pending')list=list.filter(x=>x.status==='Pending'||!x.status);
+  if(shipFilter==='prepared')list=list.filter(x=>x.status==='Prepared');
   if(shipFilter==='shipped')list=list.filter(x=>x.status==='Shipped');
   if(!list.length){tbl.innerHTML='<div class="state-box">No shipments found</div>';return;}
 
@@ -1562,7 +1567,7 @@ function renderShipmentsTable(){
     const items=s.items_summary||'—';
     const typeBadge=s.ship_type==='International'?'badge-blue':'badge-green';
     const typeLabel=s.ship_type||'US Only';
-    const statusColor=s.status==='Shipped'?'badge-green':s.status==='Cancelled'?'badge-gray':'badge-amber';
+    const statusColor=s.status==='Shipped'?'badge-green':s.status==='Prepared'?'badge-blue':s.status==='Cancelled'?'badge-gray':'badge-amber';
     const urgencyColor=s.urgency==='Urgent'?'color:var(--red-text);font-weight:600;':'';
     const date=s.date_requested?new Date(s.date_requested+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
     return `<tr>
@@ -1712,6 +1717,7 @@ function viewShipment(id){
       <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;">Status</div>
       <select class="form-input" id="status-select" style="max-width:200px;">
         <option ${(!s.status||s.status==='Pending')?'selected':''}>Pending</option>
+        <option ${s.status==='Prepared'?'selected':''}>Prepared</option>
         <option ${s.status==='Shipped'?'selected':''}>Shipped</option>
         <option ${s.status==='Cancelled'?'selected':''}>Cancelled</option>
       </select>
@@ -1824,6 +1830,7 @@ function editShipment(id){
         <label class="form-label">Status</label>
         <select class="form-input" id="edit-status">
           <option ${(!s.status||s.status==='Pending')?'selected':''}>Pending</option>
+          <option ${s.status==='Prepared'?'selected':''}>Prepared</option>
           <option ${s.status==='Shipped'?'selected':''}>Shipped</option>
           <option ${s.status==='Cancelled'?'selected':''}>Cancelled</option>
         </select>
@@ -1937,6 +1944,21 @@ async function saveFullShipmentEdit(id){
   if(!updates.shipment_number){return showToast('Shipment number is required','error');}
   if(!updates.recipient_name){return showToast('Recipient name is required','error');}
 
+  // Capture original status BEFORE patch so we can detect transitions
+  const sBefore=DATA.shipments.find(x=>x.id===id);
+  const oldStatus=sBefore?.status||'Pending';
+  const newStatus=updates.status||'Pending';
+
+  // Warn (but don't block) if going to Shipped without tracking + cost
+  if(newStatus==='Shipped' && (!updates.tracking_number || !updates.shipping_cost)){
+    const missing=[];
+    if(!updates.tracking_number)missing.push('tracking number');
+    if(!updates.shipping_cost)missing.push('shipping cost');
+    if(!confirm(`Mark as Shipped without ${missing.join(' and ')}?\n\nYou can add these later, but typically a Shipped status means it's gone with these recorded.`)){
+      return;
+    }
+  }
+
   const btn=document.getElementById('edit-save-btn');
   const orig=btn.textContent;
   btn.disabled=true;btn.textContent='Saving…';
@@ -1951,6 +1973,10 @@ async function saveFullShipmentEdit(id){
     // Update the in-memory copy too
     const s=DATA.shipments.find(x=>x.id===id);
     if(s)Object.assign(s,updates);
+
+    // Adjust inventory if status crossed the in/out boundary
+    if(s)await processInventoryForStatusChange(s,oldStatus,newStatus);
+
     showToast('✓ Shipment updated','success');
     closeModal();
     await loadAll();
@@ -2004,18 +2030,175 @@ async function performDeleteShipment(id){
   }
 }
 
+// ===========================================================================
+// Inventory deduction for shipments
+// ===========================================================================
+// When a shipment moves into 'Prepared' status, sacks/rolls in the shipment
+// are subtracted from Home Office inventory.
+// When a Prepared/Shipped shipment reverts to Pending/Cancelled, sacks/rolls
+// come back into inventory.
+// ===========================================================================
+
+// Maps a shipment item name to an inventory location ID.
+// Returns null if the item doesn't deduct from any tracked inventory.
+function mapItemToInventoryLocation(itemName){
+  const n=(itemName||'').toLowerCase();
+  // Mixed items (from Airtable migration) — too ambiguous to auto-deduct
+  if(n.includes('mixed item'))return null;
+  // Sewn sacks → home_sacks
+  if(n.includes('sewn')&&n.includes('sack'))return {id:'home_sacks',type:'Sewn Sacks'};
+  if(n.includes('garden tower sack')&&!n.includes('mini'))return {id:'home_sacks',type:'Sewn Sacks'};
+  // "Mini" sacks count as sacks too in the Home Office bin
+  if(n.match(/^minis?$/)||n.includes('garden tower mini'))return {id:'home_sacks',type:'Sewn Sacks'};
+  // Rolls (uncut tower fabric)
+  if(n.includes('roll')&&!n.includes('payroll'))return {id:'home_rolls',type:'Rolls'};
+  // Welcome kits, tracking tags, etc. — not tracked in inventory
+  return null;
+}
+
+// Returns a list of {locationId, itemType, qty} entries that this shipment
+// would deduct from inventory.
+function shipmentInventoryImpact(shipment){
+  const items=JSON.parse(shipment.items_json||'[]');
+  const impact=[];
+  items.forEach(item=>{
+    const loc=mapItemToInventoryLocation(item.name);
+    if(loc&&item.qty>0){
+      impact.push({location_id:loc.id,item_type:loc.type,qty:item.qty,itemName:item.name});
+    }
+  });
+  return impact;
+}
+
+// Apply an inventory delta (positive = add back, negative = deduct).
+// Returns {ok, newQty, locationName, itemType} or null on no-op.
+async function adjustInventoryForShipment(impact,delta,shipmentNumber){
+  // delta = +1 (return to inventory) or -1 (take from inventory)
+  if(!impact.length)return [];
+  const results=[];
+  for(const entry of impact){
+    const change=entry.qty*delta;
+    const existing=DATA.inventory.find(x=>x.location_id===entry.location_id);
+    const oldQty=existing?(existing.stock_level||0):0;
+    const newQty=oldQty+change;
+    const locInfo=LOCATIONS.find(l=>l.id===entry.location_id);
+    const locationName=locInfo?locInfo.name:entry.location_id;
+
+    if(dbReady){
+      try{
+        if(existing){
+          await fetch(`${SUPABASE_URL}/rest/v1/gt_inventory?id=eq.${existing.id}`,{
+            method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},
+            body:JSON.stringify({stock_level:newQty})
+          });
+        }else{
+          await sbPost('gt_inventory',{
+            location_id:entry.location_id,location_name:locationName,
+            item_type:entry.item_type,stock_level:newQty
+          },'return=minimal');
+        }
+        await sbPost('gt_inventory_log',{
+          location_id:entry.location_id,location_name:locationName,
+          item_type:entry.item_type,change_qty:change,new_qty:newQty,
+          notes:`Shipment #${shipmentNumber} — ${delta>0?'returned to':'pulled for'} prep (${entry.itemName})`
+        },'return=minimal');
+      }catch(e){console.error('Inventory adjust failed:',e);}
+    }
+    if(existing)existing.stock_level=newQty;
+    else DATA.inventory.push({
+      location_id:entry.location_id,location_name:locationName,
+      item_type:entry.item_type,stock_level:newQty
+    });
+    DATA.invLog.unshift({
+      location_id:entry.location_id,location_name:locationName,
+      item_type:entry.item_type,change_qty:change,new_qty:newQty,
+      notes:`Shipment #${shipmentNumber} — ${delta>0?'returned to':'pulled for'} prep (${entry.itemName})`,
+      created_at:new Date().toISOString()
+    });
+    results.push({locationName,itemType:entry.item_type,qty:entry.qty,newQty,oldQty});
+  }
+  return results;
+}
+
+// Decides whether inventory should be deducted/restored based on a status
+// transition. Returns {action: 'deduct'|'restore'|null}.
+//   Pending → Prepared    : deduct
+//   Pending → Shipped     : deduct (skipped Prepared, but pull anyway)
+//   Prepared → Shipped    : no-op (already deducted at Prepared)
+//   Prepared → Pending    : restore
+//   Shipped → Prepared    : no-op (still gone from inventory)
+//   Shipped → Pending     : restore
+//   any → Cancelled       : restore (only if was Prepared/Shipped)
+function inventoryActionForStatusChange(oldStatus,newStatus){
+  const wasOut=oldStatus==='Prepared'||oldStatus==='Shipped';
+  const isOut =newStatus==='Prepared'||newStatus==='Shipped';
+  if(!wasOut && isOut) return 'deduct';
+  if(wasOut && !isOut) return 'restore';
+  return null;  // no change to inventory
+}
+
+// Helper that handles the full inventory side-effect for a status change.
+// Includes a low-stock warning if deducting more than available.
+async function processInventoryForStatusChange(shipment,oldStatus,newStatus){
+  const action=inventoryActionForStatusChange(oldStatus,newStatus);
+  if(!action)return null;
+  const impact=shipmentInventoryImpact(shipment);
+  if(!impact.length)return null;
+
+  // Warn if deducting more than available
+  if(action==='deduct'){
+    const shortages=[];
+    impact.forEach(entry=>{
+      const cur=DATA.inventory.find(x=>x.location_id===entry.location_id);
+      const have=cur?(cur.stock_level||0):0;
+      if(have<entry.qty){
+        shortages.push(`${entry.itemName}: need ${entry.qty}, have ${have}`);
+      }
+    });
+    if(shortages.length){
+      // Allow but warn
+      showToast('⚠ Low stock: '+shortages.join('; '),'error');
+    }
+  }
+
+  const delta=action==='deduct'?-1:+1;
+  const results=await adjustInventoryForShipment(impact,delta,shipment.shipment_number);
+  if(results.length){
+    const summary=results.map(r=>`${r.qty} ${r.itemType} ${delta<0?'→':'←'} ${r.locationName}`).join(', ');
+    showToast(`📦 Inventory ${action==='deduct'?'pulled':'returned'}: ${summary}`,'success');
+  }
+  return results;
+}
+
 async function saveShipmentUpdate(id){
   const status=document.getElementById('status-select')?.value||'Pending';
   const tracking=document.getElementById('tracking-input')?.value||'';
   const cost=parseFloat(document.getElementById('cost-input')?.value)||null;
   const s=DATA.shipments.find(x=>x.id===id);
-  if(s){s.status=status;s.tracking_number=tracking;s.shipping_cost=cost;}
+  if(!s)return;
+  const oldStatus=s.status||'Pending';
+
+  // Warn (but don't block) if going to Shipped without tracking + cost
+  if(status==='Shipped' && (!tracking || !cost)){
+    const missing=[];
+    if(!tracking)missing.push('tracking number');
+    if(!cost)missing.push('shipping cost');
+    if(!confirm(`Mark as Shipped without ${missing.join(' and ')}?\n\nYou can add these later, but typically a Shipped status means it's gone with these recorded.`)){
+      return;
+    }
+  }
+
+  s.status=status;s.tracking_number=tracking;s.shipping_cost=cost;
   if(dbReady){
     await fetch(`${SUPABASE_URL}/rest/v1/gt_shipments?id=eq.${id}`,{
       method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},
       body:JSON.stringify({status,tracking_number:tracking,shipping_cost:cost})
     });
   }
+
+  // Adjust inventory if status crossed the in/out boundary
+  await processInventoryForStatusChange(s,oldStatus,status);
+
   closeModal();
   renderAll();
   showToast('Shipment updated','success');
