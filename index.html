@@ -2126,7 +2126,19 @@ function renderRouteView(){
     return true;
   });
   const done=agencies.filter(n=>routeDeliveries[currentWeek+'_'+currentDay+'_'+n]!==undefined);
-  const totalExpected=agencies.reduce((s,n)=>{const a=DATA.agencies.find(ag=>ag.name===n||ag.name===normalizeAgencyName(n));return s+(a?.weekly_bag_count||0);},0);
+  // Expected bags = sum of each agency's bags_per_delivery so the total matches
+  // what each card shows individually. For monthly agencies this multiplies the
+  // weekly count by 4 (since they get the whole month's drop on their day),
+  // for biweekly by 2, and weekly stays as-is.
+  const totalExpected=agencies.reduce((s,n)=>{
+    const a=DATA.agencies.find(ag=>ag.name===n||ag.name===normalizeAgencyName(n));
+    if(!a)return s;
+    const freq=a.delivery_frequency||'Weekly';
+    const weekly=a.weekly_bag_count||0;
+    const perDelivery=a.bags_per_delivery||
+      (freq==='Biweekly'?weekly*2:freq==='Monthly'?weekly*4:weekly);
+    return s+perDelivery;
+  },0);
   const totalDelivered=agencies.reduce((s,n)=>{const key=currentWeek+'_'+currentDay+'_'+n;return s+(routeDeliveries[key]||0);},0);
   if(summaryEl) summaryEl.innerHTML=adminBar+`<div style="display:flex;gap:12px;margin-bottom:4px;">
     <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Stops today</div><div class="metric-value">${agencies.length}</div></div>
