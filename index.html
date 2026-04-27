@@ -1118,6 +1118,7 @@ async function init(){
   try{
     await sbGet('agencies','select=id&limit=1');
     dbReady=true;
+    await loadSeasonSettings();
     await loadAll();
   }catch(e){
     loadSeedData();
@@ -1190,6 +1191,12 @@ function renderAll(){
   renderAgencies();
   renderRequests();
   renderRecipe();
+  // Auto-pick the right week (Week 1/2/3/4) based on today's date
+  // before rendering the schedule. Users can still manually override.
+  const detectedWeek=detectCurrentWeekNumber();
+  currentWeek=detectedWeek;
+  document.querySelectorAll('.week-btn').forEach(b=>b.classList.remove('btn-primary'));
+  document.getElementById('week-btn-'+detectedWeek)?.classList.add('btn-primary');
   renderRouteView();
   renderHome();
 }
@@ -1799,7 +1806,7 @@ async function adjustInventory(productName, delta, source){
 // ---- Route data (4-week rotation from wall chart) ----
 const ROUTE_DATA={1:{Monday:['Horizon','Longview','Parkside','Hillcrest Jr','Ascent Academy'],Tuesday:['Oquirrh','Westvale','Copper Canyon','Columbia','Mountain Shadows'],Wednesday:['Silver Hills','Taylorsville Elementary','Eisenhower Jr.','Stansbury Elementary','Farnsworth']},2:{Monday:['McMillan','Liberty','Hillcrest High','Union Middle','Grant'],Tuesday:['Heartland','Majestic','Westvale','Terra Linda','Oquirrh'],Wednesday:['Beacon Heights','Highland High','Stansbury Elementary','Pacific Heritage Academy','Dos Mundos Academy']},3:{Monday:['Parkside','Murray High','Riverview Jr','Horizon'],Tuesday:['Oquirrh','Westvale','Copper Canyon','Columbia'],Wednesday:['Silver Hills','Taylorsville Elementary','Eisenhower Jr.','Stansbury Elementary','Farnsworth']},4:{Monday:['Union Middle','Midvale Middle School','Childrens Justice Center','Grant'],Tuesday:['Heartland','Majestic','Westvale','Terra Linda','Oquirrh'],Wednesday:['Pacific Heritage Academy','Highland High','Stansbury Elementary','Dos Mundos Academy']}};
 
-let currentWeek=1;
+let currentWeek=1;  // overridden on init by detectCurrentWeekNumber()
 let currentDay='Monday';
 let schedTab='routes';
 let routeDeliveries={};
@@ -1828,14 +1835,90 @@ function setSchedTab(tab){
 }
 
 function renderRouteView(){
-  const agencies=ROUTE_DATA[currentWeek]?.[currentDay]||[];
   const summaryEl=document.getElementById('route-summary');
   const cardsEl=document.getElementById('route-cards');
   if(!cardsEl)return;
+
+  const inSummer=isInSummerMode();
+  // Pretty label for the toggle button — flip what's shown based on state
+  const summerToggleLabel=inSummer?'📚 Switch to school year':'🏖 Switch to summer mode';
+  const summerToggleStyle=inSummer
+    ? 'background:var(--green-light);color:var(--green-dark);border-color:var(--green);'
+    : 'background:#fff8e1;color:var(--amber-text);border-color:var(--amber);';
+
+  // Admin button bar — visible in all modes
+  const adminBar=`<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <button class="btn btn-sm" onclick="toggleSummerMode()" style="${summerToggleStyle}font-size:11px;padding:5px 12px;font-weight:600;" title="Switch the schedule between school-year and summer modes.">${summerToggleLabel}</button>
+    <button class="btn btn-sm" onclick="setThisWeekAsWeek1()" style="background:var(--green-light);color:var(--green-dark);border-color:var(--green);font-size:11px;padding:5px 12px;" title="Mark this Monday as the start of a new 4-week rotation. Use at the start of each school year.">📌 Set this week as Week 1</button>
+    <button class="btn btn-sm" onclick="pauseForSummer()" style="background:var(--amber-light);color:var(--amber-text);border-color:var(--amber);font-size:11px;padding:5px 12px;" title="Pause deliveries for summer break. The schedule will hide until you set a new Week 1 in the fall.">⏸ Pause for summer</button>
+  </div>`;
+
+  // ============================================================
+  // SUMMER MODE — show only year-round agencies on one delivery day
+  // ============================================================
+  if(inSummer){
+    const yearRound=(DATA.agencies||[]).filter(a=>a.operates_year_round && a.is_active);
+    const sumDay=SEASON_SETTINGS.summer_delivery_day||'Monday';
+    // Use a non-week-numbered key so summer logs don't collide with school-year ones
+    const keyFor=name=>'summer_'+sumDay+'_'+name;
+    const done=yearRound.filter(a=>routeDeliveries[keyFor(a.name)]!==undefined);
+    const totalExpected=yearRound.reduce((s,a)=>s+(a.weekly_bag_count||0),0);
+    const totalDelivered=yearRound.reduce((s,a)=>s+(routeDeliveries[keyFor(a.name)]||0),0);
+
+    // Day picker (Mon/Tue/Wed/Thu/Fri)
+    const days=['Monday','Tuesday','Wednesday','Thursday','Friday'];
+    const dayPicker=`<div style="background:#fff8e1;border:1px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:600;color:var(--amber-text);">🏖 Summer mode active</span>
+        <span style="font-size:12px;color:var(--text-muted);">Delivery day:</span>
+        ${days.map(d=>`<button class="btn btn-sm" onclick="setSummerDeliveryDay('${d}')" style="font-size:11px;padding:4px 10px;${sumDay===d?'background:var(--amber);color:#fff;border-color:var(--amber);font-weight:600;':''}">${d.slice(0,3)}</button>`).join('')}
+        <span style="font-size:11px;color:var(--text-faint);margin-left:auto;">${yearRound.length} year-round agencies</span>
+      </div>
+    </div>`;
+
+    if(summaryEl) summaryEl.innerHTML=adminBar+dayPicker+`<div style="display:flex;gap:12px;margin-bottom:4px;">
+      <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Stops today</div><div class="metric-value">${yearRound.length}</div></div>
+      <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Completed</div><div class="metric-value green">${done.length}</div></div>
+      <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Expected bags</div><div class="metric-value">${totalExpected.toLocaleString()}</div></div>
+      <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Bags logged</div><div class="metric-value green">${totalDelivered.toLocaleString()}</div></div>
+    </div>`;
+
+    if(!yearRound.length){
+      cardsEl.innerHTML=`<div class="state-box">
+        No year-round agencies set up yet. Go to <strong>Agencies</strong> and click the
+        <strong>School year</strong> button next to any agency to mark it as year-round.
+      </div>`;
+      return;
+    }
+
+    cardsEl.innerHTML=yearRound.map((a,idx)=>{
+      const expected=a.weekly_bag_count||0;
+      const cartSwap=a.cart_swap||false;
+      const key=keyFor(a.name);
+      const isDone=routeDeliveries[key]!==undefined;
+      return `<div class="route-card${isDone?' done':''}" id="route-card-summer-${idx}">
+        <div style="flex:1;">
+          <div class="route-name">${a.name}${cartSwap?'<span class="cart-swap-tag">🔄 Cart swap</span>':''}<span style="margin-left:8px;font-size:10px;background:var(--amber-light);color:var(--amber-text);padding:2px 6px;border-radius:10px;font-weight:600;">YEAR-ROUND</span></div>
+          <div class="route-bags">Expected: <strong>${expected}</strong> bags${isDone?' · <span style="color:var(--green-dark);font-weight:600;">✓ Logged: '+routeDeliveries[key]+' bags</span>':''}</div>
+        </div>
+        ${!isDone?`<div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" class="route-input" id="route-input-summer-${idx}" placeholder="${expected}" min="0" value="${expected}" />
+          <button class="route-done-btn" onclick="logSummerDelivery(${idx},'${a.name.replace(/'/g,'\\\'')}','${key}')">Mark delivered</button>
+          <button class="btn btn-sm" style="color:var(--amber-text);" onclick="logSummerSkipped('${a.name.replace(/'/g,'\\\'')}','${key}')">Skipped</button>
+        </div>`:`<button class="btn btn-sm route-done-btn undone" onclick="undoDelivery('${a.name.replace(/'/g,'\\\'')}','${key}')">Undo</button>`}
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // ============================================================
+  // SCHOOL-YEAR MODE — full Mon/Tue/Wed weekly rotation
+  // ============================================================
+  const agencies=ROUTE_DATA[currentWeek]?.[currentDay]||[];
   const done=agencies.filter(n=>routeDeliveries[currentWeek+'_'+currentDay+'_'+n]!==undefined);
   const totalExpected=agencies.reduce((s,n)=>{const a=DATA.agencies.find(ag=>ag.name===n||ag.name===normalizeAgencyName(n));return s+(a?.weekly_bag_count||0);},0);
   const totalDelivered=agencies.reduce((s,n)=>{const key=currentWeek+'_'+currentDay+'_'+n;return s+(routeDeliveries[key]||0);},0);
-  if(summaryEl) summaryEl.innerHTML=`<div style="display:flex;gap:12px;margin-bottom:4px;">
+  if(summaryEl) summaryEl.innerHTML=adminBar+`<div style="display:flex;gap:12px;margin-bottom:4px;">
     <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Stops today</div><div class="metric-value">${agencies.length}</div></div>
     <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Completed</div><div class="metric-value green">${done.length}</div></div>
     <div class="metric" style="flex:1;padding:14px 18px;"><div class="metric-label">Expected bags</div><div class="metric-value">${totalExpected.toLocaleString()}</div></div>
@@ -1866,6 +1949,53 @@ function renderRouteView(){
   cardsEl.innerHTML=cards;
 }
 
+// Summer-mode delivery loggers (year-round agencies on a single day)
+async function logSummerDelivery(idx,agencyName,key){
+  const input=document.getElementById('route-input-summer-'+idx);
+  const bags=parseInt(input?.value)||0;
+  routeDeliveries[key]=bags;
+  if(dbReady){
+    try{
+      await sbPost('delivery_schedule',{
+        week_start_date:getMondayOfCurrentWeek(),
+        agency_name:agencyName,
+        week_number:'summer',
+        bags_delivered:bags,
+        expected_bags:DATA.agencies.find(a=>a.name===agencyName)?.weekly_bag_count||0,
+        delivery_status:bags>0?'Delivered':'Skipped',
+        meals_delivered:bags*7
+      },'return=minimal');
+      DATA.schedule.unshift({
+        agency_name:agencyName,
+        week_start_date:getMondayOfCurrentWeek(),
+        bags_delivered:bags,
+        delivery_status:bags>0?'Delivered':'Skipped',
+        meals_delivered:bags*7
+      });
+    }catch(e){console.error(e);}
+  }
+  renderRouteView();
+  showToast('✓ '+agencyName+' logged ('+bags+' bags)','success');
+}
+
+async function logSummerSkipped(agencyName,key){
+  routeDeliveries[key]=0;
+  if(dbReady){
+    try{
+      await sbPost('delivery_schedule',{
+        week_start_date:getMondayOfCurrentWeek(),
+        agency_name:agencyName,
+        week_number:'summer',
+        bags_delivered:0,
+        delivery_status:'Skipped',
+        meals_delivered:0
+      },'return=minimal');
+    }catch(e){console.error(e);}
+  }
+  renderRouteView();
+  showToast(agencyName+' marked as skipped','info');
+}
+
 async function logRouteDelivery(idx,agencyName,key){
   const input=document.getElementById('route-input-'+idx);
   const bags=parseInt(input?.value)||0;
@@ -1889,9 +2019,163 @@ async function logSkipped(agencyName,key){
 
 function undoDelivery(agencyName,key){delete routeDeliveries[key];renderRouteView();showToast('Delivery for '+agencyName+' removed','info');}
 
+// Season + week rotation settings, loaded from kids_eat_settings table on init.
+// If the table is empty/unreachable, falls back to a hardcoded April 20, 2026 = Week 1.
+let SEASON_SETTINGS={
+  week1_reference_date:'2026-04-20',
+  season_start_date:'2025-08-25',
+  season_end_date:'2026-05-29',
+  summer_delivery_day:'Monday',
+};
+
+// Lets the user manually flip into/out of summer mode regardless of the date.
+// null = use date-based detection; true/false = manual override
+let manualSummerMode=null;
+
+async function loadSeasonSettings(){
+  try{
+    const rows=await sbGet('kids_eat_settings','select=*&limit=1');
+    if(rows && rows.length){
+      SEASON_SETTINGS={
+        week1_reference_date:rows[0].week1_reference_date||SEASON_SETTINGS.week1_reference_date,
+        season_start_date:rows[0].season_start_date||SEASON_SETTINGS.season_start_date,
+        season_end_date:rows[0].season_end_date||SEASON_SETTINGS.season_end_date,
+        summer_delivery_day:rows[0].summer_delivery_day||SEASON_SETTINGS.summer_delivery_day,
+      };
+    }
+  }catch(e){
+    console.warn('Could not load season settings, using defaults',e);
+  }
+}
+
+// Returns true if today is during summer break (between season_end and next season_start).
+function isSummerBreak(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const seasonEnd=new Date(SEASON_SETTINGS.season_end_date+'T00:00:00');
+  const seasonStart=new Date(SEASON_SETTINGS.season_start_date+'T00:00:00');
+  // If we're past the end AND the start is in the future (or also past),
+  // we're between school years.
+  return today>seasonEnd && today<seasonStart || (today>seasonEnd && seasonStart<=seasonEnd);
+}
+
+// True when the schedule should show only year-round agencies on a single day.
+// Manual override beats date detection.
+function isInSummerMode(){
+  if(manualSummerMode!==null)return manualSummerMode;
+  return isSummerBreak();
+}
+
+// Manual toggle into/out of summer mode (button in schedule view).
+function toggleSummerMode(){
+  manualSummerMode=!isInSummerMode();
+  showToast(manualSummerMode?'🏖 Summer mode on — year-round agencies only':'📚 School year mode — full schedule','success');
+  renderRouteView();
+}
+
+// Persist a chosen summer delivery day (Mon/Tue/Wed/etc).
+async function setSummerDeliveryDay(day){
+  SEASON_SETTINGS.summer_delivery_day=day;
+  if(dbReady){
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/kids_eat_settings?id=eq.1`,{
+        method:'PATCH',
+        headers:{...HDR,'Prefer':'return=minimal'},
+        body:JSON.stringify({summer_delivery_day:day,updated_at:new Date().toISOString()})
+      });
+    }catch(e){showToast('Could not save: '+e.message,'error');}
+  }
+  // Also update currentDay so the existing route logic shows the right one
+  currentDay=day;
+  renderRouteView();
+}
+
+// Auto-detect which week of the 4-week rotation we're in,
+// based on the week1_reference_date stored in the settings.
+function detectCurrentWeekNumber(){
+  const refMonday=new Date(SEASON_SETTINGS.week1_reference_date+'T00:00:00');
+  refMonday.setHours(0,0,0,0);
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  const day=today.getDay();
+  const diff=day===0?-6:1-day;
+  const thisMonday=new Date(today);
+  thisMonday.setDate(today.getDate()+diff);
+  const msPerWeek=7*24*60*60*1000;
+  const weeksSinceRef=Math.round((thisMonday-refMonday)/msPerWeek);
+  return ((weeksSinceRef%4)+4)%4+1;
+}
+
+// Save a new Week 1 reference (admin: "Set this week as Week 1")
+async function setThisWeekAsWeek1(){
+  if(!confirm('Mark this week as Week 1?\n\nAll future weeks will count forward from this Monday. This is usually done at the start of a new school year.'))return;
+  // Calculate THIS Monday in local time
+  const d=new Date();
+  const day=d.getDay();
+  const diff=day===0?-6:1-day;
+  d.setDate(d.getDate()+diff);
+  const yyyy=d.getFullYear();
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  const newRef=`${yyyy}-${mm}-${dd}`;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/kids_eat_settings?id=eq.1`,{
+      method:'PATCH',
+      headers:{...HDR,'Prefer':'return=minimal'},
+      body:JSON.stringify({week1_reference_date:newRef,season_start_date:newRef,updated_at:new Date().toISOString()})
+    });
+    SEASON_SETTINGS.week1_reference_date=newRef;
+    SEASON_SETTINGS.season_start_date=newRef;
+    showToast('✓ Week 1 set to '+newRef+' — schedule will rotate forward from this Monday','success');
+    // Refresh week selection
+    const detectedWeek=detectCurrentWeekNumber();
+    currentWeek=detectedWeek;
+    document.querySelectorAll('.week-btn').forEach(b=>b.classList.remove('btn-primary'));
+    document.getElementById('week-btn-'+detectedWeek)?.classList.add('btn-primary');
+    renderRouteView();
+  }catch(e){
+    console.error(e);
+    showToast('Could not save: '+e.message,'error');
+  }
+}
+
+// Save end-of-season ("Pause for summer")
+async function pauseForSummer(){
+  // Calculate THIS Sunday in local time as season end
+  const d=new Date();
+  const day=d.getDay();
+  const diff=day===0?0:7-day;
+  d.setDate(d.getDate()+diff);
+  const yyyy=d.getFullYear();
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  const seasonEnd=`${yyyy}-${mm}-${dd}`;
+  if(!confirm('Pause deliveries after this week?\n\nThe schedule will show a "Summer break" message until you click "Set this week as Week 1" again in the fall.\n\nSeason will end: '+seasonEnd))return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/kids_eat_settings?id=eq.1`,{
+      method:'PATCH',
+      headers:{...HDR,'Prefer':'return=minimal'},
+      body:JSON.stringify({season_end_date:seasonEnd,updated_at:new Date().toISOString()})
+    });
+    SEASON_SETTINGS.season_end_date=seasonEnd;
+    showToast('✓ Season ends '+seasonEnd+' — summer break message will show after this week','success');
+    renderRouteView();
+  }catch(e){
+    console.error(e);
+    showToast('Could not save: '+e.message,'error');
+  }
+}
+
 function getMondayOfCurrentWeek(){
-  const d=new Date();const day=d.getDay();const diff=d.getDate()-(day===0?6:day-1);
-  const monday=new Date(d.setDate(diff));return monday.toISOString().split('T')[0];
+  // Returns the YYYY-MM-DD of Monday of THIS week, in local time.
+  // Avoids the toISOString() bug that shifts dates by a day in non-UTC timezones.
+  const d=new Date();
+  const day=d.getDay();
+  const diff=day===0?-6:1-day;
+  d.setDate(d.getDate()+diff);
+  const yyyy=d.getFullYear();
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function openSendNotifications(){
@@ -3020,6 +3304,9 @@ function renderAgencies(q){
       <td style="padding:10px 14px;text-align:center;">
         <button class="btn btn-sm" onclick="toggleCartSwap(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.cart_swap?'background:var(--blue-light);color:#0C447C;border-color:var(--blue);':''}">${a.cart_swap?'✓ Cart swap':'Cart swap'}</button>
       </td>
+      <td style="padding:10px 14px;text-align:center;">
+        <button class="btn btn-sm" onclick="toggleYearRound(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.operates_year_round?'background:var(--amber-light);color:var(--amber-text);border-color:var(--amber);':''}" title="If checked, agency continues deliveries during summer break">${a.operates_year_round?'✓ Year-round':'School year'}</button>
+      </td>
       <td style="padding:10px 14px;text-align:right;">
         <button class="btn btn-sm" onclick="openEditAgency('${a.id||''}','${(a.name||'').replace(/'/g,"\\'")}',${weeklyBags},'${freq}',${perDelivery})" style="font-size:11px;padding:3px 10px;background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button>
       </td>
@@ -3037,6 +3324,7 @@ function renderAgencies(q){
       <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:right;">Delivered 2026</th>
       <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Status</th>
       <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Cart</th>
+      <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Year-round</th>
       <th></th>
     </tr></thead>
     <tbody>${rows}</tbody>
@@ -3077,6 +3365,24 @@ async function toggleCartSwap(idx,id,airtableId){
   if(dbReady&&id){try{await fetch(`${SUPABASE_URL}/rest/v1/agencies?id=eq.${id}`,{method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify({cart_swap:newVal})});}catch(e){showToast('Could not save: '+e.message,'error');return;}}
   agency.cart_swap=newVal;renderAgencies();
   showToast(newVal?`✓ ${agency.name} marked as cart swap`:`${agency.name} cart swap removed`,'success');
+}
+
+async function toggleYearRound(idx,id,airtableId){
+  const agency=DATA.agencies.find(a=>(a.id===id)||(a.airtable_id===airtableId));
+  if(!agency)return;
+  const newVal=!agency.operates_year_round;
+  if(dbReady&&id){
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/agencies?id=eq.${id}`,{
+        method:'PATCH',
+        headers:{...HDR,'Prefer':'return=minimal'},
+        body:JSON.stringify({operates_year_round:newVal})
+      });
+    }catch(e){showToast('Could not save: '+e.message,'error');return;}
+  }
+  agency.operates_year_round=newVal;
+  renderAgencies();
+  showToast(newVal?`✓ ${agency.name} now delivers year-round`:`${agency.name} school-year only`,'success');
 }
 
 
@@ -3505,6 +3811,7 @@ async function init(){
   try{
     await sbGet('agencies','select=id&limit=1');
     dbReady=true;
+    await loadSeasonSettings();
     await loadAll();
   }catch(e){
     loadSeedData();
