@@ -1243,6 +1243,7 @@ async function loadAll(){
       showToast('Database empty — syncing from Airtable...','info');
       await syncFromAirtable();
     }else{
+      buildRouteData();
       renderAll();
     }
   }catch(e){
@@ -1264,6 +1265,7 @@ function loadSeedData(){
   DATA.annualInv=[];
   DATA.startingStock=[];
   DATA.holiday=[];
+  buildRouteData();
   renderAll();
   showToast('Preview mode — run SQL setup to go live','info');
 }
@@ -1914,7 +1916,31 @@ async function adjustInventory(productName, delta, source){
 }
 
 // ---- Route data (4-week rotation from wall chart) ----
-const ROUTE_DATA={1:{Monday:['Horizon','Longview','Parkside','Hillcrest Jr','Ascent Academy'],Tuesday:['Oquirrh','Westvale','Copper Canyon','Columbia','Mountain Shadows'],Wednesday:['Silver Hills','Taylorsville Elementary','Eisenhower Jr.','Stansbury Elementary','Farnsworth']},2:{Monday:['McMillan','Liberty','Hillcrest High','Union Middle','Grant'],Tuesday:['Heartland','Majestic','Westvale','Terra Linda','Oquirrh'],Wednesday:['Beacon Heights','Highland High','Stansbury Elementary','Pacific Heritage Academy','Dos Mundos Academy']},3:{Monday:['Parkside','Murray High','Riverview Jr','Horizon'],Tuesday:['Oquirrh','Westvale','Copper Canyon','Columbia'],Wednesday:['Silver Hills','Taylorsville Elementary','Eisenhower Jr.','Stansbury Elementary','Farnsworth']},4:{Monday:['Union Middle','Midvale Middle School','Childrens Justice Center','Grant'],Tuesday:['Heartland','Majestic','Westvale','Terra Linda','Oquirrh'],Wednesday:['Pacific Heritage Academy','Highland High','Stansbury Elementary','Dos Mundos Academy']}};
+// ROUTE_DATA used to be hardcoded here. It's now derived dynamically from the
+// agencies table (delivery_day + assigned_weeks columns) by buildRouteData(),
+// so admins can edit the schedule via the agencies page without code changes.
+// The const below is kept as a fallback for partial offline rendering.
+let ROUTE_DATA={1:{Monday:[],Tuesday:[],Wednesday:[]},2:{Monday:[],Tuesday:[],Wednesday:[]},3:{Monday:[],Tuesday:[],Wednesday:[]},4:{Monday:[],Tuesday:[],Wednesday:[]}};
+
+// Builds ROUTE_DATA from DATA.agencies. Called after every load and after any
+// agency edit. Uses the assigned_weeks ('1,3') and delivery_day fields.
+function buildRouteData(){
+  const fresh={1:{Monday:[],Tuesday:[],Wednesday:[],Thursday:[],Friday:[]},
+               2:{Monday:[],Tuesday:[],Wednesday:[],Thursday:[],Friday:[]},
+               3:{Monday:[],Tuesday:[],Wednesday:[],Thursday:[],Friday:[]},
+               4:{Monday:[],Tuesday:[],Wednesday:[],Thursday:[],Friday:[]}};
+  (DATA.agencies||[]).forEach(a=>{
+    if(a.is_active===false)return;
+    if(!a.delivery_day||!a.assigned_weeks)return;
+    const weeks=String(a.assigned_weeks).split(',').map(s=>parseInt(s.trim())).filter(n=>n>=1&&n<=4);
+    weeks.forEach(wk=>{
+      if(fresh[wk] && fresh[wk][a.delivery_day] && !fresh[wk][a.delivery_day].includes(a.name)){
+        fresh[wk][a.delivery_day].push(a.name);
+      }
+    });
+  });
+  ROUTE_DATA=fresh;
+}
 
 let currentWeek=1;  // overridden on init by detectCurrentWeekNumber()
 let currentDay='Monday';
@@ -3785,7 +3811,7 @@ function renderAgencies(q){
 
   if(!filtered.length){document.getElementById('ag-table').innerHTML='<div class="state-box">No agencies match your filters</div>';return;}
 
-  const rows=filtered.map(a=>{
+  const rows=filtered.map((a,rowIdx)=>{
     const cartBadge=a.cart_swap?'<span class="cart-swap-tag">🔄</span>':'';
     const freq=a.delivery_frequency||'Weekly';
     const weeklyBags=a.weekly_bag_count||0;
@@ -3793,7 +3819,16 @@ function renderAgencies(q){
     const realIdx=DATA.agencies.findIndex(x=>x.id===a.id);
     const freqColor=freq==='Weekly'?'background:#dcfce7;color:#166534;':freq==='Biweekly'?'background:#dbeafe;color:#1e40af;':freq==='Monthly'?'background:#fef3c7;color:#92400e;':'background:var(--bg);color:var(--text-muted);';
     const districtDot=byDistrict?`<span style="font-size:11px;color:var(--text-muted);margin-left:6px;">${a.district||''}</span>`:``;
-    return `<tr style="opacity:${a.is_active?'1':'0.45'};">
+    // Build human-readable schedule label: "Mon · Wks 1, 3" or "—"
+    const dayShort=a.delivery_day?a.delivery_day.slice(0,3):'';
+    const wks=a.assigned_weeks?String(a.assigned_weeks).split(',').map(s=>s.trim()).filter(Boolean):[];
+    const wksLabel=wks.length===4?'all weeks':(wks.length?'Wks '+wks.join(', '):'');
+    const scheduleCell=(a.delivery_day&&wks.length)
+      ?`<div style="font-size:12px;font-weight:600;color:var(--green-dark);">${dayShort}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${wksLabel}</div>`
+      :`<span style="font-size:11px;color:var(--text-faint);font-style:italic;">Not assigned</span>`;
+    // Zebra striping — slightly tinted background on every other row
+    const stripeBg=rowIdx%2===1?'background:rgba(94,204,201,0.05);':'';
+    return `<tr style="opacity:${a.is_active?'1':'0.45'};${stripeBg}border-bottom:1px solid var(--border);">
       <td style="padding:10px 14px;">
         <strong style="font-size:13px;">${a.name||'—'}</strong>${cartBadge}${districtDot}
       </td>
@@ -3802,6 +3837,7 @@ function renderAgencies(q){
         <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;${freqColor}">${freq}</span>
         ${perDelivery>0&&freq!=='As Needed'?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${perDelivery} per visit</div>`:''}
       </td>
+      <td style="padding:10px 14px;">${scheduleCell}</td>
       <td style="padding:10px 14px;text-align:center;font-family:'Courier New',monospace;font-size:13px;">${weeklyBags||'—'}</td>
       <td style="padding:10px 14px;text-align:right;font-family:'Courier New',monospace;font-size:13px;">${(a.total_bags_delivered_2026||0).toLocaleString()}</td>
       <td style="padding:10px 14px;text-align:center;">
@@ -3814,7 +3850,7 @@ function renderAgencies(q){
         <button class="btn btn-sm" onclick="toggleYearRound(${realIdx},'${a.id||''}','${a.airtable_id||''}')" style="font-size:11px;padding:3px 10px;${a.operates_year_round?'background:var(--amber-light);color:var(--amber-text);border-color:var(--amber);':''}" title="If checked, agency continues deliveries during summer break">${a.operates_year_round?'✓ Year-round':'School year'}</button>
       </td>
       <td style="padding:10px 14px;text-align:right;">
-        <button class="btn btn-sm" onclick="openEditAgency('${a.id||''}','${(a.name||'').replace(/'/g,"\\'")}',${weeklyBags},'${freq}',${perDelivery})" style="font-size:11px;padding:3px 10px;background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button>
+        <button class="btn btn-sm" onclick="openEditAgency('${a.id||''}')" style="font-size:11px;padding:3px 10px;background:var(--teal-light,#e8fafa);color:var(--green-dark);border-color:var(--green);">✏ Edit</button>
       </td>
     </tr>`;
   }).join('');
@@ -3826,6 +3862,7 @@ function renderAgencies(q){
       <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;">Agency</th>
       ${districtCol}
       <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;">Frequency</th>
+      <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;">Schedule</th>
       <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Bags/wk</th>
       <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:right;">Delivered 2026</th>
       <th style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;text-align:center;">Status</th>
@@ -3892,19 +3929,65 @@ async function toggleYearRound(idx,id,airtableId){
 }
 
 
-function openEditAgency(id, name, weeklyBags, freq, perDelivery){
+function openEditAgency(id){
+  const agency=DATA.agencies.find(a=>a.id===id);
+  if(!agency){showToast('Agency not found','error');return;}
+  const name=agency.name||'';
+  const weeklyBags=agency.weekly_bag_count||0;
+  const freq=agency.delivery_frequency||'Weekly';
+  const perDelivery=agency.bags_per_delivery||(freq==='Biweekly'?weeklyBags*2:freq==='Monthly'?weeklyBags*4:weeklyBags);
+  const day=agency.delivery_day||'Monday';
+  const wks=(agency.assigned_weeks?String(agency.assigned_weeks).split(',').map(s=>parseInt(s.trim())).filter(n=>n):[]);
+
   document.getElementById('modal-content').innerHTML=`
     <h2>Edit agency — ${name}</h2>
-    <p class="modal-sub">Update the bag count and delivery frequency. Changes take effect immediately.</p>
+    <p class="modal-sub">Set the delivery frequency, day, and which weeks of the rotation this agency is on. Changes take effect immediately on the schedule.</p>
+
     <div class="form-row">
       <label class="form-label">Delivery frequency</label>
       <select class="form-input" id="ea-freq">
-        <option value="Weekly" ${freq==='Weekly'?'selected':''}>Weekly</option>
+        <option value="Weekly" ${freq==='Weekly'?'selected':''}>Weekly (every week)</option>
         <option value="Biweekly" ${freq==='Biweekly'?'selected':''}>Biweekly (every 2 weeks)</option>
         <option value="Monthly" ${freq==='Monthly'?'selected':''}>Monthly (once a month)</option>
-        <option value="As Needed" ${freq==='As Needed'?'selected':''}>As Needed</option>
+        <option value="As Needed" ${freq==='As Needed'?'selected':''}>As Needed (no fixed schedule)</option>
       </select>
     </div>
+
+    <div class="form-row" id="ea-day-row">
+      <label class="form-label">Delivery day</label>
+      <select class="form-input" id="ea-day">
+        <option ${day==='Monday'?'selected':''}>Monday</option>
+        <option ${day==='Tuesday'?'selected':''}>Tuesday</option>
+        <option ${day==='Wednesday'?'selected':''}>Wednesday</option>
+        <option ${day==='Thursday'?'selected':''}>Thursday</option>
+        <option ${day==='Friday'?'selected':''}>Friday</option>
+      </select>
+    </div>
+
+    <div class="form-row" id="ea-weeks-row">
+      <label class="form-label">Weeks in 4-week rotation</label>
+      <div id="ea-weeks-display" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text);"></div>
+      <div id="ea-weeks-help" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+    </div>
+
+    <div id="ea-biweekly-pattern" class="form-row" style="display:none;">
+      <label class="form-label">Biweekly pattern</label>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-sm" id="ea-pattern-13" onclick="setBiweeklyPattern('1,3')" style="flex:1;font-size:12px;padding:8px 12px;">Weeks 1 + 3</button>
+        <button type="button" class="btn btn-sm" id="ea-pattern-24" onclick="setBiweeklyPattern('2,4')" style="flex:1;font-size:12px;padding:8px 12px;">Weeks 2 + 4</button>
+      </div>
+    </div>
+
+    <div id="ea-monthly-pattern" class="form-row" style="display:none;">
+      <label class="form-label">Which week each month?</label>
+      <div style="display:flex;gap:6px;">
+        <button type="button" class="btn btn-sm ea-monthly-btn" onclick="setMonthlyWeek(1)" style="flex:1;font-size:12px;padding:8px 12px;">Week 1</button>
+        <button type="button" class="btn btn-sm ea-monthly-btn" onclick="setMonthlyWeek(2)" style="flex:1;font-size:12px;padding:8px 12px;">Week 2</button>
+        <button type="button" class="btn btn-sm ea-monthly-btn" onclick="setMonthlyWeek(3)" style="flex:1;font-size:12px;padding:8px 12px;">Week 3</button>
+        <button type="button" class="btn btn-sm ea-monthly-btn" onclick="setMonthlyWeek(4)" style="flex:1;font-size:12px;padding:8px 12px;">Week 4</button>
+      </div>
+    </div>
+
     <div class="form-row">
       <label class="form-label">Weekly bag count <span style="font-size:11px;color:var(--text-muted);">(bags per week — base rate)</span></label>
       <input type="number" class="form-input" id="ea-weekly" value="${weeklyBags}" min="0"/>
@@ -3916,49 +3999,146 @@ function openEditAgency(id, name, weeklyBags, freq, perDelivery){
     </div>
     <div class="modal-footer">
       <button class="btn" data-action="closeModal">Cancel</button>
-      <button class="btn btn-primary" data-action="saveAgencyEdit" data-arg="${id}|${name}">Save changes</button>
+      <button class="btn btn-primary" onclick="saveAgencyEdit('${id}')">Save changes</button>
     </div>`;
   document.getElementById('modal-bg').classList.add('open');
-  // Auto-calculate bags per delivery when freq or weekly changes
-  function recalc(){
+
+  // Track the working state for the weeks selector
+  window._eaState={weeks:wks.slice()};
+
+  // Show/hide pattern UI based on frequency, and update display
+  function syncFreqUI(){
     const f=document.getElementById('ea-freq').value;
     const w=parseInt(document.getElementById('ea-weekly').value)||0;
     const auto=f==='Biweekly'?w*2:f==='Monthly'?w*4:w;
     document.getElementById('ea-perdelivery').value=auto;
+
+    const dayRow=document.getElementById('ea-day-row');
+    const weeksRow=document.getElementById('ea-weeks-row');
+    const biPattern=document.getElementById('ea-biweekly-pattern');
+    const moPattern=document.getElementById('ea-monthly-pattern');
+    const help=document.getElementById('ea-weeks-help');
+
+    if(f==='As Needed'){
+      dayRow.style.display='none';
+      weeksRow.style.display='none';
+      biPattern.style.display='none';
+      moPattern.style.display='none';
+      window._eaState.weeks=[];
+    }else{
+      dayRow.style.display='';
+      weeksRow.style.display='';
+      if(f==='Weekly'){
+        window._eaState.weeks=[1,2,3,4];
+        biPattern.style.display='none';
+        moPattern.style.display='none';
+        help.textContent='Weekly agencies are visited every week (all 4).';
+      }else if(f==='Biweekly'){
+        biPattern.style.display='';
+        moPattern.style.display='none';
+        help.textContent='Pick which 2-week pattern this agency is on.';
+        // Auto-pick a default if none set or if not biweekly-ish
+        if(!(window._eaState.weeks.length===2 && (window._eaState.weeks.join(',')==='1,3'||window._eaState.weeks.join(',')==='2,4'))){
+          window._eaState.weeks=[1,3];
+        }
+      }else if(f==='Monthly'){
+        biPattern.style.display='none';
+        moPattern.style.display='';
+        help.textContent='Pick which week of the 4-week rotation this agency gets a visit.';
+        if(window._eaState.weeks.length!==1){
+          window._eaState.weeks=[1];
+        }
+      }
+    }
+    refreshWeekDisplay();
   }
-  document.getElementById('ea-freq').addEventListener('change',recalc);
-  document.getElementById('ea-weekly').addEventListener('input',recalc);
+  window._refreshFreqUI=syncFreqUI;
+  window._refreshWeekDisplay=refreshWeekDisplay;
+
+  function refreshWeekDisplay(){
+    const display=document.getElementById('ea-weeks-display');
+    if(!display)return;
+    const weeks=window._eaState.weeks||[];
+    if(!weeks.length){
+      display.innerHTML='<span style="color:var(--text-faint);font-style:italic;">No weeks selected</span>';
+    }else{
+      display.innerHTML=weeks.sort().map(w=>`<span style="display:inline-block;background:var(--green-light);color:var(--green-dark);padding:3px 10px;border-radius:12px;font-weight:600;margin-right:6px;">Week ${w}</span>`).join('');
+    }
+    // Highlight active monthly button
+    document.querySelectorAll('.ea-monthly-btn').forEach((btn,i)=>{
+      const wkNum=i+1;
+      if(weeks.includes(wkNum)){
+        btn.style.background='var(--green)';btn.style.color='#fff';btn.style.borderColor='var(--green)';
+      }else{
+        btn.style.background='';btn.style.color='';btn.style.borderColor='';
+      }
+    });
+    // Highlight active biweekly button
+    const p13=document.getElementById('ea-pattern-13');
+    const p24=document.getElementById('ea-pattern-24');
+    if(p13 && p24){
+      const isPattern=weeks.length===2;
+      const pat=isPattern?weeks.join(','):'';
+      [p13,p24].forEach(b=>{b.style.background='';b.style.color='';b.style.borderColor='';});
+      if(pat==='1,3'){p13.style.background='var(--green)';p13.style.color='#fff';p13.style.borderColor='var(--green)';}
+      if(pat==='2,4'){p24.style.background='var(--green)';p24.style.color='#fff';p24.style.borderColor='var(--green)';}
+    }
+  }
+
+  document.getElementById('ea-freq').addEventListener('change',syncFreqUI);
+  document.getElementById('ea-weekly').addEventListener('input',syncFreqUI);
+  syncFreqUI();
 }
 
-async function saveAgencyEditFromArg(arg){
-  const parts=(arg||'').split('|');
-  const id=parts[0]||'';
-  const name=parts.slice(1).join('|');
-  return saveAgencyEdit(id, name);
+// Helpers used by the buttons inside the edit-agency modal
+function setBiweeklyPattern(pattern){
+  window._eaState.weeks=pattern.split(',').map(Number);
+  if(window._refreshWeekDisplay)window._refreshWeekDisplay();
 }
-async function saveAgencyEdit(id, name){
+function setMonthlyWeek(wk){
+  window._eaState.weeks=[wk];
+  if(window._refreshWeekDisplay)window._refreshWeekDisplay();
+}
+
+async function saveAgencyEdit(id){
+  const agency=DATA.agencies.find(a=>a.id===id);
+  if(!agency){showToast('Agency not found','error');return;}
+  const name=agency.name||'';
   const freq=document.getElementById('ea-freq').value;
   const weekly=parseInt(document.getElementById('ea-weekly').value)||0;
   const perDelivery=parseInt(document.getElementById('ea-perdelivery').value)||0;
+  const day=document.getElementById('ea-day')?.value||null;
+  const weeks=(window._eaState&&window._eaState.weeks)||[];
+  const assignedWeeks=freq==='As Needed'?null:(weeks.length?weeks.sort().join(','):null);
+  const finalDay=freq==='As Needed'?null:day;
 
   try{
     if(dbReady&&id){
       await fetch(`${SUPABASE_URL}/rest/v1/agencies?id=eq.${id}`,{
         method:'PATCH',
         headers:{...HDR,'Prefer':'return=minimal'},
-        body:JSON.stringify({delivery_frequency:freq, weekly_bag_count:weekly, bags_per_delivery:perDelivery})
+        body:JSON.stringify({
+          delivery_frequency:freq,
+          weekly_bag_count:weekly,
+          bags_per_delivery:perDelivery,
+          delivery_day:finalDay,
+          assigned_weeks:assignedWeeks
+        })
       });
     }
     // Update local data
-    const agency=DATA.agencies.find(a=>a.id===id||a.name===name);
-    if(agency){
-      agency.delivery_frequency=freq;
-      agency.weekly_bag_count=weekly;
-      agency.bags_per_delivery=perDelivery;
-    }
+    agency.delivery_frequency=freq;
+    agency.weekly_bag_count=weekly;
+    agency.bags_per_delivery=perDelivery;
+    agency.delivery_day=finalDay;
+    agency.assigned_weeks=assignedWeeks;
+    // Rebuild ROUTE_DATA from the updated agencies so the schedule reflects the change
+    buildRouteData();
     closeModal();
     renderAgencies();
-    showToast(`✓ ${name} updated — ${weekly} bags/week, ${perDelivery} per delivery`,'success');
+    renderRouteView();
+    const scheduleStr=assignedWeeks?` · ${day} weeks ${assignedWeeks}`:'';
+    showToast(`✓ ${name} updated — ${freq}${scheduleStr}`,'success');
   }catch(e){
     showToast('Error saving: '+e.message,'error');
   }
@@ -4398,7 +4578,6 @@ document.getElementById('modal-bg').addEventListener('click', function(e){
     case 'savePack': savePack(); break;
     case 'saveLossBatch': saveLossBatch(arg); break;
     case 'saveExtraDelivery': saveExtraDelivery(); break;
-    case 'saveAgencyEdit': saveAgencyEditFromArg(arg); break;
     case 'saveHolidaySchool': saveHolidaySchool(); break;
     case 'saveGeneralInfo': saveGeneralInfo(); break;
     case 'syncFromAirtable': syncFromAirtable(); break;
