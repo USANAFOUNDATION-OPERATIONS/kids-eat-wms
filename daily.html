@@ -62,6 +62,11 @@
   .deliv-title{font-size:14px;font-weight:600;color:var(--text);}
   .deliv-stats{font-size:12px;color:var(--text-muted);margin-top:2px;}
   .deliv-arrow{font-size:14px;color:var(--text-faint);}
+  /* Agency list under the deliveries card */
+  .deliv-agencies{padding:0 18px 14px;}
+  .deliv-agency{padding:8px 0;border-top:1px solid var(--border);font-size:14px;color:var(--text);display:flex;align-items:center;gap:10px;}
+  .deliv-agency:first-child{border-top:none;padding-top:4px;}
+  .deliv-bullet{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
 
   /* Tasks */
   .task-row{display:flex;align-items:flex-start;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border);}
@@ -356,36 +361,44 @@ async function loadTodaysDeliveries(){
     const ROUTE_DATA={1:{Monday:['Horizon','Longview','Parkside','Hillcrest Jr','Ascent Academy'],Tuesday:['Oquirrh','Westvale','Copper Canyon','Columbia','Mountain Shadows'],Wednesday:['Silver Hills','Taylorsville Elementary','Eisenhower Jr.','Stansbury Elementary','Farnsworth']},2:{Monday:['McMillan','Liberty','Hillcrest High','Union Middle','Grant'],Tuesday:['Heartland','Majestic','Westvale','Terra Linda','Oquirrh'],Wednesday:['Beacon Heights','Highland High','Stansbury Elementary','Pacific Heritage Academy','Dos Mundos Academy']},3:{Monday:['Parkside','Murray High','Riverview Jr','Horizon'],Tuesday:['Oquirrh','Westvale','Copper Canyon','Columbia'],Wednesday:['Silver Hills','Taylorsville Elementary','Eisenhower Jr.','Stansbury Elementary','Farnsworth']},4:{Monday:['Union Middle','Midvale Middle School','Childrens Justice Center','Grant'],Tuesday:['Heartland','Majestic','Westvale','Terra Linda','Oquirrh'],Wednesday:['Pacific Heritage Academy','Highland High','Stansbury Elementary','Dos Mundos Academy']}};
     const todayStops=ROUTE_DATA[weekNum]?.[dayName]||[];
 
-    // Pull active agencies to filter inactive + sum bag counts
-    const agencies=await sbGet('agencies','select=name,is_active,weekly_bag_count,bags_per_delivery,delivery_frequency');
+    // Pull active agencies to filter inactive
+    const agencies=await sbGet('agencies','select=name,is_active');
     const norm=s=>(s||'').toLowerCase().trim();
     const activeStops=todayStops.filter(name=>{
       const a=agencies.find(ag=>norm(ag.name)===norm(name));
       return !(a && a.is_active===false);
     });
-    const totalBags=activeStops.reduce((s,name)=>{
-      const a=agencies.find(ag=>norm(ag.name)===norm(name));
-      if(!a)return s;
-      const freq=a.delivery_frequency||'Weekly';
-      const weekly=a.weekly_bag_count||0;
-      const perDelivery=a.bags_per_delivery||(freq==='Biweekly'?weekly*2:freq==='Monthly'?weekly*4:weekly);
-      return s+perDelivery;
-    },0);
 
-    // Pull this Monday's already-logged delivery count
-    const mondayStr=monday.getFullYear()+'-'+String(monday.getMonth()+1).padStart(2,'0')+'-'+String(monday.getDate()).padStart(2,'0');
-    const sched=await sbGet('delivery_schedule',`select=agency_name,bags_delivered,delivery_status&week_start_date=eq.${mondayStr}`);
-    const logged=sched.length;
-    const totalLogged=sched.reduce((s,r)=>s+(r.bags_delivered||0),0);
+    if(!activeStops.length){
+      el.innerHTML=`<a href="index.html#schedule" class="deliv-card">
+        <div class="deliv-icon">📅</div>
+        <div class="deliv-body">
+          <div class="deliv-title">${dayName}, Week ${weekNum}</div>
+          <div class="deliv-stats">No deliveries scheduled today</div>
+        </div>
+        <div class="deliv-arrow">→</div>
+      </a>`;
+      return;
+    }
 
-    el.innerHTML=`<a href="index.html#schedule" class="deliv-card">
-      <div class="deliv-icon">📅</div>
-      <div class="deliv-body">
-        <div class="deliv-title">${dayName}, Week ${weekNum} · ${activeStops.length} stops</div>
-        <div class="deliv-stats">${totalBags.toLocaleString()} bags expected · ${logged} logged so far (${totalLogged.toLocaleString()} bags)</div>
+    const agencyList=activeStops.map(name=>`
+      <div class="deliv-agency">
+        <div class="deliv-bullet"></div>
+        <div>${escapeHtml(name)}</div>
       </div>
-      <div class="deliv-arrow">→</div>
-    </a>`;
+    `).join('');
+
+    el.innerHTML=`
+      <a href="index.html#schedule" class="deliv-card">
+        <div class="deliv-icon">📅</div>
+        <div class="deliv-body">
+          <div class="deliv-title">${dayName}, Week ${weekNum}</div>
+          <div class="deliv-stats">${activeStops.length} stop${activeStops.length===1?'':'s'} today</div>
+        </div>
+        <div class="deliv-arrow">→</div>
+      </a>
+      <div class="deliv-agencies">${agencyList}</div>
+    `;
   }catch(e){
     console.error('Deliveries summary failed:',e);
     el.innerHTML=`<a href="index.html" class="deliv-card">
