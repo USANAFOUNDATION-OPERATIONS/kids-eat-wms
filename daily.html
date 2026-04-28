@@ -295,8 +295,9 @@ async function loadNotifications(){
   try{
     // Kids Eat change requests — fetch all, filter client-side to match Kids Eat's
     // own badge logic exactly: anything where status is null OR 'Pending' counts as open.
-    const allChanges=await sbGet('delivery_change_requests','select=id,request_status,school_name');
-    const openChanges=allChanges.filter(r=>!r.request_status||r.request_status==='Pending');
+    // Use select=* so we don't break if column names differ from what we expect.
+    const allChanges=await sbGet('delivery_change_requests','select=*');
+    const openChanges=(allChanges||[]).filter(r=>!r.request_status||r.request_status==='Pending');
     if(openChanges.length){
       items.push({
         icon:'📨',iconClass:'amber',
@@ -306,7 +307,7 @@ async function loadNotifications(){
       });
     }
   }catch(e){
-    console.log('Change requests check skipped:',e.message);
+    console.log('Change requests check failed:',e.message);
   }
 
   // Render
