@@ -4322,6 +4322,33 @@ async function init(){
   }catch(e){
     loadSeedData();
   }
+  // Handle deep-link hashes from Daily Command Center notifications
+  handleHashRoute();
+  window.addEventListener('hashchange',handleHashRoute);
+}
+
+// Routes based on URL hash. Examples:
+//   #change-requests / #requests -> change requests page
+//   #schedule                    -> schedule page
+//   #agencies                    -> agencies page
+function handleHashRoute(){
+  const hash=(window.location.hash||'').replace(/^#/,'');
+  if(!hash)return;
+  const map={
+    'change-requests':'requests',
+    'change_requests':'requests',
+    'requests':'requests',
+    'schedule':'schedule',
+    'agencies':'agencies',
+    'dashboard':'dashboard',
+    'inventory':'inventory',
+    'receiving':'receiving',
+    'home':'home'
+  };
+  const target=map[hash]||hash;
+  if(document.getElementById('page-'+target) && typeof showPage==='function'){
+    showPage(target);
+  }
 }
 
 

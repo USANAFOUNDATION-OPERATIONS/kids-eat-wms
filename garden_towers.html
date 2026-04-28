@@ -1474,6 +1474,37 @@ async function init(){
     console.log('DB not ready, using empty state');
     renderAll();
   }
+  // Handle deep-link hashes (e.g., #shipping-pending from Daily Command Center notifications)
+  handleHashRoute();
+  window.addEventListener('hashchange',handleHashRoute);
+}
+
+// Routes based on URL hash. Examples:
+//   #shipping            -> shipping page, no filter
+//   #shipping-pending    -> shipping page with Pending filter
+//   #shipping-prepared   -> shipping page with Prepared filter
+//   #shipping-shipped    -> shipping page with Shipped filter
+//   #tracker             -> tower tracker
+//   #inventory           -> inventory page
+function handleHashRoute(){
+  const hash=(window.location.hash||'').replace(/^#/,'');
+  if(!hash)return;
+  const [page,...rest]=hash.split('-');
+  const param=rest.join('-');
+  if(page==='shipping'){
+    showPage('shipping');
+    if(param && typeof filterShipments==='function'){
+      // Wait a tick so the page is rendered before clicking the filter
+      setTimeout(()=>filterShipments(param),50);
+    }
+  }else if(page==='tracker'){
+    showPage('tracker');
+    if(typeof renderTracker==='function')renderTracker();
+  }else if(page==='inventory'){
+    showPage('inventory');
+  }else if(document.getElementById('page-'+page)){
+    showPage(page);
+  }
 }
 
 async function loadAll(){
