@@ -5,14 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>Daily</title>
 
-<!-- Favicons (real PNG files for max compatibility) -->
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<!-- Real PNG files (preferred) — uploaded to repo root alongside daily.html -->
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
+
+<!-- Inline SVG fallback in case PNGs failed to upload — works even without external files -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230774cc'/><path d='M32 50c-1 0-2-.4-2.7-1.1L14.5 33.4c-3.3-3.3-3.3-8.7 0-12 3.3-3.3 8.7-3.3 12 0L32 26.6l5.5-5.2c3.3-3.3 8.7-3.3 12 0 3.3 3.3 3.3 8.7 0 12L34.7 48.9c-.7.7-1.7 1.1-2.7 1.1z' fill='white'/></svg>">
 
 <!-- PWA manifest for "add to home screen" -->
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json?v=2">
 <meta name="apple-mobile-web-app-title" content="Daily">
+<meta name="application-name" content="Daily">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0774cc">
 <style>
@@ -289,18 +293,27 @@ async function loadNotifications(){
   }catch(e){console.error('GT shipments fetch failed:',e);}
 
   try{
-    // Kids Eat change requests — open ones
-    const changes=await sbGet('delivery_change_requests','select=id,request_status,school_name&request_status=neq.Resolved&request_status=neq.Cancelled');
+    // Kids Eat change requests — Pending status only (not Completed or Rejected)
+    const changes=await sbGet('delivery_change_requests','select=id,request_status,school_name&request_status=eq.Pending');
     if(changes.length){
       items.push({
         icon:'📨',iconClass:'amber',
-        title:`${changes.length} open change request${changes.length===1?'':'s'}`,
+        title:`${changes.length} pending change request${changes.length===1?'':'s'}`,
         sub:'Kids Eat · review and respond',
         link:'index.html#change-requests'
       });
     }
+    // Also catch ones with NULL/missing status (legacy rows)
+    const nullStatusChanges=await sbGet('delivery_change_requests','select=id&request_status=is.null');
+    if(nullStatusChanges.length){
+      items.push({
+        icon:'📨',iconClass:'amber',
+        title:`${nullStatusChanges.length} unreviewed change request${nullStatusChanges.length===1?'':'s'}`,
+        sub:'Kids Eat · need triage',
+        link:'index.html#change-requests'
+      });
+    }
   }catch(e){
-    // Table might not exist or be filterable — skip silently
     console.log('Change requests check skipped:',e.message);
   }
 
