@@ -293,23 +293,15 @@ async function loadNotifications(){
   }catch(e){console.error('GT shipments fetch failed:',e);}
 
   try{
-    // Kids Eat change requests — Pending status only (not Completed or Rejected)
-    const changes=await sbGet('delivery_change_requests','select=id,request_status,school_name&request_status=eq.Pending');
-    if(changes.length){
+    // Kids Eat change requests — fetch all, filter client-side to match Kids Eat's
+    // own badge logic exactly: anything where status is null OR 'Pending' counts as open.
+    const allChanges=await sbGet('delivery_change_requests','select=id,request_status,school_name');
+    const openChanges=allChanges.filter(r=>!r.request_status||r.request_status==='Pending');
+    if(openChanges.length){
       items.push({
         icon:'📨',iconClass:'amber',
-        title:`${changes.length} pending change request${changes.length===1?'':'s'}`,
+        title:`${openChanges.length} pending change request${openChanges.length===1?'':'s'}`,
         sub:'Kids Eat · review and respond',
-        link:'index.html#change-requests'
-      });
-    }
-    // Also catch ones with NULL/missing status (legacy rows)
-    const nullStatusChanges=await sbGet('delivery_change_requests','select=id&request_status=is.null');
-    if(nullStatusChanges.length){
-      items.push({
-        icon:'📨',iconClass:'amber',
-        title:`${nullStatusChanges.length} unreviewed change request${nullStatusChanges.length===1?'':'s'}`,
-        sub:'Kids Eat · need triage',
         link:'index.html#change-requests'
       });
     }
