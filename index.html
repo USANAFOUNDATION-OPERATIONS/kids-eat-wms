@@ -3224,12 +3224,13 @@ function loadSnapshot(date){
     }
 
     const inputDisabled=r.adjustment_applied?'disabled':'';
+    const notesEsc=(r.notes||'').replace(/"/g,'&quot;');
     return `<tr>
       <td><strong>${r.product_name}</strong></td>
       <td style="font-family:'Courier New',monospace;">${sys.toLocaleString()}</td>
       <td><input type="number" class="form-input annual-actual-input" data-id="${id}" data-sys="${sys}" value="${actual!==null&&actual!==undefined?actual:''}" placeholder="Enter count" min="0" style="width:110px;padding:5px 8px;text-align:center;" ${inputDisabled}/></td>
       ${varianceCell}
-      <td style="font-size:12px;color:var(--text-muted);">${r.notes||'—'}</td>
+      <td><input type="text" class="form-input annual-notes-input" data-id="${id}" value="${notesEsc}" placeholder="Optional notes" style="width:180px;padding:5px 8px;font-size:12px;" ${inputDisabled}/></td>
     </tr>`;
   }).join('');
 
@@ -3264,6 +3265,23 @@ function loadSnapshot(date){
         loadSnapshot(date);
         document.getElementById('apply-adj-btn').style.display='block';
       }catch(e){showToast('Error saving count: '+e.message,'error');}
+    });
+  });
+
+  // Save notes on blur (when user clicks away from the input)
+  document.querySelectorAll('.annual-notes-input').forEach(input=>{
+    input.addEventListener('change', async function(){
+      const id=this.getAttribute('data-id');
+      const note=this.value||null;
+      try{
+        await fetch(`${SUPABASE_URL}/rest/v1/annual_inventory?id=eq.${id}`,{
+          method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},
+          body:JSON.stringify({notes:note})
+        });
+        const rec=DATA.annualInv.find(r=>r.id===id);
+        if(rec)rec.notes=note;
+        showToast('✓ Note saved','success');
+      }catch(e){showToast('Error saving note: '+e.message,'error');}
     });
   });
 }
