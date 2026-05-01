@@ -475,6 +475,23 @@ function renderForm(){
   const selectedChallenges=parseMultiField(t.significant_challenges);
 
   const html=`
+    ${ext?`
+    <div class="card" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-color:#93c5fd;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span style="font-size:20px;">📋</span>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:#1e3a8a;">Copy data from another tower</div>
+          <div style="font-size:12px;color:#1e40af;margin-top:2px;">Same family getting a 2nd tower? Pull their info from a previous tower in this project.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:stretch;margin-top:10px;">
+        <input type="number" id="dup-source-num" placeholder="Tower #" inputmode="numeric" style="flex:1;padding:10px 12px;border:1px solid #93c5fd;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;outline:none;" onkeypress="if(event.key==='Enter'){event.preventDefault();duplicateFromTower();}">
+        <button type="button" class="btn btn-primary" style="padding:10px 16px;font-size:13px;font-weight:600;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;" onclick="duplicateFromTower()">Copy data</button>
+      </div>
+      <div id="dup-status" style="font-size:12px;margin-top:8px;min-height:14px;"></div>
+    </div>
+    `:''}
+
     <div class="card">
       <div class="card-title">Basic info</div>
       <div class="field">
@@ -755,6 +772,113 @@ async function doAutosave(){
     setTimeout(()=>as.classList.remove('show'),1400);
   }catch(e){
     console.warn('Autosave failed:',e);
+  }
+}
+
+// ============================================================================
+// Copy data from another tower (100 Humanitarians workflow)
+// ============================================================================
+// When 100H builds 2 towers for the same family, this lets them enter the
+// previous tower's number to fill in the data fields. Only fills EMPTY fields
+// in the form — anything already typed is left alone. Photos, evaluations,
+// and challenges are NEVER copied (those are tower-specific).
+async function duplicateFromTower(){
+  const statusEl=document.getElementById('dup-status');
+  const inputEl=document.getElementById('dup-source-num');
+  if(!statusEl||!inputEl)return;
+  const sourceNum=parseInt(inputEl.value);
+  if(!sourceNum||sourceNum<=0){
+    statusEl.innerHTML='<span style="color:#dc2626;">Please enter a tower number</span>';
+    return;
+  }
+  if(sourceNum===currentTower.tower_number){
+    statusEl.innerHTML='<span style="color:#dc2626;">Cannot copy from the same tower</span>';
+    return;
+  }
+  // Only fetch towers from the SAME project at the SAME partner — keeps things tidy
+  const proj=currentTower.project_number;
+  const partner=currentTower.partner||PARTNER.name;
+  statusEl.innerHTML='<span style="color:#1e40af;">🔍 Looking up tower #'+sourceNum+'...</span>';
+  let source;
+  try{
+    const params=`select=*&tower_number=eq.${sourceNum}&project_number=eq.${proj}&partner=eq.${encodeURIComponent(partner)}&limit=1`;
+    const r=await sbGet('gt_towers?'+params);
+    source=Array.isArray(r)&&r.length?r[0]:null;
+  }catch(e){
+    statusEl.innerHTML='<span style="color:#dc2626;">Lookup failed: '+e.message+'</span>';
+    return;
+  }
+  if(!source){
+    statusEl.innerHTML=`<span style="color:#dc2626;">Tower #${sourceNum} not found in project ${proj}</span>`;
+    return;
+  }
+
+  // List of "data fields" to copy. Photos/evaluations/challenges are intentionally excluded.
+  const textFields=['date_planted','tower_location','country','person_in_charge','recipient_name',
+    'notes_about_family','communities','family_monthly_income','water_source',
+    'water_distance_from_home','water_used_per_week'];
+  const numFields=['number_of_family_members','number_of_children_in_home','number_of_children_in_school',
+    'water_trips_per_day','meals_per_week_from_garden','money_earned_per_week'];
+  const boolFields=['did_family_help_build','extra_vegetables_sold'];
+
+  let filled=0;
+  let skipped=0;
+
+  // Helper: only sets if the input is currently empty
+  const setIfEmpty=(id,val)=>{
+    const el=document.getElementById(id);
+    if(!el)return false;
+    const cur=(el.value||'').trim();
+    if(cur===''&&val!==null&&val!==undefined&&String(val).trim()!==''){
+      el.value=val;
+      return true;
+    }
+    return false;
+  };
+
+  textFields.forEach(f=>{
+    if(setIfEmpty('f-'+f,source[f]))filled++;else if(source[f])skipped++;
+  });
+  numFields.forEach(f=>{
+    if(setIfEmpty('f-'+f,source[f]))filled++;else if(source[f]!==null&&source[f]!==undefined)skipped++;
+  });
+
+  // Vegetables (chips) — only fill if no chips currently selected
+  const vegEl=document.getElementById('f-vegetables_planted');
+  if(vegEl){
+    const anySelected=vegEl.querySelectorAll('.chip.selected').length>0;
+    if(!anySelected && Array.isArray(source.vegetables_planted) && source.vegetables_planted.length){
+      source.vegetables_planted.forEach(v=>{
+        const chip=vegEl.querySelector(`.chip[data-val="${(v||'').replace(/"/g,'\\\"')}"]`);
+        if(chip){chip.classList.add('selected');filled++;}
+      });
+    }else if(anySelected){
+      skipped++;
+    }
+  }
+
+  // Boolean Yes/No buttons — only fill if neither button is currently selected
+  boolFields.forEach(f=>{
+    const group=document.querySelectorAll(`[data-field="${f}"]`);
+    if(!group.length)return;
+    const anySelected=[...group].some(b=>b.classList.contains('selected'));
+    if(anySelected){if(source[f]!==null&&source[f]!==undefined)skipped++;return;}
+    if(source[f]===true||source[f]===false){
+      const target=[...group].find(b=>b.dataset.val===String(source[f]));
+      if(target){
+        group.forEach(b=>b.classList.remove('selected'));
+        target.classList.add('selected');
+        filled++;
+      }
+    }
+  });
+
+  if(filled===0){
+    statusEl.innerHTML=`<span style="color:#a16207;">⚠ Nothing copied — fields already have values or source tower has no data</span>`;
+  }else{
+    const skippedNote=skipped?` (${skipped} field${skipped===1?'':'s'} skipped — already filled)`:'';
+    statusEl.innerHTML=`<span style="color:#15803d;">✓ Copied ${filled} field${filled===1?'':'s'} from tower #${sourceNum}${skippedNote}. Review, then save.</span>`;
+    scheduleAutosave();
   }
 }
 
