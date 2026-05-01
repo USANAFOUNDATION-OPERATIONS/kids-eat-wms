@@ -98,6 +98,61 @@
   .status-three_mo{background:var(--blue-light);color:var(--blue);}
   .status-six_mo{background:#e0f2e0;color:var(--green-dark);}
 
+  /* Community share link panel (100H only) */
+  .comm-link-panel{
+    background:linear-gradient(135deg,#eff6ff,#dbeafe);
+    border:1px solid #93c5fd;
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:14px;
+  }
+  .comm-link-panel-compact{padding:12px 14px;}
+  .comm-link-panel-head{
+    display:flex;align-items:flex-start;gap:10px;
+    margin-bottom:10px;
+  }
+  .comm-link-panel-title{
+    font-weight:700;font-size:14px;color:#1e3a8a;
+  }
+  .comm-link-panel-sub{
+    font-size:12px;color:#1e40af;margin-top:2px;
+  }
+  .comm-link-list{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:6px;
+  }
+  .comm-link-row{
+    background:#fff;border:1px solid #93c5fd;border-radius:8px;
+    padding:8px 10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .comm-link-info{
+    flex:1;min-width:0;display:flex;align-items:center;gap:8px;
+  }
+  .comm-link-icon{font-size:14px;flex-shrink:0;}
+  .comm-link-name{
+    font-size:13px;font-weight:600;color:#1e3a8a;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .comm-link-meta{
+    font-size:11px;color:#64748b;margin-top:1px;
+  }
+  .comm-link-btn{
+    background:#2563eb;color:#fff;border:none;
+    font-size:11px;font-weight:600;padding:5px 10px;
+    border-radius:6px;cursor:pointer;flex-shrink:0;
+    font-family:inherit;
+  }
+  .comm-link-btn:hover{background:#1d4ed8;}
+
+  /* Community pill on tower rows */
+  .tower-comm-pill{
+    display:inline-block;font-size:10px;font-weight:600;
+    background:var(--blue-light);color:var(--blue);
+    padding:2px 7px;border-radius:10px;
+    margin-top:3px;letter-spacing:.02em;
+  }
+
   /* Photo upload */
   .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
   .photo-slot{aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--bg);position:relative;}
@@ -283,6 +338,94 @@ function statusLabel(s){
   return {empty:'Not started',planted:'Planted',three_mo:'3-mo done',six_mo:'6-mo done'}[s]||s;
 }
 
+// ---- Community helpers (100 Humanitarians only) ----
+// Returns true when the partner form should render community-link sections.
+// Hidden if: (a) partner is not 100H, (b) URL is already filtered to a community.
+function showCommunityLinks(){
+  if(!PARTNER||!PARTNER.uses_extended_form)return false;
+  if(window._communityFilter)return false;
+  return true;
+}
+
+// Builds the unique community list for a given set of towers.
+// Returns array of {name, count} sorted alphabetically. (Unassigned) goes last.
+function communitiesIn(towers){
+  const map={};
+  (towers||[]).forEach(t=>{
+    const c=(t.communities||'').trim();
+    const key=c||'(Unassigned)';
+    if(!map[key])map[key]={name:key,count:0};
+    map[key].count++;
+  });
+  return Object.values(map).sort((a,b)=>{
+    if(a.name==='(Unassigned)')return 1;
+    if(b.name==='(Unassigned)')return -1;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+// Builds a shareable area-director URL for a community.
+// Includes the partner slug and (if applicable) the project number.
+function communityShareUrl(communityName,project){
+  const base=window.location.origin+window.location.pathname;
+  const slug=PARTNER.slug||'';
+  let url=`${base}?partner=${encodeURIComponent(slug)}&community=${encodeURIComponent(communityName)}`;
+  if(project)url+=`&project=${encodeURIComponent(project)}`;
+  return url;
+}
+
+// Copies a community link to clipboard with a friendly toast.
+async function copyCommunityLink(communityName,project){
+  const url=communityShareUrl(communityName,project);
+  try{
+    await navigator.clipboard.writeText(url);
+    showToast(`✓ ${communityName} link copied`,'success');
+  }catch(e){
+    // Fallback for browsers without clipboard API
+    const ta=document.createElement('textarea');
+    ta.value=url;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');showToast(`✓ ${communityName} link copied`,'success');}
+    catch(_){showToast('Copy failed — link: '+url,'error');}
+    document.body.removeChild(ta);
+  }
+}
+
+// Renders the "Share with area directors" community link panel.
+// Used in both the project list and tower list views.
+function renderCommunityLinkPanel(towers,project,opts){
+  if(!showCommunityLinks())return '';
+  const comms=communitiesIn(towers).filter(c=>c.name!=='(Unassigned)');
+  if(!comms.length)return '';
+  const compact=opts&&opts.compact;
+  const projLabel=project?` for Project ${project}`:'';
+  const rows=comms.map(c=>{
+    const escName=JSON.stringify(c.name).replace(/"/g,'&quot;');
+    const projArg=project?String(project):'null';
+    return `<div class="comm-link-row">
+      <div class="comm-link-info">
+        <span class="comm-link-icon">📍</span>
+        <div>
+          <div class="comm-link-name">${esc(c.name)}</div>
+          <div class="comm-link-meta">${c.count.toLocaleString()} tower${c.count===1?'':'s'}</div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-sm comm-link-btn" onclick="event.stopPropagation();copyCommunityLink(${escName},${projArg})" title="Copy ${esc(c.name)} link">
+        🔗 Copy link
+      </button>
+    </div>`;
+  }).join('');
+  return `<div class="comm-link-panel ${compact?'comm-link-panel-compact':''}">
+    <div class="comm-link-panel-head">
+      <span style="font-size:18px;">📤</span>
+      <div>
+        <div class="comm-link-panel-title">Share with area directors${projLabel}</div>
+        <div class="comm-link-panel-sub">Each link opens just that community's towers — safe to send to community leaders.</div>
+      </div>
+    </div>
+    <div class="comm-link-list">${rows}</div>
+  </div>`;
+}
+
 // ---- Supabase calls ----
 async function sbGet(path){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{headers:HDR});
@@ -396,19 +539,24 @@ function renderProjects(){
     el.innerHTML='<div class="state"><h3>No towers yet</h3><p>No projects have been assigned to you yet. Contact your project manager.</p></div>';
     return;
   }
-  el.innerHTML=keys.map(k=>{
+  // Project cards
+  const projectCards=keys.map(k=>{
     const g=byProject[k];
     const n=g.towers.length;
     const done=g.towers.filter(t=>t.date_planted).length;
     const pct=n?Math.round(done/n*100):0;
     const rangeStart=Math.min(...g.towers.map(t=>t.tower_number||Infinity));
     const rangeEnd=Math.max(...g.towers.map(t=>t.tower_number||0));
+    // Per-project community panel rendered INSIDE the project card so it's clear which project the links belong to
+    const projCommPanel=showCommunityLinks()?renderCommunityLinkPanel(g.towers,g.project,{compact:true}):'';
     return `<div class="proj-card" onclick="openProject(${g.project})">
       <h3>Project ${g.project}</h3>
       <div class="meta">Towers ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} · ${done}/${n} planted (${pct}%)</div>
       <div class="proj-bar"><div class="proj-bar-fill" style="width:${pct}%;"></div></div>
+      ${projCommPanel?`<div style="margin-top:14px;">${projCommPanel}</div>`:''}
     </div>`;
   }).join('');
+  el.innerHTML=projectCards;
 }
 function openProject(n){
   currentProject=n;
@@ -428,22 +576,33 @@ function renderTowerList(){
   const q=($('tower-search')?.value||'').trim().toLowerCase();
   let list=TOWERS.filter(t=>t.project_number===currentProject);
   if(towerFilter!=='all')list=list.filter(t=>towerStatus(t)===towerFilter);
-  if(q)list=list.filter(t=>String(t.tower_number).includes(q)||(t.recipient_name||'').toLowerCase().includes(q)||(t.tower_location||'').toLowerCase().includes(q));
+  if(q)list=list.filter(t=>String(t.tower_number).includes(q)||(t.recipient_name||'').toLowerCase().includes(q)||(t.tower_location||'').toLowerCase().includes(q)||(t.communities||'').toLowerCase().includes(q));
+
+  // Community link panel for this project (only when 100H + not already filtered)
+  const projectTowers=TOWERS.filter(t=>t.project_number===currentProject);
+  const commPanel=renderCommunityLinkPanel(projectTowers,currentProject);
+
   if(!list.length){
-    el.innerHTML='<div class="state"><p>No towers match your filter.</p></div>';
+    el.innerHTML=commPanel+'<div class="state"><p>No towers match your filter.</p></div>';
     return;
   }
-  el.innerHTML=list.map(t=>{
+  const rows=list.map(t=>{
     const s=towerStatus(t);
+    const comm=(t.communities||'').trim();
+    // Show community as a small pill below recipient/location, but only on 100H forms
+    const commPill=(PARTNER&&PARTNER.uses_extended_form&&comm)
+      ?`<span class="tower-comm-pill">📍 ${esc(comm)}</span>`:'';
     return `<div class="tower-card" onclick="openTower('${t.id}')">
       <div class="tower-num">#${t.tower_number||'—'}</div>
       <div class="tower-main">
         <div class="tower-recipient">${t.recipient_name||'— unassigned —'}</div>
         <div class="tower-loc">${t.tower_location||'Tap to fill in'}</div>
+        ${commPill}
       </div>
       <div class="tower-status"><span class="status-pill status-${s}">${statusLabel(s)}</span></div>
     </div>`;
   }).join('');
+  el.innerHTML=commPanel+rows;
 }
 function setTowerFilter(f){
   towerFilter=f;
