@@ -578,12 +578,22 @@ function renderTowerList(){
   if(towerFilter!=='all')list=list.filter(t=>towerStatus(t)===towerFilter);
   if(q)list=list.filter(t=>String(t.tower_number).includes(q)||(t.recipient_name||'').toLowerCase().includes(q)||(t.tower_location||'').toLowerCase().includes(q)||(t.communities||'').toLowerCase().includes(q));
 
-  // Community link panel for this project (only when 100H + not already filtered)
+  // Welcome card + reports button — shown at the top so partners always have
+  // partner-level context, no matter how they entered (direct link, drilled in, etc.)
   const projectTowers=TOWERS.filter(t=>t.project_number===currentProject);
+  const projectCount=new Set(TOWERS.map(t=>t.project_number)).size;
+  const commLabel=window._communityFilter?` &middot; ${window._communityFilter} community`:'';
+  const welcomeCard=`<div class="card" style="background:var(--green-light);border-color:var(--moss);margin-bottom:14px;">
+    <div class="card-title" style="color:var(--green-dark);">Welcome, partner</div>
+    <p style="font-size:14px;color:var(--text);margin-bottom:6px;">${PARTNER.name}${commLabel} &middot; ${TOWERS.length.toLocaleString()} towers across ${projectCount} project(s)</p>
+  </div>`;
+  const reportsBtn=`<button class="btn btn-block" style="margin-bottom:14px;" onclick="showReport()">📊 View my reports</button>`;
+
+  // Community link panel for this project (only when 100H + not already filtered)
   const commPanel=renderCommunityLinkPanel(projectTowers,currentProject);
 
   if(!list.length){
-    el.innerHTML=commPanel+'<div class="state"><p>No towers match your filter.</p></div>';
+    el.innerHTML=welcomeCard+reportsBtn+commPanel+'<div class="state"><p>No towers match your filter.</p></div>';
     return;
   }
   const rows=list.map(t=>{
@@ -602,7 +612,7 @@ function renderTowerList(){
       <div class="tower-status"><span class="status-pill status-${s}">${statusLabel(s)}</span></div>
     </div>`;
   }).join('');
-  el.innerHTML=commPanel+rows;
+  el.innerHTML=welcomeCard+reportsBtn+commPanel+rows;
 }
 function setTowerFilter(f){
   towerFilter=f;
